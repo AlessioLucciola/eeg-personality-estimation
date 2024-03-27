@@ -1,0 +1,9 @@
+torch==2.0.0
+torchvision==0.15.1
+pandas
+tqdm
+wandb
+scikit-learn
+torch-directml
+lightning
+torchmetrics
