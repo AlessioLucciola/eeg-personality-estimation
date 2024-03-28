@@ -22,11 +22,10 @@ class AMIGOSDataset(EEGClassificationDataset):
     
     def load_data(self):
         metadata_df = self.upload_metadata()
-        # TO DO: Create a function to discretize the labels
         if DISCRETIZE_LABELS:
             metadata_df = self.discretize_labels(metadata_df)
-
-        eeg_df = self.upload_eeg_data() # Upload the EEG data
+        print(metadata_df)
+        #eeg_df = self.upload_eeg_data() # Upload the EEG data
 
         # TO DO: Create a function to see if there is consistency between the metadata and the data files
         self.check_metadata_validity() # Check if the metadata file is valid
@@ -43,7 +42,13 @@ class AMIGOSDataset(EEGClassificationDataset):
         return metadata_df
     
     def discretize_labels(self, metadata_df):
-        pass
+        # Discretize the personality traits based on their mean value
+        traits = metadata_df.columns[1:]
+        for trait in traits:
+            mean = metadata_df[trait].mean() # Calculate the mean value of the personality trait
+            assert mean >= 1 and mean <= 7 # Check if the mean is within the range of the personality trait (it must be a value between 1 and 7)
+            metadata_df[trait] = metadata_df[trait].apply(lambda x: 1 if x > mean else 0) # Discretize the personality trait based on the mean value
+        return metadata_df
 
     def upload_eeg_data(self):
         # Upload the EEG data

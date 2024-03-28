@@ -31,7 +31,7 @@ class EEGClassificationDataset(Dataset, ABC):
         self.window_size = window_size
         self.window_stride = window_stride
         
-        self.eeg_data, self.labels_data, self.subject_ids_data = self.load_data()
+        #self.eeg_data, self.labels_data, self.subject_ids_data = self.load_data()
         
     def __len__(self):
         # TO DO: Implement the division of the eeg data into windows
