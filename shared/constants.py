@@ -1,5 +1,5 @@
 amigos_labels = {
-    "Extrovesion": 0,
+    "Extroversion": 0,
     "Agreeableness": 1,
     "Conscientiousness": 2,
     "Emotional Stability": 3,

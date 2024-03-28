@@ -1,6 +1,7 @@
 from config import AMIGOS_NUM_CLASSES, AMIGOS_FILES_DIR, AMIGOS_METADATA_FILE, DISCRETIZE_LABELS
-from shared.constants import amigos_labels
 from datasets.EEG_classification_dataset import EEGClassificationDataset
+from shared.constants import amigos_labels
+from collections import deque
 from tqdm import tqdm
 from scipy import io
 import pandas as pd
@@ -21,14 +22,24 @@ class AMIGOSDataset(EEGClassificationDataset):
         )
     
     def load_data(self):
-        metadata_df = self.upload_metadata()
+        metadata_df = self.upload_metadata() # Upload the metadata file
         if DISCRETIZE_LABELS:
-            metadata_df = self.discretize_labels(metadata_df)
-        
+            metadata_df = self.discretize_labels(metadata_df) # Discretize the personality traits
         eeg_df = self.upload_eeg_data() # Upload the EEG data
         metadata_df, eeg_df = self.check_metadata_validity(metadata_df, eeg_df) # Check if the metadata file is valid
-        print(metadata_df, eeg_df.keys())
-        return None, None, None
+        
+        eegs_list = deque()
+        labels_list = deque()
+        subject_list = deque()
+        for egg_file, eeg_data in tqdm(eeg_df.items(), desc="Parsing EEG data..", unit="file", leave=False):
+            _, subject_id = self.parse_amigos_file_names(egg_file) # Parse the file name to get the subject ID
+            subject_list.append(subject_id) # Append the subject ID
+            eegs_list.append(eeg_data) # Append the EEG data of the subject
+            labels_dict = metadata_df[metadata_df['UserID'] == subject_id].iloc[0, 1:].to_dict() # Extract the personality traits of the subject
+            mapped_labels_dict = {amigos_labels[key]: value for key, value in labels_dict.items()} # Map column names to their corresponding integer values
+            labels_list.append(mapped_labels_dict) # Append the personality traits of the subject
+        return list(eegs_list), list(labels_list), list(subject_list)
+
     
     def upload_metadata(self):
         # Upload the metadata file with the subject IDs and associated personality traits
