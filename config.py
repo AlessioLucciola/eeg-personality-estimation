@@ -5,8 +5,9 @@ DATA_DIR = "data"
 RESULTS_DIR = "results"
 
 # AMIGOS dataset configurations
-AMIGOS_DATASET_DIR = os.path.join(DATA_DIR, "AMIGOS")
-AMIGOS_METADATA_FILE = os.path.join(AMIGOS_DATASET_DIR, "Participant_Personality.xlsx")
+AMIGOS_DATASET_DIR = os.path.join(DATA_DIR, "amigos")
+AMIGOS_FILES_DIR = os.path.join(AMIGOS_DATASET_DIR, "files")
+AMIGOS_METADATA_FILE = os.path.join(AMIGOS_DATASET_DIR, "Participants_Personality.xlsx")
 AMIGOS_NUM_CLASSES = 2
 
 # Miscellanous configurations
@@ -20,3 +21,4 @@ WINDOWS_STRIDE = 1
 SAMPLING_RATE = 128
 ELECTRODES = ["AF3", "F7", "F3", "FC5", "T7", "P7", "O1", "O2",
               "P8", "T8", "FC6", "F4", "F8", "AF4"]
+DISCRETIZE_LABELS = True

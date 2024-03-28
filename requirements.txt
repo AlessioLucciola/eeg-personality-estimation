@@ -7,4 +7,5 @@ scikit-learn
 torch-directml
 lightning
 torchmetrics
+openpyxl
 mne
