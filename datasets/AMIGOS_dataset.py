@@ -30,15 +30,15 @@ class AMIGOSDataset(EEGClassificationDataset):
         
         eegs_list = deque()
         labels_list = deque()
-        subject_list = deque()
+        subjects_list = deque()
         for egg_file, eeg_data in tqdm(eeg_df.items(), desc="Parsing EEG data..", unit="file", leave=False):
             _, subject_id = self.parse_amigos_file_names(egg_file) # Parse the file name to get the subject ID
-            subject_list.append(subject_id) # Append the subject ID
+            subjects_list.append(subject_id) # Append the subject ID
             eegs_list.append(eeg_data) # Append the EEG data of the subject
             labels_dict = metadata_df[metadata_df['UserID'] == subject_id].iloc[0, 1:].to_dict() # Extract the personality traits of the subject
             mapped_labels_dict = {amigos_labels[key]: value for key, value in labels_dict.items()} # Map column names to their corresponding integer values
             labels_list.append(mapped_labels_dict) # Append the personality traits of the subject
-        return list(eegs_list), list(labels_list), list(subject_list)
+        return list(eegs_list), list(labels_list), list(subjects_list)
 
     
     def upload_metadata(self):
@@ -96,4 +96,3 @@ class AMIGOSDataset(EEGClassificationDataset):
 
 if __name__ == "__main__":
     dataset = AMIGOSDataset(data_path=AMIGOS_FILES_DIR, metadata_path=AMIGOS_METADATA_FILE)
-    dataset.load_data()

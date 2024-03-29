@@ -1,8 +1,11 @@
-from config import WINDOWS_SIZE, WINDOWS_STRIDE, SAMPLING_RATE, ELECTRODES
+from config import WINDOWS_SIZE, WINDOWS_STRIDE, SAMPLING_RATE, ELECTRODES, NORMALIZE_DATA
 from torch.utils.data import Dataset
 from abc import ABC, abstractmethod
 from typing import List
-import os
+from tqdm import tqdm
+import numpy as np
+import einops
+import mne
 
 class EEGClassificationDataset(Dataset, ABC):
     def __init__(self,
@@ -31,7 +34,15 @@ class EEGClassificationDataset(Dataset, ABC):
         self.window_size = window_size
         self.window_stride = window_stride
         
-        #self.eeg_data, self.labels_data, self.subject_ids_data = self.load_data()
+        self.eegs_data, self.labels_data, self.subjects_data = self.load_data()
+        print(len(self.eegs_data))
+        print(self.eegs_data[0].shape)
+
+        # Normalizes the EEG data if the NORMALIZE_DATA flag is set to True
+        if NORMALIZE_DATA:
+            print("--NORMALIZATION-- Normalization_data flag set to True. EEG data will be normalized..")
+            self.eegs_data = self.normalize_data(self.eegs_data)
+
         
     def __len__(self):
         # TO DO: Implement the division of the eeg data into windows
@@ -44,6 +55,19 @@ class EEGClassificationDataset(Dataset, ABC):
     @abstractmethod
     def load_data(self):
         pass
+
+    def normalize_data(self, eegs_data):
+        for i, experiment in enumerate(tqdm(eegs_data, desc="Normalizing EEG data..", unit="experiment", leave=False)):
+            print(experiment.shape)
+            scaler = mne.decoding.Scaler(info=mne.create_info(ch_names=self.electrodes, sfreq=self.sampling_rate, verbose=False, ch_types="eeg"), scalings="mean") # Initializes the scaler
+            experiment_scaled = einops.rearrange(experiment, "s c -> () c s")
+            print(experiment_scaled.shape)
+            experiment_scaled = scaler.fit_transform(experiment_scaled)
+            experiment_scaled = einops.rearrange(experiment_scaled, "b c s -> s (b c)") # Normalizes the data
+            experiment_scaled = np.nan_to_num(experiment_scaled) # Replaces NaN values with 0
+            experiment_scaled = 2 * ((experiment_scaled - experiment_scaled.min(axis=0)) / (experiment_scaled.max(axis=0) - experiment_scaled.min(axis=0))) - 1 # Normalizes between -1 and 1
+            eegs_data[i] = experiment_scaled # Updates the EEG data
+        return eegs_data
     
-#if __name__ == "__main__":
-#    dataset = EEGClassificationDataset()
+    def get_windows(self):
+        pass

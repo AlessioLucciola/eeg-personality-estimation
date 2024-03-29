@@ -8,4 +8,6 @@ torch-directml
 lightning
 torchmetrics
 openpyxl
+seaborn
+einops
 mne
