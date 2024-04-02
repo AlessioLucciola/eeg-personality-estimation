@@ -1,4 +1,4 @@
-from config import WINDOWS_SIZE, WINDOWS_STRIDE, SAMPLING_RATE, ELECTRODES, NORMALIZE_DATA
+from config import WINDOWS_SIZE, WINDOWS_STRIDE, SAMPLING_RATE, ELECTRODES, NORMALIZE_DATA, DROP_LAST
 from torch.utils.data import Dataset
 from abc import ABC, abstractmethod
 from typing import List
@@ -19,6 +19,7 @@ class EEGClassificationDataset(Dataset, ABC):
                  electrodes: List[str] = ELECTRODES,
                  window_size: int = WINDOWS_SIZE,
                  window_stride: int = WINDOWS_STRIDE,
+                 drop_last: bool = DROP_LAST
                 ):
         super().__init__()
 
@@ -33,6 +34,9 @@ class EEGClassificationDataset(Dataset, ABC):
         self.electrodes = electrodes
         self.window_size = window_size
         self.window_stride = window_stride
+        self.drop_last = drop_last
+        self.samples_per_window = int(np.floor(self.sampling_rate * self.window_size)) # Number of samples per window
+        self.samples_per_stride = int(np.floor(self.sampling_rate * self.window_stride)) # Number of samples per stride
         
         self.eegs_data, self.labels_data, self.subjects_data = self.load_data()
 
@@ -43,6 +47,7 @@ class EEGClassificationDataset(Dataset, ABC):
 
         # Divide the EEG data into windows
         self.windows = self.get_windows()
+        print(self.windows)
 
         
     def __len__(self):
@@ -76,11 +81,17 @@ class EEGClassificationDataset(Dataset, ABC):
     
     def get_windows(self):
         windows = []
-        for _, experiment in enumerate(tqdm(self.eegs_data, desc="Dividing EEG data into windows..", unit="experiment", leave=False)):
-            for _, trial in enumerate(experiment):
-                for k in range(0, len(trial) - self.window_size, self.window_stride):
-                    window = trial[k:k + self.window_size]
+        for i, subject_experiment in enumerate(tqdm(self.eegs_data, desc="Dividing EEG data into windows..", unit="experiment", leave=False)):
+            for j, trial in enumerate(subject_experiment):
+                for k in range(0, len(trial), self.samples_per_stride):
+                    window = {
+                        "experiment": j,
+                        "start": k,
+                        "end": k + self.samples_per_window,
+                        "subject_id": self.subjects_data[i],
+                        "labels": self.labels_data[i]
+                    }
+                    if self.drop_last and (window["end"] - window["start"]) != self.samples_per_window:
+                        continue
                     windows.append(window)
-    
-    def get_windows(self):
-        pass
+        return windows
