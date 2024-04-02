@@ -4,6 +4,7 @@ from shared.constants import amigos_labels
 from collections import deque
 from tqdm import tqdm
 from scipy import io
+import numpy as np
 import pandas as pd
 import os
 
@@ -31,6 +32,7 @@ class AMIGOSDataset(EEGClassificationDataset):
         eegs_list = deque()
         labels_list = deque()
         subjects_list = deque()
+        #TO DO: Controllare che la struttura di eegs_list allo stato attuale abbia senso
         for egg_file, eeg_data in tqdm(eeg_df.items(), desc="Parsing EEG data..", unit="file", leave=False):
             _, subject_id = self.parse_amigos_file_names(egg_file) # Parse the file name to get the subject ID
             subjects_list.append(subject_id) # Append the subject ID
@@ -65,8 +67,9 @@ class AMIGOSDataset(EEGClassificationDataset):
         electrodes_data = {}
         for file in tqdm(os.listdir(self.data_path), desc="Uploading EEG data..", unit="file", leave=False):
             if file.endswith(".mat"):
-                eeg_data = io.loadmat(os.path.join(self.data_path, file))
-                electrodes_data[file] = eeg_data["joined_data"][:, :14]
+                eeg_data = io.loadmat(os.path.join(self.data_path, file), simplify_cells=True)
+                trials = [e[:, :14].astype(np.float32) for e in eeg_data["joined_data"] if e.size != 0]
+                electrodes_data[file] = trials
         return electrodes_data
     
     def check_metadata_validity(self, metadata_df, eeg_df):

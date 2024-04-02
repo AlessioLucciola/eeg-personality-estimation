@@ -35,18 +35,18 @@ class EEGClassificationDataset(Dataset, ABC):
         self.window_stride = window_stride
         
         self.eegs_data, self.labels_data, self.subjects_data = self.load_data()
-        print(len(self.eegs_data))
-        print(self.eegs_data[0].shape)
 
         # Normalizes the EEG data if the NORMALIZE_DATA flag is set to True
         if NORMALIZE_DATA:
             print("--NORMALIZATION-- Normalization_data flag set to True. EEG data will be normalized..")
             self.eegs_data = self.normalize_data(self.eegs_data)
 
+        # Divide the EEG data into windows
+        self.windows = self.get_windows()
+
         
     def __len__(self):
-        # TO DO: Implement the division of the eeg data into windows
-        return 0
+        return len(self.windows)
     
     def __getitem__(self, idx):
         # TO DO: Implement the division of the eeg data into windows
@@ -56,18 +56,31 @@ class EEGClassificationDataset(Dataset, ABC):
     def load_data(self):
         pass
 
-    def normalize_data(self, eegs_data):
-        for i, experiment in enumerate(tqdm(eegs_data, desc="Normalizing EEG data..", unit="experiment", leave=False)):
-            print(experiment.shape)
+    def normalize_data(self, eegs_data, epsilon=1e-9):
+        for i, subject_experiment in enumerate(tqdm(eegs_data, desc="Normalizing EEG data..", unit="experiment", leave=False)):
             scaler = mne.decoding.Scaler(info=mne.create_info(ch_names=self.electrodes, sfreq=self.sampling_rate, verbose=False, ch_types="eeg"), scalings="mean") # Initializes the scaler
-            experiment_scaled = einops.rearrange(experiment, "s c -> () c s")
-            print(experiment_scaled.shape)
-            experiment_scaled = scaler.fit_transform(experiment_scaled)
-            experiment_scaled = einops.rearrange(experiment_scaled, "b c s -> s (b c)") # Normalizes the data
-            experiment_scaled = np.nan_to_num(experiment_scaled) # Replaces NaN values with 0
-            experiment_scaled = 2 * ((experiment_scaled - experiment_scaled.min(axis=0)) / (experiment_scaled.max(axis=0) - experiment_scaled.min(axis=0))) - 1 # Normalizes between -1 and 1
-            eegs_data[i] = experiment_scaled # Updates the EEG data
+            for j, trial in enumerate(subject_experiment):
+                trial_scaled = einops.rearrange(trial, "s c -> () c s")
+                trial_scaled = scaler.fit_transform(trial_scaled)
+                trial_scaled = einops.rearrange(trial_scaled, "b c s -> s (b c)") # Normalizes the data
+                trial_scaled = np.nan_to_num(trial_scaled) # Replaces NaN values with 0
+                #TO DO: Sembra che ci siano esperimenti che valgono sempre 0. Va bene così? Vanno tolti?
+                #den = trial_scaled.max(axis=0) - trial_scaled.min(axis=0) + epsilon
+                #print(den)
+                #if den.any == 0 or den.any() == epsilon:
+                #    print(trial_scaled.max(axis=0), trial_scaled.min(axis=0), den)
+                trial_scaled = 2 * ((trial_scaled - trial_scaled.min(axis=0)) / (trial_scaled.max(axis=0) - trial_scaled.min(axis=0) + epsilon)) - 1 # Normalizes between -1 and 1
+                subject_experiment[j] = trial_scaled # Updates the EEG data
+            eegs_data[i] = subject_experiment
         return eegs_data
+    
+    def get_windows(self):
+        windows = []
+        for _, experiment in enumerate(tqdm(self.eegs_data, desc="Dividing EEG data into windows..", unit="experiment", leave=False)):
+            for _, trial in enumerate(experiment):
+                for k in range(0, len(trial) - self.window_size, self.window_stride):
+                    window = trial[k:k + self.window_size]
+                    windows.append(window)
     
     def get_windows(self):
         pass
