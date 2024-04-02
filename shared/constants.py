@@ -5,3 +5,8 @@ amigos_labels = {
     "Emotional Stability": 3,
     "Creativity (openness)": 4
 }
+
+validation_schemes = [
+    "K-FOLDCV",
+    "LOOCV",
+]

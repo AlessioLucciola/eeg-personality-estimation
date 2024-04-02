@@ -1,3 +1,4 @@
+from shared.constants import validation_schemes
 import os
 
 # General dataset configurations
@@ -24,3 +25,13 @@ ELECTRODES = ["AF3", "F7", "F3", "FC5", "T7", "P7", "O1", "O2",
 DISCRETIZE_LABELS = True
 NORMALIZE_DATA = True
 DROP_LAST = False # Drop the last window if True
+
+# Training configurations
+BATCH_SIZE = 32
+LEARNING_RATE = 0.001
+EPOCHS = 100
+VALIDATION_SCHEME = "LOOCV"
+KFOLDCV = 5
+
+# Miscellaneous assertions
+assert (VALIDATION_SCHEME in validation_schemes, f"{VALIDATION_SCHEME} is not a supported validation scheme.")
