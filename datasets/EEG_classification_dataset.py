@@ -40,6 +40,9 @@ class EEGClassificationDataset(Dataset, ABC):
         
         self.eegs_data, self.labels_data, self.subjects_data = self.load_data()
 
+        # Discard corrupted experiments
+        self.eegs_data = self.discard_corrupted_experiments(self.eegs_data)
+
         # Normalizes the EEG data if the NORMALIZE_DATA flag is set to True
         if NORMALIZE_DATA:
             print("--NORMALIZATION-- Normalization_data flag set to True. EEG data will be normalized..")
@@ -47,19 +50,40 @@ class EEGClassificationDataset(Dataset, ABC):
 
         # Divide the EEG data into windows
         self.windows = self.get_windows()
-        print(self.windows)
-
         
     def __len__(self):
         return len(self.windows)
     
     def __getitem__(self, idx):
-        # TO DO: Implement the division of the eeg data into windows
-        return "TO DO: Implement __getitem__"
+        window = self.windows[idx]
+        eeg_data = self.eegs_data[window["subject_id"]][window["experiment"]][window["start"]:window["end"]] # Extracts the EEG data of the window
+        if eeg_data.shape[0] != self.samples_per_window:
+            print(f"WARNING: Window shape is {eeg_data.shape[0]} instead of {self.samples_per_window}. Data will be zero-padded.")
+            eeg_data = np.concatenate((eeg_data, np.zeros((self.samples_per_window - eeg_data.shape[0], eeg_data.shape[1]))), axis=0) # Zero-pads the data
+        return {
+            "eeg_data": eeg_data.astype(np.float32),
+            "sample_rate": self.sampling_rate,
+            "subject_id": window["subject_id"],
+            "labels": window["labels"],
+        }
 
     @abstractmethod
     def load_data(self):
         pass
+
+    def discard_corrupted_experiments(self, eegs_data):
+        data_discarded = False
+        for i, subject_experiment in enumerate(tqdm(eegs_data, desc="--DATASET--Discarding corrupted experiments..", unit="experiment", leave=False)):
+            eegs_data[i] = [trial for trial in subject_experiment if np.count_nonzero(np.isnan(trial)) <= trial.size*0.9]
+            discarded_experiments = len(subject_experiment) - len(eegs_data[i])
+            if discarded_experiments > 0:
+                data_discarded = True
+                print(f"Subject {i} - Discarded {discarded_experiments} corrupted experiments")
+        if data_discarded:
+            print("WARNING: Some experiments were discarded due to corruption or null values.")
+        else :
+            print("No corrupted experiments found.")
+        return eegs_data
 
     def normalize_data(self, eegs_data, epsilon=1e-9):
         for i, subject_experiment in enumerate(tqdm(eegs_data, desc="Normalizing EEG data..", unit="experiment", leave=False)):
@@ -69,11 +93,6 @@ class EEGClassificationDataset(Dataset, ABC):
                 trial_scaled = scaler.fit_transform(trial_scaled)
                 trial_scaled = einops.rearrange(trial_scaled, "b c s -> s (b c)") # Normalizes the data
                 trial_scaled = np.nan_to_num(trial_scaled) # Replaces NaN values with 0
-                #TO DO: Sembra che ci siano esperimenti che valgono sempre 0. Va bene così? Vanno tolti?
-                #den = trial_scaled.max(axis=0) - trial_scaled.min(axis=0) + epsilon
-                #print(den)
-                #if den.any == 0 or den.any() == epsilon:
-                #    print(trial_scaled.max(axis=0), trial_scaled.min(axis=0), den)
                 trial_scaled = 2 * ((trial_scaled - trial_scaled.min(axis=0)) / (trial_scaled.max(axis=0) - trial_scaled.min(axis=0) + epsilon)) - 1 # Normalizes between -1 and 1
                 subject_experiment[j] = trial_scaled # Updates the EEG data
             eegs_data[i] = subject_experiment
