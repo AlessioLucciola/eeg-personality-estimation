@@ -56,12 +56,8 @@ class EEGClassificationDataset(Dataset, ABC):
     
     def __getitem__(self, idx):
         window = self.windows[idx]
-        eeg_data = self.eegs_data[window["subject_id"]][window["experiment"]][window["start"]:window["end"]] # Extracts the EEG data of the window
-        if eeg_data.shape[0] != self.samples_per_window:
-            print(f"WARNING: Window shape is {eeg_data.shape[0]} instead of {self.samples_per_window}. Data will be zero-padded.")
-            eeg_data = np.concatenate((eeg_data, np.zeros((self.samples_per_window - eeg_data.shape[0], eeg_data.shape[1]))), axis=0) # Zero-pads the data
         return {
-            "eeg_data": eeg_data.astype(np.float32),
+            "eeg_data": window["eeg_data"].astype(np.float32),
             "sample_rate": self.sampling_rate,
             "subject_id": window["subject_id"],
             "labels": window["labels"],
@@ -103,14 +99,26 @@ class EEGClassificationDataset(Dataset, ABC):
         for i, subject_experiment in enumerate(tqdm(self.eegs_data, desc="Dividing EEG data into windows..", unit="experiment", leave=False)):
             for j, trial in enumerate(subject_experiment):
                 for k in range(0, len(trial), self.samples_per_stride):
+                    window_start = k # Start of the window
+                    window_end = k + self.samples_per_window # End of the window
+                    subject_id = self.subjects_data[i]
+                    if window_end > len(trial): # If the window is larger than actual the EEG data
+                        window_end = len(trial) # Adjusts the window size
+                    window_eeg = trial[window_start:window_end]
+                    if window_eeg.shape[0] != self.samples_per_window:
+                        if self.drop_last:
+                            print(f"WARNING: Window shape of subject {subject_id} experiment {j} is {trial.shape[0]} instead of {self.samples_per_window}. Window will be discarded since drop_last flag is True.")
+                            continue
+                        else:
+                            print(f"WARNING: Window shape of subject {subject_id} experiment {j} is {trial.shape[0]} instead of {self.samples_per_window}. Data will be zero-padded.")
+                            window_eeg = np.concatenate((trial, np.zeros((self.samples_per_window - trial.shape[0], trial.shape[1]))), axis=0) # Zero-pads the data
                     window = {
                         "experiment": j,
-                        "start": k,
-                        "end": k + self.samples_per_window,
+                        "start": window_start,
+                        "end": window_end,
+                        "eeg_data": window_eeg,
                         "subject_id": self.subjects_data[i],
                         "labels": self.labels_data[i]
                     }
-                    if self.drop_last and (window["end"] - window["start"]) != self.samples_per_window:
-                        continue
                     windows.append(window)
         return windows
