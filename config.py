@@ -24,7 +24,7 @@ ELECTRODES = ["AF3", "F7", "F3", "FC5", "T7", "P7", "O1", "O2",
               "P8", "T8", "FC6", "F4", "F8", "AF4"] # Labels of the electrodes to consider
 DISCRETIZE_LABELS = True # Discretize the labels if True
 NORMALIZE_DATA = True # Normalize the EEG data if True
-DROP_LAST = True # Drop the last window if True
+DROP_LAST = False # Drop the last window if True
 
 # Training configurations
 BATCH_SIZE = 32 # Batch size

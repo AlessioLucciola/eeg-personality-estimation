@@ -105,13 +105,13 @@ class EEGClassificationDataset(Dataset, ABC):
                     if window_end > len(trial): # If the window is larger than actual the EEG data
                         window_end = len(trial) # Adjusts the window size
                     window_eeg = trial[window_start:window_end]
-                    if window_eeg.shape[0] != self.samples_per_window:
+                    if window_eeg.shape[0] < self.samples_per_window:
                         if self.drop_last:
-                            print(f"WARNING: Window shape of subject {subject_id} experiment {j} is {trial.shape[0]} instead of {self.samples_per_window}. Window will be discarded since drop_last flag is True.")
+                            print(f"WARNING: Window shape of subject {subject_id} experiment {j} is {window_eeg.shape[0]} instead of {self.samples_per_window}. Window will be discarded since drop_last flag is True.")
                             continue
                         else:
-                            print(f"WARNING: Window shape of subject {subject_id} experiment {j} is {trial.shape[0]} instead of {self.samples_per_window}. Data will be zero-padded.")
-                            window_eeg = np.concatenate((trial, np.zeros((self.samples_per_window - trial.shape[0], trial.shape[1]))), axis=0) # Zero-pads the data
+                            print(f"WARNING: Window shape of subject {subject_id} experiment {j} is {window_eeg.shape[0]} instead of {self.samples_per_window}. Data will be zero-padded.")
+                            window_eeg = np.concatenate((window_eeg, np.zeros((self.samples_per_window - window_eeg.shape[0], window_eeg.shape[1]))), axis=0) # Zero-pads the data
                     window = {
                         "experiment": j,
                         "start": window_start,
