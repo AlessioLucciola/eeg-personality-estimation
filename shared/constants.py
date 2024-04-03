@@ -9,4 +9,5 @@ amigos_labels = {
 validation_schemes = [
     "K-FOLDCV",
     "LOOCV",
+    "SPLIT"
 ]

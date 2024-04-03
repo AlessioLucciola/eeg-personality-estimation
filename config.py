@@ -12,26 +12,27 @@ AMIGOS_METADATA_FILE = os.path.join(AMIGOS_DATASET_DIR, "Participants_Personalit
 AMIGOS_NUM_CLASSES = 2
 
 # Miscellanous configurations
-RANDOM_SEED = 42
-USE_DML = False
-USE_WANDB = False
+RANDOM_SEED = 42 # Random seed
+USE_DML = False # Use DirectML library if True (for AMD GPUs)
+USE_WANDB = False # Use Weights & Biases for logging if True
 
 # EEGNet configurations
-WINDOWS_SIZE = 3
-WINDOWS_STRIDE = 1
-SAMPLING_RATE = 128
+WINDOWS_SIZE = 3 # Size of the sliding window
+WINDOWS_STRIDE = 1 # Stride of the sliding window
+SAMPLING_RATE = 128 # Sampling rate of the EEG data
 ELECTRODES = ["AF3", "F7", "F3", "FC5", "T7", "P7", "O1", "O2",
-              "P8", "T8", "FC6", "F4", "F8", "AF4"]
-DISCRETIZE_LABELS = True
-NORMALIZE_DATA = True
-DROP_LAST = False # Drop the last window if True
+              "P8", "T8", "FC6", "F4", "F8", "AF4"] # Labels of the electrodes to consider
+DISCRETIZE_LABELS = True # Discretize the labels if True
+NORMALIZE_DATA = True # Normalize the EEG data if True
+DROP_LAST = True # Drop the last window if True
 
 # Training configurations
-BATCH_SIZE = 32
-LEARNING_RATE = 0.001
-EPOCHS = 100
-VALIDATION_SCHEME = "LOOCV"
-KFOLDCV = 5
+BATCH_SIZE = 32 # Batch size
+LEARNING_RATE = 0.001 # Learning rate
+EPOCHS = 100 # Number of epochs
+VALIDATION_SCHEME = "K-FOLDCV" # "LOOCV" | "K-FOLDCV" | "SPLIT"
+KFOLDCV = 5 # Number of folds for K-Fold Cross Validation
+SPLIT_RATIO = 0.2 # Ratio for the train-validation split
 
 # Miscellaneous assertions
-assert (VALIDATION_SCHEME in validation_schemes, f"{VALIDATION_SCHEME} is not a supported validation scheme.")
+assert VALIDATION_SCHEME in validation_schemes, f"{VALIDATION_SCHEME} is not a supported validation scheme."
