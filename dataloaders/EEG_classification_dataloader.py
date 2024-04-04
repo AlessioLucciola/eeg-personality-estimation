@@ -46,12 +46,12 @@ class EEG_dataloader(DataLoader):
         print("--VALIDATION SCHEME-- Leave-One-Out Cross Validation (LOOCV) is selected.")
         loo_dataloaders = {}
         for i, subject_id in enumerate(self.dataset.subject_ids):
-            train_idx = [j for j in range(len(self.dataset.windows)) if self.dataset.windows[j]['subject_id'] != subject_id] # All windows except the one with the subject_id
-            val_idx = [j for j in range(len(self.dataset.windows)) if self.dataset.windows[j]['subject_id'] == subject_id] # The window with the subject_id
-            train_subsampler = torch.utils.data.SubsetRandomSampler(train_idx)
-            val_subsampler = torch.utils.data.SubsetRandomSampler(val_idx)
-            train_dataloader = DataLoader(train_subsampler, batch_size=self.batch_size, shuffle=True)
-            val_dataloader = DataLoader(val_subsampler, batch_size=self.batch_size, shuffle=True)
+            train_idx = [j for j in range(len(self.dataset.windows)) if self.dataset.windows[j]['subject_id'] != subject_id]
+            val_idx = [j for j in range(len(self.dataset.windows)) if self.dataset.windows[j]['subject_id'] == subject_id]
+            train_dataset = torch.utils.data.Subset(self.dataset, train_idx)
+            val_dataset = torch.utils.data.Subset(self.dataset, val_idx)
+            train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
+            val_dataloader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=True)
             loo_dataloaders[i] = tuple((train_dataloader, val_dataloader))
         return loo_dataloaders
     
@@ -61,14 +61,22 @@ class EEG_dataloader(DataLoader):
         kfold = KFold(n_splits=self.k_folds, shuffle=True)
         folds_dataloader = {}
         for i, (train_idx, val_idx) in enumerate(kfold.split(self.dataset)):
-            train_subsampler = torch.utils.data.SubsetRandomSampler(train_idx)
-            val_subsampler = torch.utils.data.SubsetRandomSampler(val_idx)
-            train_dataloader = DataLoader(train_subsampler, batch_size=self.batch_size, shuffle=True)
-            val_dataloader = DataLoader(val_subsampler, batch_size=self.batch_size, shuffle=True)
+            train_dataset = torch.utils.data.Subset(self.dataset, train_idx)
+            val_dataset = torch.utils.data.Subset(self.dataset, val_idx)
+            train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
+            val_dataloader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=True)
             folds_dataloader[i] = tuple((train_dataloader, val_dataloader))
         return folds_dataloader
     
+    def get_dataloaders(self):
+        return self.dataloaders
+    
 if __name__ == "__main__":
     amigos_dataset = AMIGOSDataset(data_path=AMIGOS_FILES_DIR, metadata_path=AMIGOS_METADATA_FILE)
-    dataloader = EEG_dataloader(dataset=amigos_dataset, validation_scheme="SPLIT")
-    print(dataloader.dataloaders)
+    dataloaders = EEG_dataloader(dataset=amigos_dataset, validation_scheme="LOOCV").get_dataloaders()
+    #dataloader_test = dataloaders[0]
+    #train_dataloader, val_dataloader = dataloader_test
+    #for batch in train_dataloader:
+    #    print("tr: " + str(batch['subject_id']))
+    #for batch in val_dataloader:
+    #    print("val: " + str(batch['subject_id']))
