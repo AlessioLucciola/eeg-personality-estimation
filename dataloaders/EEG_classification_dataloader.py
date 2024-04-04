@@ -33,7 +33,8 @@ class EEG_dataloader(DataLoader):
             self.dataloaders = self.split()
         else:
             raise ValueError(f"Validation scheme {self.validation_scheme} is not supported.")
-        
+    
+    # Stantard train-test split
     def split(self):
         print(f"--VALIDATION SCHEME-- Split is selected with test_size of {self.split_ratio*100}%.")
         train_df, test_df = train_test_split(self.dataset, test_size=self.split_ratio, random_state=self.seed)
