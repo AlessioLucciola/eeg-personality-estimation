@@ -1,9 +1,10 @@
-from shared.constants import validation_schemes
+from shared.constants import validation_schemes, supported_datasets
 import os
 
 # General dataset configurations
 DATA_DIR = "data"
 RESULTS_DIR = "results"
+DATASET_TO_USE = "AMIGOS" # "AMIGOS"
 
 # AMIGOS dataset configurations
 AMIGOS_DATASET_DIR = os.path.join(DATA_DIR, "amigos")
@@ -36,3 +37,4 @@ SPLIT_RATIO = 0.2 # Ratio for the train-validation split
 
 # Miscellaneous assertions
 assert VALIDATION_SCHEME in validation_schemes, f"{VALIDATION_SCHEME} is not a supported validation scheme."
+assert DATASET_TO_USE in supported_datasets, f"{DATASET_TO_USE} is not a supported dataset."

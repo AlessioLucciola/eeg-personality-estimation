@@ -11,3 +11,7 @@ validation_schemes = [
     "LOOCV",
     "SPLIT"
 ]
+
+supported_datasets = [
+    "AMIGOS"
+]

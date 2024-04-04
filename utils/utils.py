@@ -1,4 +1,4 @@
-from config import USE_DML
+from config import AMIGOS_FILES_DIR, AMIGOS_METADATA_FILE, USE_DML
 import random
 import numpy as np
 import torch
@@ -24,3 +24,10 @@ def select_device():
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print('--DEVICE-- Using device: %s' % device)
     return device
+
+def instantiate_dataset(dataset_name):
+    if dataset_name == "AMIGOS":
+        from datasets.AMIGOS_dataset import AMIGOSDataset
+        return AMIGOSDataset(data_path=AMIGOS_FILES_DIR, metadata_path=AMIGOS_METADATA_FILE)
+    else:
+        raise ValueError(f"Dataset {dataset_name} is not supported.")
