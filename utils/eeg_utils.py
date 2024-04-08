@@ -11,6 +11,7 @@ class MelSpectrogram(nn.Module):
             sampling_rate: int,
             window_size: Union[int, float],
             window_stride: Union[int, float],
+            device: any,
             mels: int = 8,
             min_freq: int = 0,
             max_freq: int = 50,
@@ -19,6 +20,7 @@ class MelSpectrogram(nn.Module):
         self.sampling_rate = sampling_rate
         self.min_freq = min_freq
         self.max_freq = max_freq
+        self.device = device
         self.mels = mels
         self.window_size = math.floor(window_size * self.sampling_rate)
         self.window_stride = math.floor(window_stride * self.sampling_rate)
@@ -26,7 +28,7 @@ class MelSpectrogram(nn.Module):
     def forward(
             self,
             eegs: torch.Tensor,
-    ):
+        ):
         is_batched = True if len(eegs.shape) == 3 else False
         if not is_batched:
             eegs = einops.rearrange(eegs, "s c -> () s c")
@@ -45,7 +47,7 @@ class MelSpectrogram(nn.Module):
             win_length=window_size,
             hop_length=window_stride,
             pad=math.ceil(window_stride//2),
-        ).to(eegs.device).float()
+        ).to(self.device).float()
         eegs = einops.rearrange(eegs, "b s c -> b c s")
         spectrogram = mel_fn(eegs)  # (b c m s)
         spectrogram = einops.rearrange(spectrogram, "b c m s -> b s c m")

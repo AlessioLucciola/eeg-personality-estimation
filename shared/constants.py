@@ -15,3 +15,9 @@ validation_schemes = [
 supported_datasets = [
     "AMIGOS"
 ]
+
+optimizers = [
+    "Adam",
+    "AdamW",
+    "SGD"
+]

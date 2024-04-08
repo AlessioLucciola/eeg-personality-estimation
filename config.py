@@ -1,4 +1,4 @@
-from shared.constants import validation_schemes, supported_datasets
+from shared.constants import validation_schemes, supported_datasets, optimizers
 import os
 
 # General dataset configurations
@@ -14,7 +14,7 @@ AMIGOS_NUM_CLASSES = 2
 
 # Miscellanous configurations
 RANDOM_SEED = 42 # Random seed
-USE_DML = False # Use DirectML library if True (for AMD GPUs)
+USE_DML = True # Use DirectML library if True (for AMD GPUs)
 USE_WANDB = False # Use Weights & Biases for logging if True
 
 # EEGNet configurations
@@ -26,15 +26,22 @@ ELECTRODES = ["AF3", "F7", "F3", "FC5", "T7", "P7", "O1", "O2",
 DISCRETIZE_LABELS = True # Discretize the labels if True
 NORMALIZE_DATA = True # Normalize the EEG data if True
 DROP_LAST = False # Drop the last window if True
+MELS = 32 # Number of mel bands
+MELS_WINDOW_SIZE = 1 # Size of the window for the mel spectrogram
+MELS_WINDOW_STRIDE = 0.05 # Stride of the window for the mel spectrogram
 
 # Training configurations
 BATCH_SIZE = 32 # Batch size
 LEARNING_RATE = 0.001 # Learning rate
+REG = 0.1 # Regularization parameter
 EPOCHS = 100 # Number of epochs
+DROPOUT_P = 0.25 # Dropout probability
 VALIDATION_SCHEME = "K-FOLDCV" # "LOOCV" | "K-FOLDCV" | "SPLIT"
 KFOLDCV = 5 # Number of folds for K-Fold Cross Validation
 SPLIT_RATIO = 0.2 # Ratio for the train-validation split
+OPTIMIZER = "Adam" # "Adam" | "AdamW" | "SGD"
 
 # Miscellaneous assertions
 assert VALIDATION_SCHEME in validation_schemes, f"{VALIDATION_SCHEME} is not a supported validation scheme."
 assert DATASET_TO_USE in supported_datasets, f"{DATASET_TO_USE} is not a supported dataset."
+assert OPTIMIZER in optimizers, f"{OPTIMIZER} is not a supported optimizer."
