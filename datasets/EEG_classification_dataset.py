@@ -1,4 +1,4 @@
-from config import WINDOWS_SIZE, WINDOWS_STRIDE, SAMPLING_RATE, ELECTRODES, NORMALIZE_DATA, DROP_LAST
+from config import WINDOWS_SIZE, WINDOWS_STRIDE, SAMPLING_RATE, ELECTRODES, NORMALIZE_DATA, DROP_LAST, PRINT_DATASET_DEBUG
 from torch.utils.data import Dataset
 from abc import ABC, abstractmethod
 from typing import List
@@ -74,7 +74,8 @@ class EEGClassificationDataset(Dataset, ABC):
             discarded_experiments = len(subject_experiment) - len(eegs_data[i])
             if discarded_experiments > 0:
                 data_discarded = True
-                print(f"Subject {i} - Discarded {discarded_experiments} corrupted experiments")
+                if PRINT_DATASET_DEBUG:
+                    print(f"Subject {i} - Discarded {discarded_experiments} corrupted experiments")
         if data_discarded:
             print("WARNING: Some experiments were discarded due to corruption or null values.")
         else :
@@ -107,10 +108,12 @@ class EEGClassificationDataset(Dataset, ABC):
                     window_eeg = trial[window_start:window_end]
                     if window_eeg.shape[0] < self.samples_per_window:
                         if self.drop_last:
-                            print(f"WARNING: Window shape of subject {subject_id} experiment {j} is {window_eeg.shape[0]} instead of {self.samples_per_window}. Window will be discarded since drop_last flag is True.")
+                            if PRINT_DATASET_DEBUG:
+                                print(f"WARNING: Window shape of subject {subject_id} experiment {j} is {window_eeg.shape[0]} instead of {self.samples_per_window}. Window will be discarded since drop_last flag is True.")
                             continue
                         else:
-                            print(f"WARNING: Window shape of subject {subject_id} experiment {j} is {window_eeg.shape[0]} instead of {self.samples_per_window}. Data will be zero-padded.")
+                            if PRINT_DATASET_DEBUG:
+                                print(f"WARNING: Window shape of subject {subject_id} experiment {j} is {window_eeg.shape[0]} instead of {self.samples_per_window}. Data will be zero-padded.")
                             window_eeg = np.concatenate((window_eeg, np.zeros((self.samples_per_window - window_eeg.shape[0], window_eeg.shape[1]))), axis=0) # Zero-pads the data
                     window = {
                         "experiment": j,

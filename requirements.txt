@@ -1,14 +1,15 @@
 torch==2.0.0
 torchvision==0.15.1
 torchaudio==2.0.0
+pysoundfile
 pandas
 tqdm
 wandb
 scikit-learn
 torch-directml
-lightning
 torchmetrics
 openpyxl
 seaborn
 einops
+psutil
 mne

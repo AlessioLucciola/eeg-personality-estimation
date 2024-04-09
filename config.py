@@ -5,6 +5,7 @@ import os
 DATA_DIR = "data"
 RESULTS_DIR = "results"
 DATASET_TO_USE = "AMIGOS" # "AMIGOS"
+PRINT_DATASET_DEBUG = True # Print debug information during dataset upload if True
 
 # AMIGOS dataset configurations
 AMIGOS_DATASET_DIR = os.path.join(DATA_DIR, "amigos")
@@ -19,7 +20,7 @@ USE_WANDB = False # Use Weights & Biases for logging if True
 
 # EEGNet configurations
 WINDOWS_SIZE = 3 # Size of the sliding window
-WINDOWS_STRIDE = 1 # Stride of the sliding window
+WINDOWS_STRIDE = 3 # Stride of the sliding window
 SAMPLING_RATE = 128 # Sampling rate of the EEG data
 ELECTRODES = ["AF3", "F7", "F3", "FC5", "T7", "P7", "O1", "O2",
               "P8", "T8", "FC6", "F4", "F8", "AF4"] # Labels of the electrodes to consider
@@ -29,6 +30,8 @@ DROP_LAST = False # Drop the last window if True
 MELS = 32 # Number of mel bands
 MELS_WINDOW_SIZE = 1 # Size of the window for the mel spectrogram
 MELS_WINDOW_STRIDE = 0.05 # Stride of the window for the mel spectrogram
+MELS_MIN_FREQ = 0 # Minimum frequency for the mel spectrogram
+MELS_MAX_FREQ = 50 # Maximum frequency for the mel spectrogram
 
 # Training configurations
 BATCH_SIZE = 32 # Batch size
@@ -36,7 +39,7 @@ LEARNING_RATE = 0.001 # Learning rate
 REG = 0.1 # Regularization parameter
 EPOCHS = 100 # Number of epochs
 DROPOUT_P = 0.25 # Dropout probability
-VALIDATION_SCHEME = "K-FOLDCV" # "LOOCV" | "K-FOLDCV" | "SPLIT"
+VALIDATION_SCHEME = "SPLIT" # "LOOCV" | "K-FOLDCV" | "SPLIT"
 KFOLDCV = 5 # Number of folds for K-Fold Cross Validation
 SPLIT_RATIO = 0.2 # Ratio for the train-validation split
 OPTIMIZER = "Adam" # "Adam" | "AdamW" | "SGD"

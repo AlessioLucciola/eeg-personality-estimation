@@ -14,7 +14,7 @@ def set_seed(seed):
     torch.backends.cudnn.benchmark = False
     # Set a fixed value for the hash seed
     os.environ["PYTHONHASHSEED"] = str(seed)
-    print(f"Random seed set as {seed}")
+    print(f"--RANDOM SEED-- Random seed set as {seed}")
 
 def select_device():
     if USE_DML:

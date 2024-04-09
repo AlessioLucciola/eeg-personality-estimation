@@ -1,5 +1,7 @@
-import pytorch_lightning as pl
+from utils.eeg_utils import MelSpectrogram
+import torchvision.models as models
 from typing import List
+from torch import nn
 
 class ResNet18(pl.LightningModule):
     def __init__(self,
@@ -10,6 +12,8 @@ class ResNet18(pl.LightningModule):
                  mels: int,
                  mel_window_size: float,
                  mel_window_stride: float,
+                 mel_min_freq: float,
+                 mel_max_freq: float,
                  dropout_p: float,
                  learning_rate: float,
                  weight_decay: float,
@@ -28,4 +32,24 @@ class ResNet18(pl.LightningModule):
         self.dropout_p = dropout_p
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
-        self.device = device
+        self.mel_min_freq = mel_min_freq
+        self.mel_max_freq = mel_max_freq
+        print(self.device)
+        self.get_spectrogram = MelSpectrogram(sampling_rate=self.sampling_rate,
+                                              window_size=self.mel_window_size,
+                                              window_stride=self.mel_window_stride,
+                                              device=self.device,
+                                              mels=self.mels,
+                                              min_freq=self.mel_min_freq,
+                                              max_freq=self.mel_max_freq
+                                              )
+        
+        self.resnet18 = models.resnet18(pretrained=False)
+        self.resnet18.conv1 = nn.Conv2d(self.in_channels, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+        self.resnet18.fc = nn.Linear(512, len(self.labels))
+        print(self.resnet18)
+
+
+    def forward(self, eegs, ids):
+        spectrogram = self.get_spectrogram(eegs)
+        print(spectrogram.shape)

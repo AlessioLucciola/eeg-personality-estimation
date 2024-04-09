@@ -39,7 +39,7 @@ class EEG_dataloader(DataLoader):
         print(f"--VALIDATION SCHEME-- Split is selected with test_size of {self.split_ratio*100}%.")
         train_df, test_df = train_test_split(self.dataset, test_size=self.split_ratio, random_state=self.seed)
         train_dataloader = DataLoader(train_df, batch_size=self.batch_size, shuffle=True)
-        test_dataloader = DataLoader(test_df, batch_size=self.batch_size, shuffle=True)
+        test_dataloader = DataLoader(test_df, batch_size=self.batch_size, shuffle=False)
         return tuple((train_dataloader, test_dataloader))
     
     # Leave-One-Out Cross Validation (LOOCV) based on subject_id
@@ -52,7 +52,7 @@ class EEG_dataloader(DataLoader):
             train_dataset = torch.utils.data.Subset(self.dataset, train_idx)
             val_dataset = torch.utils.data.Subset(self.dataset, val_idx)
             train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
-            val_dataloader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=True)
+            val_dataloader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=False)
             loo_dataloaders[i] = tuple((train_dataloader, val_dataloader))
         return loo_dataloaders
     
@@ -65,7 +65,7 @@ class EEG_dataloader(DataLoader):
             train_dataset = torch.utils.data.Subset(self.dataset, train_idx)
             val_dataset = torch.utils.data.Subset(self.dataset, val_idx)
             train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
-            val_dataloader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=True)
+            val_dataloader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=False)
             folds_dataloader[i] = tuple((train_dataloader, val_dataloader))
         return folds_dataloader
     

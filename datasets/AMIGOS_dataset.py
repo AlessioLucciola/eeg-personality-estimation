@@ -1,4 +1,4 @@
-from config import AMIGOS_NUM_CLASSES, AMIGOS_FILES_DIR, AMIGOS_METADATA_FILE, DISCRETIZE_LABELS
+from config import AMIGOS_NUM_CLASSES, AMIGOS_FILES_DIR, AMIGOS_METADATA_FILE, DISCRETIZE_LABELS, PRINT_DATASET_DEBUG
 from datasets.EEG_classification_dataset import EEGClassificationDataset
 from shared.constants import amigos_labels
 from collections import deque
@@ -33,7 +33,7 @@ class AMIGOSDataset(EEGClassificationDataset):
         labels_list = deque()
         subjects_list = deque()
         #TO DO: Controllare che la struttura di eegs_list allo stato attuale abbia senso
-        for egg_file, eeg_data in tqdm(eeg_df.items(), desc="Parsing EEG data..", unit="file", leave=False):
+        for egg_file, eeg_data in tqdm(eeg_df.items(), desc="Parsing EEG data..", unit="subject", leave=False):
             _, subject_id = self.parse_amigos_file_names(egg_file) # Parse the file name to get the subject ID
             subjects_list.append(subject_id) # Append the subject ID
             eegs_list.append(eeg_data) # Append the EEG data of the subject
@@ -83,11 +83,13 @@ class AMIGOSDataset(EEGClassificationDataset):
                 metadata_df = metadata_df[metadata_df['UserID'] != subject_id] # Remove the subject ID from the metadata file
                 files_to_remove.append(egg_file) # Add the file to the list of files to remove
         if len(missing_subjects) > 0:
-            print(f"--DATASET-- Missing personality traits of these subjects (the associated files won't be considered): {missing_subjects}")
+            if PRINT_DATASET_DEBUG:
+                print(f"--DATASET-- Missing personality traits of these subjects (the associated files won't be considered): {missing_subjects}")
             for file in files_to_remove: # Remove the files that are not in the metadata file
                 del eeg_df[file]
         else:
-            print("--DATASET-- All subjects have personality traits")
+            if PRINT_DATASET_DEBUG:
+                print("--DATASET-- All subjects have personality traits")
         return metadata_df, eeg_df
 
     def parse_amigos_file_names(self, file):
