@@ -6,6 +6,14 @@ amigos_labels = {
     "Creativity (openness)": 4
 }
 
+amigos_labels_reverse = {
+    0: 'Extroversion',
+    1: 'Agreeableness',
+    2: 'Conscientiousness',
+    3: 'Emotional Stability',
+    4: 'Creativity (openness)'
+}
+
 validation_schemes = [
     "K-FOLDCV",
     "LOOCV",

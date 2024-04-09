@@ -1,4 +1,5 @@
-from config import WINDOWS_SIZE, WINDOWS_STRIDE, SAMPLING_RATE, ELECTRODES, NORMALIZE_DATA, DROP_LAST, PRINT_DATASET_DEBUG
+from config import WINDOWS_SIZE, WINDOWS_STRIDE, SAMPLING_RATE, ELECTRODES, NORMALIZE_DATA, DROP_LAST, PRINT_DATASET_DEBUG, MAKE_PLOTS
+from plots.plots import plot_amplitudes_distribution, plot_labels_distribution, plot_sample, plot_subjects_distribution
 from torch.utils.data import Dataset
 from abc import ABC, abstractmethod
 from typing import List
@@ -43,10 +44,47 @@ class EEGClassificationDataset(Dataset, ABC):
         # Discard corrupted experiments
         self.eegs_data = self.discard_corrupted_experiments(self.eegs_data)
 
+        # Plot EEG data sample before normalization
+        if MAKE_PLOTS:
+            for i in tqdm(range(len(self.eegs_data)), desc="--PLOTS-- Plotting EEG data sample before normalization..", unit="subject", leave=False):
+                plot_sample(self.eegs_data[i][0], self.electrodes, dataset_name=self.dataset_name, data_normalized=False, title=f"EEG data sample for subject {self.subjects_data[i]} before normalization")
+
         # Normalizes the EEG data if the NORMALIZE_DATA flag is set to True
         if NORMALIZE_DATA:
             print("--NORMALIZATION-- Normalization_data flag set to True. EEG data will be normalized..")
             self.eegs_data = self.normalize_data(self.eegs_data)
+        
+        # Plot the EEG data sample after normalization
+        if MAKE_PLOTS:
+            for i in tqdm(range(len(self.eegs_data)), desc="--PLOTS-- Plotting EEG data sample after normalization..", unit="subject", leave=False):
+                plot_sample(self.eegs_data[i][0], self.electrodes, dataset_name=self.dataset_name, data_normalized=True, title=f"EEG data sample for subject {self.subjects_data[i]} after normalization")
+
+        # Plot the amplitudes distribution of the EEG data after normalization
+        if MAKE_PLOTS:
+            print("--PLOTS-- Plotting amplitudes distribution of EEG data after normalization..")
+            all_eegs = np.concatenate([np.concatenate(exp) for exp in self.eegs_data])
+            plot_amplitudes_distribution(all_eegs, self.electrodes, dataset_name=self.dataset_name, title=f"Amplitudes distribution of EEG data after normalization")
+            del all_eegs
+
+        # Plot the subjects distribution
+        if MAKE_PLOTS:
+            print("--PLOTS-- Plotting subjects distribution..")
+            subject_samples_num = {}
+            for i, s_id in enumerate(self.subject_ids):
+                subject_samples_num[s_id] = len(self.eegs_data[i])
+            plot_subjects_distribution(subject_samples_num, dataset_name=self.dataset_name, title="Subjects distribution")
+            del subject_samples_num
+
+        # Plot the labels distribution
+        if MAKE_PLOTS:
+            print("--PLOTS-- Plotting labels distribution..")
+            labels_num = {label: 0 for label in range(len(self.labels))}
+            for i, subject_labels in enumerate(self.labels_data):
+                for label in subject_labels.keys():
+                    if subject_labels[label] == 1:
+                        labels_num[label] += 1
+            plot_labels_distribution(self.labels, labels_num, discretized_labels=True, dataset_name=self.dataset_name, title="Distribution of labels")
+            del labels_num
 
         # Divide the EEG data into windows
         self.windows = self.get_windows()

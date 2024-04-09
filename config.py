@@ -4,8 +4,10 @@ import os
 # General dataset configurations
 DATA_DIR = "data"
 RESULTS_DIR = "results"
+PLOTS_DIR = "plots"
 DATASET_TO_USE = "AMIGOS" # "AMIGOS"
-PRINT_DATASET_DEBUG = True # Print debug information during dataset upload if True
+PRINT_DATASET_DEBUG = False # Print debug information during dataset upload if True
+MAKE_PLOTS = False # Make plots if True (it takes some time to generate the plots!)
 
 # AMIGOS dataset configurations
 AMIGOS_DATASET_DIR = os.path.join(DATA_DIR, "amigos")
