@@ -45,9 +45,9 @@ class EEGClassificationDataset(Dataset, ABC):
         self.eegs_data = self.discard_corrupted_experiments(self.eegs_data)
 
         # Plot EEG data sample before normalization
-        if MAKE_PLOTS:
-            for i in tqdm(range(len(self.eegs_data)), desc="--PLOTS-- Plotting EEG data sample before normalization..", unit="subject", leave=False):
-                plot_sample(self.eegs_data[i][0], self.electrodes, dataset_name=self.dataset_name, data_normalized=False, title=f"EEG data sample for subject {self.subjects_data[i]} before normalization")
+        #if MAKE_PLOTS:
+        #    for i in tqdm(range(len(self.eegs_data)), desc="--PLOTS-- Plotting EEG data sample before normalization..", unit="subject", leave=False):
+        #        plot_sample(self.eegs_data[i][0], self.electrodes, dataset_name=self.dataset_name, data_normalized=False, title=f"EEG data sample for subject {self.subjects_data[i]} before normalization")
 
         # Normalizes the EEG data if the NORMALIZE_DATA flag is set to True
         if NORMALIZE_DATA:
@@ -55,9 +55,9 @@ class EEGClassificationDataset(Dataset, ABC):
             self.eegs_data = self.normalize_data(self.eegs_data)
         
         # Plot the EEG data sample after normalization
-        if MAKE_PLOTS:
-            for i in tqdm(range(len(self.eegs_data)), desc="--PLOTS-- Plotting EEG data sample after normalization..", unit="subject", leave=False):
-                plot_sample(self.eegs_data[i][0], self.electrodes, dataset_name=self.dataset_name, data_normalized=True, title=f"EEG data sample for subject {self.subjects_data[i]} after normalization")
+        #if MAKE_PLOTS:
+        #    for i in tqdm(range(len(self.eegs_data)), desc="--PLOTS-- Plotting EEG data sample after normalization..", unit="subject", leave=False):
+        #        plot_sample(self.eegs_data[i][0], self.electrodes, dataset_name=self.dataset_name, data_normalized=True, title=f"EEG data sample for subject {self.subjects_data[i]} after normalization")
 
         # Plot the amplitudes distribution of the EEG data after normalization
         if MAKE_PLOTS:
@@ -72,7 +72,7 @@ class EEGClassificationDataset(Dataset, ABC):
             subject_samples_num = {}
             for i, s_id in enumerate(self.subject_ids):
                 subject_samples_num[s_id] = len(self.eegs_data[i])
-            plot_subjects_distribution(subject_samples_num, dataset_name=self.dataset_name, title="Subjects distribution")
+            #plot_subjects_distribution(subject_samples_num, dataset_name=self.dataset_name, title="Subjects distribution")
             del subject_samples_num
 
         # Plot the labels distribution

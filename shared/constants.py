@@ -29,3 +29,9 @@ optimizers = [
     "AdamW",
     "SGD"
 ]
+
+schedulers = [
+    "StepLR",
+    "MultiStepLR",
+    "ReduceLROnPlateau"
+]

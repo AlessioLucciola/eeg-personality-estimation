@@ -30,7 +30,7 @@ def plot_amplitudes_distribution(eeg_data, rows_names, dataset_name, scale=10, t
     rows: int = ceil(len(rows_names) / cols)
     fig, axs = plt.subplots(nrows=rows, ncols=cols, figsize=(scale * cols, scale * rows), tight_layout=True)
     title = f"{title} - {dataset_name} dataset"
-    fig.suptitle(title)
+    fig.suptitle(title, y=0)
     for i_electrode, ax in enumerate(axs.flat):
         if i_electrode >= len(rows_names):
             ax.set_visible(False)
@@ -55,9 +55,9 @@ def plot_subjects_distribution(subject_samples_num, dataset_name, title="Subject
     subject_ids_samples = [x[0] for x in sorted_subject_samples]
     sample_counts = [x[1] for x in sorted_subject_samples]
     title = f"{title} - {dataset_name} dataset"
-    _, ax = plt.subplots(1, 1, figsize=(15, 5), tight_layout=True)
+    fig, ax = plt.subplots(1, 1, figsize=(15, 5), tight_layout=True)
     sns.barplot(x=subject_ids_samples, y=sample_counts, ax=ax)
-    ax.set_title(title)
+    fig.suptitle(title)
     ax.set_xlabel("Subject ID")
     ax.set_ylabel("Number of Samples")
     path_to_save_data = os.path.join(PLOTS_DIR, "results", dataset_name, "subjects_distribution")
@@ -66,12 +66,12 @@ def plot_subjects_distribution(subject_samples_num, dataset_name, title="Subject
     save_path = os.path.join(path_to_save_data, f"{title}.png")
     plt.savefig(save_path)
 
-def plot_labels_distribution(labels, labels_num, discretized_labels, dataset_name, title="Distribution of labels", scale=6):
+def plot_labels_distribution(labels, labels_num, discretized_labels, dataset_name, title="Distribution of labels", scale=10):
     title = f"{title} - {dataset_name} dataset"
     if discretized_labels:
-        _, ax = plt.subplots(figsize=(scale, scale))
+        fig, ax = plt.subplots(figsize=(scale, scale))
         ax.pie(labels_num.values(), labels=labels, autopct='%1.1f%%', shadow=False)
-        ax.set_title(title)
+        fig.suptitle(title)
         ax.axis('equal')
         path_to_save_data = os.path.join(PLOTS_DIR, "results", dataset_name, "labels_distribution")
         if not os.path.exists(path_to_save_data):
