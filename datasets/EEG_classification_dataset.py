@@ -6,6 +6,7 @@ from typing import List
 from tqdm import tqdm
 import numpy as np
 import einops
+import torch
 import mne
 
 class EEGClassificationDataset(Dataset, ABC):
@@ -94,11 +95,12 @@ class EEGClassificationDataset(Dataset, ABC):
     
     def __getitem__(self, idx):
         window = self.windows[idx]
+        parsed_labels = torch.tensor(list(window["labels"].values()), dtype=torch.double)
         return {
             "eeg_data": window["eeg_data"].astype(np.float32),
             "sample_rate": self.sampling_rate,
             "subject_id": window["subject_id"],
-            "labels": window["labels"],
+            "labels": parsed_labels,
         }
 
     @abstractmethod

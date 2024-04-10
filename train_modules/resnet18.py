@@ -1,8 +1,8 @@
-from config import DATASET_TO_USE, RANDOM_SEED, BATCH_SIZE, VALIDATION_SCHEME, ELECTRODES, SAMPLING_RATE, MELS, MELS_WINDOW_SIZE, MELS_WINDOW_STRIDE, MELS_MIN_FREQ, MELS_MAX_FREQ, DROPOUT_P, LEARNING_RATE, REG, RESUME_TRAINING, RESULTS_DIR, PATH_MODEL_TO_RESUME, RESUME_EPOCH, LEARNING_RATE, OPTIMIZER, SCHEDULER, SCHEDULER_STEP_SIZE, SCHEDULER_GAMMA
+from config import DATASET_TO_USE, RANDOM_SEED, BATCH_SIZE, VALIDATION_SCHEME, ELECTRODES, SAMPLING_RATE, MELS, MELS_WINDOW_SIZE, MELS_WINDOW_STRIDE, MELS_MIN_FREQ, MELS_MAX_FREQ, DROPOUT_P, LEARNING_RATE, REG, RESUME_TRAINING, RESULTS_DIR, PATH_MODEL_TO_RESUME, RESUME_EPOCH, LEARNING_RATE, OPTIMIZER, SCHEDULER, SCHEDULER_STEP_SIZE, SCHEDULER_GAMMA, USE_WANDB
 from utils.utils import get_configurations, instantiate_dataset, set_seed, select_device
+from utils.train_utils import get_criterion, get_optimizer, get_scheduler
 from dataloaders.EEG_classification_dataloader import EEG_dataloader
 from train_modules.train_loops.train_loop import train_eval_loop
-from utils.train_utils import get_optimizer, get_scheduler
 from models.resnet18 import ResNet18
 import torch
 
@@ -46,7 +46,8 @@ def main():
     if resumed_configuration == None:
         config = {
             "architecture": "ResNet18",
-            "num_classes": len(dataset.labels_classes),
+            "labels": dataset.labels,
+            "num_classes": dataset.labels_classes,
             "optimizer": OPTIMIZER,
             "lr": LEARNING_RATE,
             "reg": REG,
@@ -64,13 +65,14 @@ def main():
             "mel_window_stride": MELS_WINDOW_STRIDE,
             "mel_min_freq": MELS_MIN_FREQ,
             "mel_max_freq": MELS_MAX_FREQ,
-            "dropout_p": DROPOUT_P,         
+            "dropout_p": DROPOUT_P,
+            "use_wandb": USE_WANDB 
         }
 
-    criterion = torch.nn.BCEWithLogitsLoss()
+    criterion = get_criterion()
     
     train_eval_loop(device=device,
-                    data_loaders=dataloaders.get_dataloaders(),
+                    dataloaders=dataloaders,
                     model=model,
                     config=resumed_configuration if resumed_configuration != None else config,
                     optimizer=optimizer,

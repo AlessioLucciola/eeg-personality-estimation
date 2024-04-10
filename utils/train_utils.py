@@ -1,5 +1,4 @@
 from config import LEARNING_RATE, REG
-import time
 import torch
 
 def get_optimizer(optimizer_name, parameters, lr=LEARNING_RATE, weight_decay=REG):
@@ -21,3 +20,6 @@ def get_scheduler(optimizer, scheduler_name, step_size, gamma):
         return torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=gamma, patience=step_size, verbose=True)
     else:
         raise ValueError(f"Scheduler {scheduler_name} is not supported.")
+    
+def get_criterion():
+    return torch.nn.BCEWithLogitsLoss()

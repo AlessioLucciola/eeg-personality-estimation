@@ -1,4 +1,4 @@
-from config import SAVE_MODELS, SAVE_RESULTS, PATH_MODEL_TO_RESUME, RESUME_EPOCH
+from config import SAVE_MODELS, SAVE_RESULTS, PATH_MODEL_TO_RESUME, RESUME_EPOCH, EPOCHS
 from utils.utils import save_results, save_model, save_configurations
 from torchmetrics import Accuracy, Recall, Precision, F1Score, AUROC
 from datetime import datetime
@@ -8,8 +8,7 @@ import wandb
 import copy
 
 def train_eval_loop(device,
-                    train_loader: torch.utils.data.DataLoader,
-                    val_loader: torch.utils.data.DataLoader,
+                    dataloaders,
                     model,
                     config,
                     optimizer,
@@ -53,28 +52,29 @@ def train_eval_loop(device,
                 resume=resume,
                 name=data_name
             )
+    if config["validation_scheme"] == "SPLIT":
+        train_loader, val_loader = dataloaders
 
     training_total_step = len(train_loader)
     best_model = None
     best_accuracy = None
-    accuracy_metric = Accuracy(task="multiclass", num_classes=config['num_classes']).to(device)
-    recall_metric = Recall(task="multiclass", num_classes=config['num_classes'], average='macro').to(device)
-    precision_metric = Precision(task="multiclass", num_classes=config['num_classes'], average='macro').to(device)
-    f1_metric = F1Score(task="multiclass", num_classes=config['num_classes'], average='macro').to(device)
-    auroc_metric = AUROC(task="multiclass", num_classes=config['num_classes']).to(device)
-    for epoch in range(RESUME_EPOCH if resume else 0, config["epochs"]):
+    accuracy_metric = Accuracy(task="multilabel", num_labels=len(config["labels"])).to(device)
+    recall_metric = Recall(task="multilabel", num_labels=len(config["labels"]), average='macro').to(device)
+    precision_metric = Precision(task="multilabel", num_labels=len(config["labels"]), average='macro').to(device)
+    f1_metric = F1Score(task="multilabel", num_labels=len(config["labels"]), average='macro').to(device)
+    auroc_metric = AUROC(task="multilabel", num_labels=len(config["labels"])).to(device)
+    for epoch in range(RESUME_EPOCH if resume else 0, EPOCHS):
         model.train()
         epoch_tr_preds = torch.tensor([]).to(device)
         epoch_tr_labels = torch.tensor([]).to(device)
         epoch_tr_outputs = torch.tensor([]).to(device)
         epoch_tr_loss = 0
         for _, tr_batch in enumerate(tqdm(train_loader, desc="Training", leave=False)):
-            tr_data, tr_labels = tr_batch['data'], tr_batch['labels']
+            tr_data, tr_labels = tr_batch['eeg_data'], tr_batch['labels']
             tr_data = tr_data.to(device)
             tr_labels = tr_labels.to(device)
             tr_outputs = model(tr_data)  # Prediction
-
-            # Multiclassification loss considering all classes
+            #print(tr_outputs, tr_labels)
             tr_loss = criterion(tr_outputs, tr_labels)
             epoch_tr_loss = epoch_tr_loss + tr_loss.item()
             epoch_tr_outputs = torch.cat((epoch_tr_outputs, tr_outputs), 0)
@@ -84,7 +84,8 @@ def train_eval_loop(device,
             optimizer.step()
 
             with torch.no_grad():
-                tr_preds = torch.argmax(tr_outputs, -1).detach()
+                threshold = 0.5
+                tr_preds = (tr_outputs > threshold).long()
                 epoch_tr_preds = torch.cat((epoch_tr_preds, tr_preds), 0)
                 epoch_tr_labels = torch.cat((epoch_tr_labels, tr_labels), 0)
         

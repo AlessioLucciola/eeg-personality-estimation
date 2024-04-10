@@ -8,7 +8,7 @@ RESULTS_DIR: str = "results"
 PLOTS_DIR: str = "plots"
 DATASET_TO_USE: str = "AMIGOS" # "AMIGOS"
 PRINT_DATASET_DEBUG: bool = False # Print debug information during dataset upload if True
-MAKE_PLOTS: bool = True # Make plots if True (it takes some time to generate the plots!)
+MAKE_PLOTS: bool = False # Make plots if True (it takes some time to generate the plots!)
 
 # AMIGOS dataset configurations
 AMIGOS_DATASET_DIR: str = os.path.join(DATA_DIR, "amigos")
@@ -18,7 +18,7 @@ AMIGOS_NUM_CLASSES: int = 2
 
 # Miscellanous configurations
 RANDOM_SEED: int = 42 # Random seed
-USE_DML: bool = True # Use DirectML library if True (for AMD GPUs)
+USE_DML: bool = False # Use DirectML library if True (for AMD GPUs)
 USE_WANDB: bool = False # Use Weights & Biases for logging if True
 SAVE_RESULTS: bool = True # Save results in JSON files if True
 SAVE_MODELS: bool = False # Save models if True
@@ -30,11 +30,11 @@ SAMPLING_RATE: int = 128 # Sampling rate of the EEG data
 ELECTRODES: List[str] = ["AF3", "F7", "F3", "FC5", "T7", "P7", "O1", "O2",
               "P8", "T8", "FC6", "F4", "F8", "AF4"] # Labels of the electrodes to consider
 DISCRETIZE_LABELS: bool = True # Discretize the labels if True
-NORMALIZE_DATA: bool = True # Normalize the EEG data if True
+NORMALIZE_DATA: bool = False # Normalize the EEG data if True
 DROP_LAST = False # Drop the last window if True
 MELS: int = 32 # Number of mel bands
 MELS_WINDOW_SIZE: float = 1 # Size of the window for the mel spectrogram
-MELS_WINDOW_STRIDE: float = 0.05 # Stride of the window for the mel spectrogram
+MELS_WINDOW_STRIDE: float = 1 # Stride of the window for the mel spectrogram
 MELS_MIN_FREQ: int = 0 # Minimum frequency for the mel spectrogram
 MELS_MAX_FREQ: int = 50 # Maximum frequency for the mel spectrogram
 
@@ -104,4 +104,8 @@ assert isinstance(AMIGOS_DATASET_DIR, str), f"AMIGOS dataset directory must be a
 assert isinstance(AMIGOS_FILES_DIR, str), f"AMIGOS files directory must be a string, but got {AMIGOS_FILES_DIR}."
 assert isinstance(AMIGOS_METADATA_FILE, str), f"AMIGOS metadata file must be a string, but got {AMIGOS_METADATA_FILE}."
 assert isinstance(AMIGOS_NUM_CLASSES, int), f"AMIGOS number of classes must be an integer, but got {AMIGOS_NUM_CLASSES}."
+
+if RESUME_TRAINING:
+    assert EPOCHS > RESUME_EPOCH, f"The epoch to resume must be less than the total number of epochs to reach, but got {RESUME_EPOCH} and {EPOCHS}."
+
 
