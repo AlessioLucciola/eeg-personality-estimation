@@ -42,7 +42,7 @@ class MelSpectrogram(nn.Module):
             mel_spec = self.compute_mel_spectrogram(eeg.cpu().numpy(), window_size=window_size, window_stride=window_stride) # DirectML (GPU) does not support the mel spectrogram computation
             spectrograms.append(mel_spec)
         spectrograms = np.stack(spectrograms)
-        spectrograms = torch.tensor(spectrograms, dtype=torch.float32, device=self.device)
+        spectrograms = torch.tensor(spectrograms, dtype=torch.float32)
         return spectrograms
 
     def compute_mel_spectrogram(self, eeg, window_size, window_stride):

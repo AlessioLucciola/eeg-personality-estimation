@@ -39,7 +39,7 @@ MELS_MIN_FREQ: int = 0 # Minimum frequency for the mel spectrogram
 MELS_MAX_FREQ: int = 50 # Maximum frequency for the mel spectrogram
 
 # Training configurations
-BATCH_SIZE: int = 32 # Batch size
+BATCH_SIZE: int = 500 # Batch size
 LEARNING_RATE: float = 0.001 # Learning rate
 REG: float = 0.1 # Regularization parameter
 EPOCHS: int = 100 # Number of epochs

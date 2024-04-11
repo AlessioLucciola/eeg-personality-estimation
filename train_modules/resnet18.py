@@ -24,7 +24,7 @@ def main():
                      learning_rate=LEARNING_RATE,
                      weight_decay=REG,
                      device=device
-                     )
+                     ).to(device)
     resumed_configuration = None
     if RESUME_TRAINING:
         model.load_state_dict(torch.load(
