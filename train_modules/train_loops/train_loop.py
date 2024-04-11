@@ -1,10 +1,8 @@
-from config import SAVE_MODELS, SAVE_RESULTS, PATH_MODEL_TO_RESUME, RESUME_EPOCH, EPOCHS
-from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
+from config import SAVE_MODELS, SAVE_RESULTS, PATH_MODEL_TO_RESUME, RESUME_EPOCH, EPOCHS, USE_DML
 from utils.utils import save_results, save_model, save_configurations
-from sklearn.metrics import roc_auc_score
+from torchmetrics import Accuracy, Recall, Precision, F1Score, AUROC
 from datetime import datetime
 from tqdm import tqdm
-import numpy as np
 import torch
 import wandb
 import copy
@@ -60,6 +58,11 @@ def train_eval_loop(device,
     training_total_step = len(train_loader)
     best_model = None
     best_accuracy = None
+    accuracy_metric = Accuracy(task="multilabel", num_labels=len(config["labels"]))
+    recall_metric = Recall(task="multilabel", num_labels=len(config["labels"]), average='macro')
+    precision_metric = Precision(task="multilabel", num_labels=len(config["labels"]), average='macro')
+    f1_metric = F1Score(task="multilabel", num_labels=len(config["labels"]), average='macro')
+    auroc_metric = AUROC(task="multilabel", num_labels=len(config["labels"]))
     for epoch in range(RESUME_EPOCH if resume else 0, EPOCHS):
         model.train()
         epoch_tr_preds = torch.tensor([])
@@ -87,28 +90,26 @@ def train_eval_loop(device,
                 epoch_tr_labels = torch.cat((epoch_tr_labels, tr_labels), 0)
         
         with torch.no_grad():
-            epoch_tr_preds = epoch_tr_preds.long().cpu().numpy()
-            epoch_tr_labels = epoch_tr_labels.long().cpu().numpy()
-            tr_accuracy = accuracy_score(epoch_tr_labels, epoch_tr_preds) * 100
-            tr_recall = recall_score(epoch_tr_labels, epoch_tr_preds, average='macro') * 100
-            tr_precision = precision_score(epoch_tr_labels, epoch_tr_preds, average='macro') * 100
-            tr_f1 = f1_score(epoch_tr_labels, epoch_tr_preds, average='macro') * 100
-            tr_auroc = []
-            for label_idx in range(epoch_tr_labels.shape[1]):
-                label_auroc = roc_auc_score(epoch_tr_labels[:, label_idx], epoch_tr_preds[:, label_idx])
-                tr_auroc.append(label_auroc)
-            tr_auroc = np.mean(tr_auroc) * 100
+            if USE_DML:
+                epoch_tr_preds = epoch_tr_preds.long().cpu()
+                epoch_tr_labels = epoch_tr_labels.long().cpu()
+            tr_accuracy = accuracy_metric(epoch_tr_preds, epoch_tr_labels) * 100
+            tr_recall = recall_metric(epoch_tr_preds, epoch_tr_labels) * 100
+            tr_precision = precision_metric(epoch_tr_preds, epoch_tr_labels) * 100
+            tr_f1 = f1_metric(epoch_tr_preds, epoch_tr_labels) * 100
+            #tr_auroc = auroc_metric(epoch_tr_outputs.softmax(dim=1), epoch_tr_labels.long()) * 100
+            tr_auroc = torch.tensor(0)
 
             print('Training -> Epoch [{}/{}], Loss: {:.4f}, Accuracy: {:.4f}%, Recall: {:.4f}%, Precision: {:.4f}%, F1: {:.4f}%, AUROC: {:.4f}%'
                 .format(epoch+1, EPOCHS, epoch_tr_loss/training_total_step, tr_accuracy, tr_recall, tr_precision, tr_f1, tr_auroc))
 
         if config["use_wandb"]:
             wandb.log({"Training Loss": epoch_tr_loss/training_total_step})
-            wandb.log({"Training Accuracy": tr_accuracy})
-            wandb.log({"Training Recall": tr_recall})
-            wandb.log({"Training Precision": tr_precision})
-            wandb.log({"Training F1": tr_f1})
-            wandb.log({"Training AUROC": tr_auroc})
+            wandb.log({"Training Accuracy": tr_accuracy.item()})
+            wandb.log({"Training Recall": tr_recall.item()})
+            wandb.log({"Training Precision": tr_precision.item()})
+            wandb.log({"Training F1": tr_f1.item()})
+            wandb.log({"Training AUROC": tr_auroc.item()})
 
         model.eval()
         with torch.no_grad():
@@ -132,25 +133,23 @@ def train_eval_loop(device,
                 epoch_val_preds = torch.cat((epoch_val_preds, val_preds), 0)
                 epoch_val_labels = torch.cat((epoch_val_labels, val_labels), 0)
 
-            epoch_val_preds = epoch_val_preds.cpu().numpy()
-            epoch_val_labels = epoch_val_labels.cpu().numpy()
-            val_accuracy = accuracy_score(epoch_val_labels, epoch_val_preds) * 100
-            val_recall = recall_score(epoch_val_labels, epoch_val_preds, average='macro') * 100
-            val_precision = precision_score(epoch_val_labels, epoch_val_preds, average='macro') * 100
-            val_f1 = f1_score(epoch_val_labels, epoch_val_preds, average='macro') * 100
-            val_auroc = []
-            for label_idx in range(epoch_val_labels.shape[1]):
-                label_auroc = roc_auc_score(epoch_val_labels[:, label_idx], epoch_val_preds[:, label_idx])
-                val_auroc.append(label_auroc)
-            val_auroc = np.mean(val_auroc) * 100
+            if USE_DML:
+                epoch_val_preds = epoch_val_preds.long().cpu()
+                epoch_val_labels = epoch_val_labels.long().cpu()
+            val_accuracy = accuracy_metric(epoch_val_preds, epoch_val_labels) * 100
+            val_recall = recall_metric(epoch_val_preds, epoch_val_labels) * 100
+            val_precision = precision_metric(epoch_val_preds, epoch_val_labels) * 100
+            val_f1 = f1_metric(epoch_val_preds, epoch_val_labels) * 100
+            #val_auroc = auroc_metric(epoch_val_outputs.softmax(dim=1), epoch_val_labels.long()) * 100
+            val_auroc = torch.tensor(0)
 
             if config["use_wandb"]:
                 wandb.log({"Validation Loss": epoch_val_loss/val_total_step})
-                wandb.log({"Validation Accuracy": val_accuracy})
-                wandb.log({"Validation Recall": val_recall})
-                wandb.log({"Validation Precision": val_precision})
-                wandb.log({"Validation F1": val_f1})
-                wandb.log({"Validation AUROC": val_auroc})
+                wandb.log({"Validation Accuracy": val_accuracy.item()})
+                wandb.log({"Validation Recall": val_recall.item()})
+                wandb.log({"Validation Precision": val_precision.item()})
+                wandb.log({"Validation F1": val_f1.item()})
+                wandb.log({"Validation AUROC": val_auroc.item()})
             print('Validation -> Epoch [{}/{}], Loss: {:.4f}, Accuracy: {:.4f}%, Recall: {:.4f}%, Precision: {:.4f}%, F1: {:.4f}%, AUROC: {:.4f}%'
                   .format(epoch+1, EPOCHS, epoch_val_loss/val_total_step, val_accuracy, val_recall, val_precision, val_f1, val_auroc))
 
@@ -160,17 +159,17 @@ def train_eval_loop(device,
             current_results = {
                 'epoch': epoch+1,
                 'training_loss': epoch_tr_loss/training_total_step,
-                'training_accuracy': tr_accuracy,
-                'training_recall': tr_recall,
-                'training_precision': tr_precision,
-                'training_f1': tr_f1,
-                'training_auroc': tr_auroc,
+                'training_accuracy': tr_accuracy.item(),
+                'training_recall': tr_recall.item(),
+                'training_precision': tr_precision.item(),
+                'training_f1': tr_f1.item(),
+                'training_auroc': tr_auroc.item(),
                 'validation_loss': epoch_val_loss/val_total_step,
-                'validation_accuracy': val_accuracy,
-                'validation_recall': val_recall,
-                'validation_precision': val_precision,
-                'validation_f1': val_f1,
-                'validation_auroc': val_auroc
+                'validation_accuracy': val_accuracy.item(),
+                'validation_recall': val_recall.item(),
+                'validation_precision': val_precision.item(),
+                'validation_f1': val_f1.item(),
+                'validation_auroc': val_auroc.item()
             }
             if SAVE_RESULTS:
                 save_results(data_name, current_results)
