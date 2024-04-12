@@ -115,7 +115,7 @@ class EEGClassificationDataset(Dataset, ABC):
     
     def __getitem__(self, idx):
         window = self.windows[idx]
-        parsed_labels = torch.tensor(list(window["labels"].values()), dtype=torch.double)
+        parsed_labels = torch.tensor(list(window["labels"].values()), dtype=torch.float)
         return {
             "eeg_data": window["eeg_data"].astype(np.float32),
             "sample_rate": self.sampling_rate,

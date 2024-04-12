@@ -38,11 +38,6 @@ class MelSpectrogram(nn.Module):
         # Convert the numpy array to a torch tensor if needed
         if isinstance(eeg_data, np.ndarray):
             eeg_data = torch.from_numpy(eeg_data).float()
-        
-        #window_size = min(self.window_size, eeg_data.shape[1])
-        #window_stride = min(self.window_stride, window_size // 2)
-        window_size = self.window_size
-        window_stride = self.window_stride
 
         # Initialize the mel spectrogram function
         mel_fn = transforms.MelSpectrogram(
@@ -51,11 +46,11 @@ class MelSpectrogram(nn.Module):
             f_max=self.max_freq,
             n_mels=self.mels,
             center=True,
-            n_fft=max(128, window_size),
+            n_fft=max(128, self.window_size),
             normalized=True,
             power=1,
-            win_length=window_size,
-            hop_length=window_stride,
+            win_length=self.window_size,
+            hop_length=self.window_stride,
             pad_mode="constant",
         ).float()
         
@@ -71,7 +66,6 @@ class MelSpectrogram(nn.Module):
         # Rearrange the dimensions in case the input was not batched (useful for plotting)
         if not is_batched:
             spectrogram = einops.rearrange(spectrogram, "b c s m -> (b s) c m")
-        print(spectrogram.shape)
         return spectrogram
 
 '''
