@@ -1,5 +1,7 @@
-from config import WINDOWS_SIZE, WINDOWS_STRIDE, SAMPLING_RATE, ELECTRODES, NORMALIZE_DATA, DROP_LAST, PRINT_DATASET_DEBUG, MAKE_PLOTS
-from plots.plots import plot_amplitudes_distribution, plot_labels_distribution, plot_sample, plot_subjects_distribution
+from config import WINDOWS_SIZE, WINDOWS_STRIDE, SAMPLING_RATE, ELECTRODES, NORMALIZE_DATA, DROP_LAST, PRINT_DATASET_DEBUG, MAKE_PLOTS, MELS, MELS_WINDOW_SIZE, MELS_WINDOW_STRIDE, MELS_MAX_FREQ, MELS_MIN_FREQ
+from plots.plots import plot_amplitudes_distribution, plot_labels_distribution, plot_sample, plot_subjects_distribution, plot_mel_spectrogram
+from utils.eeg_utils import MelSpectrogram
+from utils.utils import select_device
 from torch.utils.data import Dataset
 from abc import ABC, abstractmethod
 from typing import List
@@ -89,6 +91,24 @@ class EEGClassificationDataset(Dataset, ABC):
 
         # Divide the EEG data into windows
         self.windows = self.get_windows()
+        
+        # Plot the mel spectrogram of the EEG data
+        if MAKE_PLOTS:
+            spectrogram_plots_counter = {subject: 0 for subject in self.subject_ids}
+            spectrogram_module = MelSpectrogram(
+                sampling_rate=self.sampling_rate,
+                window_size=MELS_WINDOW_SIZE,
+                window_stride=MELS_WINDOW_STRIDE,
+                device=select_device(),
+                mels=MELS,
+                min_freq=MELS_MIN_FREQ,
+                max_freq=MELS_MAX_FREQ
+            )
+            for i in range(len(self.windows)):
+                # Plot the mel spectrogram of 3 windows for each subject
+                if spectrogram_plots_counter[self.windows[i]["subject_id"]] < 2:
+                    spectrogram_plots_counter[self.windows[i]["subject_id"]] += 1
+                    plot_mel_spectrogram(self.windows[i]["eeg_data"], spectrogram_function=spectrogram_module, rows_name=self.electrodes, dataset_name=self.dataset_name, title=f"Mel spectrogram of EEG data for subject {self.windows[i]['subject_id']} experiment {self.windows[i]['experiment']} window {i}")
         
     def __len__(self):
         return len(self.windows)
