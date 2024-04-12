@@ -30,8 +30,10 @@ SAMPLING_RATE: int = 128 # Sampling rate of the EEG data
 ELECTRODES: List[str] = ["AF3", "F7", "F3", "FC5", "T7", "P7", "O1", "O2",
               "P8", "T8", "FC6", "F4", "F8", "AF4"] # Labels of the electrodes to consider
 DISCRETIZE_LABELS: bool = True # Discretize the labels if True
-NORMALIZE_DATA: bool = False # Normalize the EEG data if True
+NORMALIZE_DATA: bool = True # Normalize the EEG data if True
 DROP_LAST = False # Drop the last window if True
+
+# Mel spectrogram configurations
 MELS: int = 32 # Number of mel bands
 MELS_WINDOW_SIZE: float = 1 # Size of the window for the mel spectrogram
 MELS_WINDOW_STRIDE: float = 1 # Stride of the window for the mel spectrogram
