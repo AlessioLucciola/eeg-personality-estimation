@@ -111,14 +111,14 @@ def train_eval_loop(device,
             if USE_DML:
                 epoch_tr_preds = epoch_tr_preds.long().cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
                 epoch_tr_labels = epoch_tr_labels.long().cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
+                epoch_tr_outputs = epoch_tr_outputs.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
             
             # Compute metrics
             tr_accuracy = accuracy_metric(epoch_tr_preds, epoch_tr_labels) * 100
             tr_recall = recall_metric(epoch_tr_preds, epoch_tr_labels) * 100
             tr_precision = precision_metric(epoch_tr_preds, epoch_tr_labels) * 100
             tr_f1 = f1_metric(epoch_tr_preds, epoch_tr_labels) * 100
-            #tr_auroc = auroc_metric(epoch_tr_outputs.softmax(dim=1), epoch_tr_labels.long()) * 100
-            tr_auroc = torch.tensor(0)
+            tr_auroc = auroc_metric(epoch_tr_outputs, epoch_tr_labels) * 100
 
             print('Training -> Epoch [{}/{}], Loss: {:.4f}, Accuracy: {:.4f}%, Recall: {:.4f}%, Precision: {:.4f}%, F1: {:.4f}%, AUROC: {:.4f}%'
                 .format(epoch+1, EPOCHS, epoch_tr_loss/training_total_step, tr_accuracy, tr_recall, tr_precision, tr_f1, tr_auroc))
@@ -162,13 +162,14 @@ def train_eval_loop(device,
             if USE_DML:
                 epoch_val_preds = epoch_val_preds.long().cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
                 epoch_val_labels = epoch_val_labels.long().cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
+                epoch_val_outputs = epoch_val_outputs.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
+            
             # Compute metrics
             val_accuracy = accuracy_metric(epoch_val_preds, epoch_val_labels) * 100
             val_recall = recall_metric(epoch_val_preds, epoch_val_labels) * 100
             val_precision = precision_metric(epoch_val_preds, epoch_val_labels) * 100
             val_f1 = f1_metric(epoch_val_preds, epoch_val_labels) * 100
-            #val_auroc = auroc_metric(epoch_val_outputs.softmax(dim=1), epoch_val_labels.long()) * 100
-            val_auroc = torch.tensor(0)
+            val_auroc = auroc_metric(epoch_val_outputs, epoch_val_labels) * 100
 
             if config["use_wandb"]:
                 wandb.log({"Validation Loss": epoch_val_loss/val_total_step})
