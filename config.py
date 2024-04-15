@@ -18,7 +18,7 @@ AMIGOS_NUM_CLASSES: int = 2
 
 # Miscellanous configurations
 RANDOM_SEED: int = 42 # Random seed
-USE_DML: bool = False # Use DirectML library if True (for AMD GPUs)
+USE_DML: bool = True # Use DirectML library if True (for AMD GPUs)
 USE_WANDB: bool = False # Use Weights & Biases for logging if True
 SAVE_RESULTS: bool = True # Save results in JSON files if True
 SAVE_MODELS: bool = False # Save models if True
@@ -26,26 +26,27 @@ SAVE_MODELS: bool = False # Save models if True
 # EEGNet configurations
 WINDOWS_SIZE: float = 3 # Size of the sliding window
 WINDOWS_STRIDE: float = 3 # Stride of the sliding window
-SAMPLING_RATE: int = 128 # Sampling rate of the EEG data
+SAMPLING_RATE: int = 256 # Sampling rate of the EEG data
 ELECTRODES: List[str] = ["AF3", "F7", "F3", "FC5", "T7", "P7", "O1", "O2",
               "P8", "T8", "FC6", "F4", "F8", "AF4"] # Labels of the electrodes to consider
 DISCRETIZE_LABELS: bool = True # Discretize the labels if True
 NORMALIZE_DATA: bool = True # Normalize the EEG data if True
-DROP_LAST = False # Drop the last window if True
+DROP_LAST: bool = False # Drop the last window if True
 
 # Mel spectrogram configurations
-MELS: int = 32 # Number of mel bands
-MELS_WINDOW_SIZE: float = 1 # Size of the window for the mel spectrogram
-MELS_WINDOW_STRIDE: float = 1 # Stride of the window for the mel spectrogram
+MELS: int = 8 # Number of mel bands
+MELS_WINDOW_SIZE: float = 0.2 # Size of the window for the mel spectrogram
+MELS_WINDOW_STRIDE: float = 0.25 # Stride of the window for the mel spectrogram
 MELS_MIN_FREQ: int = 0 # Minimum frequency for the mel spectrogram
 MELS_MAX_FREQ: int = 50 # Maximum frequency for the mel spectrogram
 
 # Training configurations
 BATCH_SIZE: int = 32 # Batch size
-LEARNING_RATE: float = 0.001 # Learning rate
-REG: float = 0.1 # Regularization parameter
+LEARNING_RATE: float = 1e-5 # Learning rate
+REG: float = 0.2 # Regularization parameter
 EPOCHS: int = 100 # Number of epochs
 DROPOUT_P: float = 0.25 # Dropout probability
+THRESHOLD: float = 0.5 # Threshold for the binary classification
 VALIDATION_SCHEME: str = "SPLIT" # "LOOCV" | "K-FOLDCV" | "SPLIT"
 KFOLDCV: int = 5 # Number of folds for K-Fold Cross Validation
 SPLIT_RATIO: float = 0.2 # Ratio for the train-validation split

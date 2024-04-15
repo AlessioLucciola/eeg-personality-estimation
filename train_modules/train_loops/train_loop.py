@@ -16,8 +16,10 @@ def train_eval_loop(device,
                     criterion,
                     resume=False):
 
+    # If the model is to be resumed, load the model and the optimizer
     if resume:
         data_name = PATH_MODEL_TO_RESUME
+        # Start the Weights & Biases run if the configuration is set to True
         if config["use_wandb"]:
             runs = wandb.api.runs("personality_estimation", filters={"name": data_name})
             if runs:
@@ -52,47 +54,65 @@ def train_eval_loop(device,
                 resume=resume,
                 name=data_name
             )
+    
+    # Define the training and validation loaders based on the validation scheme
     if config["validation_scheme"] == "SPLIT":
         train_loader, val_loader = dataloaders
 
-    training_total_step = len(train_loader)
+    training_total_step = len(train_loader) # Number of batches in the training set
+    val_total_step = len(val_loader) # Number of batches in the validation set
+
+    # Initialize the best model and the best accuracy (for saving the best model)
     best_model = None
     best_accuracy = None
+
+    # Define the metrics
     accuracy_metric = Accuracy(task="multilabel", num_labels=len(config["labels"]))
     recall_metric = Recall(task="multilabel", num_labels=len(config["labels"]), average='macro')
     precision_metric = Precision(task="multilabel", num_labels=len(config["labels"]), average='macro')
     f1_metric = F1Score(task="multilabel", num_labels=len(config["labels"]), average='macro')
     auroc_metric = AUROC(task="multilabel", num_labels=len(config["labels"]))
+
     for epoch in range(RESUME_EPOCH if resume else 0, EPOCHS):
-        model.train()
-        epoch_tr_preds = torch.tensor([])
-        epoch_tr_labels = torch.tensor([])
-        epoch_tr_outputs = torch.tensor([])
+
+        # --Training--
+        model.train() # Set the model to training mode
+        # Define the tensors to store the predictions and the labels for the training set
+        epoch_tr_preds = torch.tensor([]).to(device)
+        epoch_tr_labels = torch.tensor([]).to(device)
+        epoch_tr_outputs = torch.tensor([]).to(device)
         epoch_tr_loss = 0
-        for _, tr_batch in enumerate(tqdm(train_loader, desc="Training", leave=False)):
+        for _, tr_batch in enumerate(tqdm(train_loader, desc=f"Training Epoch [{epoch+1}/{EPOCHS}]", leave=False)):
+            # Select the data and the labels
             tr_data, tr_labels = tr_batch['eeg_data'], tr_batch['labels']
             tr_data = tr_data.to(device)
             tr_labels = tr_labels.to(device)
-            tr_outputs = model(tr_data) # Prediction
-            #print(tr_outputs, tr_labels)
-            tr_loss = criterion(tr_outputs, tr_labels)
-            epoch_tr_loss = epoch_tr_loss + tr_loss.item()
-            epoch_tr_outputs = torch.cat((epoch_tr_outputs, tr_outputs), 0)
 
+            # Forward pass
+            tr_outputs = model(tr_data) # Prediction
+            epoch_tr_outputs = torch.cat((epoch_tr_outputs, tr_outputs), 0)
+            
+            # Loss computation
+            tr_loss = criterion(tr_outputs, tr_labels)
+            epoch_tr_loss += tr_loss.item()
+
+            # Backward pass
             optimizer.zero_grad()
             tr_loss.backward()
             optimizer.step()
-
+            
+            # Compute metrics
             with torch.no_grad():
-                threshold = 0.5
-                tr_preds = (tr_outputs > threshold)
+                tr_preds = (tr_outputs >= config["threshold"]).float() # Convert the predictions to binary (for each label)
                 epoch_tr_preds = torch.cat((epoch_tr_preds, tr_preds), 0)
                 epoch_tr_labels = torch.cat((epoch_tr_labels, tr_labels), 0)
         
         with torch.no_grad():
             if USE_DML:
-                epoch_tr_preds = epoch_tr_preds.long().cpu()
-                epoch_tr_labels = epoch_tr_labels.long().cpu()
+                epoch_tr_preds = epoch_tr_preds.long().cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
+                epoch_tr_labels = epoch_tr_labels.long().cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
+            
+            # Compute metrics
             tr_accuracy = accuracy_metric(epoch_tr_preds, epoch_tr_labels) * 100
             tr_recall = recall_metric(epoch_tr_preds, epoch_tr_labels) * 100
             tr_precision = precision_metric(epoch_tr_preds, epoch_tr_labels) * 100
@@ -110,32 +130,39 @@ def train_eval_loop(device,
             wandb.log({"Training Precision": tr_precision.item()})
             wandb.log({"Training F1": tr_f1.item()})
             wandb.log({"Training AUROC": tr_auroc.item()})
-
-        model.eval()
+        
+        # --Validation--
+        model.eval() # Set the model to evaluation mode
         with torch.no_grad():
-            val_total_step = len(val_loader)
+            # Define the tensors to store the predictions and the labels for the validation set
             epoch_val_preds = torch.tensor([]).to(device)
             epoch_val_labels = torch.tensor([]).to(device)
             epoch_val_outputs = torch.tensor([]).to(device)
             epoch_val_loss = 0
-            for _, val_batch in enumerate(tqdm(val_loader, desc="Validation", leave=False)):
+
+            for _, val_batch in enumerate(tqdm(val_loader, desc=f"Validation Epoch [{epoch+1}/{EPOCHS}]", leave=False)):
+                # Select the data and the labels
                 val_data, val_labels = val_batch['eeg_data'], val_batch['labels']
                 val_data = val_data.to(device)
                 val_labels = val_labels.to(device)
+
+                # Forward pass
                 val_outputs = model(val_data)
                 epoch_val_outputs = torch.cat((epoch_val_outputs, val_outputs), 0)
 
-                val_loss = criterion(val_outputs, val_labels)
-                epoch_val_loss = epoch_val_loss + val_loss.item()
+                # Loss computation
+                val_loss = criterion(val_outputs, val_labels) # Compute loss
+                epoch_val_loss += val_loss.item() # Accumulate validation loss
 
-                threshold = 0.5
-                val_preds = (val_outputs > threshold).long()
+                # Compute metrics
+                val_preds = (val_outputs > config["threshold"]).long() # Convert the predictions to binary (for each label)
                 epoch_val_preds = torch.cat((epoch_val_preds, val_preds), 0)
                 epoch_val_labels = torch.cat((epoch_val_labels, val_labels), 0)
 
             if USE_DML:
-                epoch_val_preds = epoch_val_preds.long().cpu()
-                epoch_val_labels = epoch_val_labels.long().cpu()
+                epoch_val_preds = epoch_val_preds.long().cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
+                epoch_val_labels = epoch_val_labels.long().cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
+            # Compute metrics
             val_accuracy = accuracy_metric(epoch_val_preds, epoch_val_labels) * 100
             val_recall = recall_metric(epoch_val_preds, epoch_val_labels) * 100
             val_precision = precision_metric(epoch_val_preds, epoch_val_labels) * 100
