@@ -1,8 +1,9 @@
-from config import DATASET_TO_USE, RANDOM_SEED, BATCH_SIZE, VALIDATION_SCHEME, ELECTRODES, SAMPLING_RATE, MELS, MELS_WINDOW_SIZE, MELS_WINDOW_STRIDE, MELS_MIN_FREQ, MELS_MAX_FREQ, DROPOUT_P, LEARNING_RATE, REG, RESUME_TRAINING, RESULTS_DIR, PATH_MODEL_TO_RESUME, RESUME_EPOCH, LEARNING_RATE, OPTIMIZER, SCHEDULER, SCHEDULER_STEP_SIZE, SCHEDULER_GAMMA, USE_WANDB, THRESHOLD
+from config import DATASET_TO_USE, RANDOM_SEED, BATCH_SIZE, VALIDATION_SCHEME, ELECTRODES, SAMPLING_RATE, MELS, MELS_WINDOW_SIZE, MELS_WINDOW_STRIDE, MELS_MIN_FREQ, MELS_MAX_FREQ, DROPOUT_P, LEARNING_RATE, REG, RESUME_TRAINING, RESULTS_DIR, PATH_MODEL_TO_RESUME, RESUME_EPOCH, LEARNING_RATE, OPTIMIZER, SCHEDULER, SCHEDULER_STEP_SIZE, SCHEDULER_GAMMA, USE_WANDB, THRESHOLD, WINDOWS_SIZE, WINDOWS_STRIDE
 from utils.utils import get_configurations, instantiate_dataset, set_seed, select_device
 from utils.train_utils import get_criterion, get_optimizer, get_scheduler
 from dataloaders.EEG_classification_dataloader import EEG_dataloader
-from train_modules.train_loops.train_loop import train_eval_loop
+from train_modules.train_loops.train_loop_split import train_eval_loop as train_eval_loop_split
+from train_modules.train_loops.train_loop_kfold_loo import train_eval_loop as train_eval_loop_kfold_loo
 from models.resnet18 import ResNet18
 import torch
 
@@ -61,6 +62,8 @@ def main():
             "validation_scheme": VALIDATION_SCHEME,
             "electrodes": ELECTRODES,
             "sampling_rate": SAMPLING_RATE,
+            "eeg_window_size": WINDOWS_SIZE,
+            "eeg_window_stride": WINDOWS_STRIDE,
             "mels": MELS,
             "mel_window_size": MELS_WINDOW_SIZE,
             "mel_window_stride": MELS_WINDOW_STRIDE,
@@ -72,15 +75,26 @@ def main():
 
     criterion = get_criterion()
     
-    train_eval_loop(device=device,
-                    dataloaders=dataloaders,
-                    model=model,
-                    config=resumed_configuration if resumed_configuration != None else config,
-                    optimizer=optimizer,
-                    scheduler=scheduler,
-                    criterion=criterion,
-                    resume=RESUME_TRAINING
-                    )
+    if config["validation_scheme"] == "split":
+        train_eval_loop_split(device=device,
+                            dataloaders=dataloaders,
+                            model=model,
+                            config=resumed_configuration if resumed_configuration != None else config,
+                            optimizer=optimizer,
+                            scheduler=scheduler,
+                            criterion=criterion,
+                            resume=RESUME_TRAINING
+                        )
+    else:
+        train_eval_loop_kfold_loo(device=device,
+                            dataloaders=dataloaders,
+                            model=model,
+                            config=resumed_configuration if resumed_configuration != None else config,
+                            optimizer=optimizer,
+                            scheduler=scheduler,
+                            criterion=criterion,
+                            resume=RESUME_TRAINING
+                        )
     
 if __name__ == "__main__":
     main()

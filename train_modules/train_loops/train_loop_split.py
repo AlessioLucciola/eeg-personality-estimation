@@ -55,9 +55,8 @@ def train_eval_loop(device,
                 name=data_name
             )
     
-    # Define the training and validation loaders based on the validation scheme
-    if config["validation_scheme"] == "SPLIT":
-        train_loader, val_loader = dataloaders
+    # Define the training and validation loaders
+    train_loader, val_loader = dataloaders
 
     training_total_step = len(train_loader) # Number of batches in the training set
     val_total_step = len(val_loader) # Number of batches in the validation set

@@ -23,3 +23,45 @@ def get_scheduler(optimizer, scheduler_name, step_size, gamma):
     
 def get_criterion():
     return torch.nn.BCEWithLogitsLoss()
+
+def compute_average_fold_metrics(fold_metrics, fold_index):
+    aggregated_fold_metrics = {
+        'fold': fold_index,
+        'fold_training_loss': 0,
+        'fold_training_accuracy': 0,
+        'fold_training_recall': 0,
+        'fold_training_precision': 0,
+        'fold_training_f1': 0,
+        'fold_training_auroc': 0,
+        'fold_validation_loss': 0,
+        'fold_validation_accuracy': 0,
+        'fold_validation_recall': 0,
+        'fold_validation_precision': 0,
+        'fold_validation_f1': 0,
+        'fold_validation_auroc': 0
+    }
+    
+    num_results = len(fold_metrics)
+
+    # Iterate over each fold result
+    for fold_results in fold_metrics:
+        # Aggregate metrics
+        aggregated_fold_metrics['fold_training_loss'] += fold_results['training_loss'] if fold_index != "final" else fold_results['fold_training_loss']
+        aggregated_fold_metrics['fold_training_accuracy'] += fold_results['training_accuracy'] if fold_index != "final" else fold_results['fold_training_accuracy']
+        aggregated_fold_metrics['fold_training_recall'] += fold_results['training_recall'] if fold_index != "final" else fold_results['fold_training_recall']
+        aggregated_fold_metrics['fold_training_precision'] += fold_results['training_precision'] if fold_index != "final" else fold_results['fold_training_precision']
+        aggregated_fold_metrics['fold_training_f1'] += fold_results['training_f1'] if fold_index != "final" else fold_results['fold_training_f1']
+        aggregated_fold_metrics['fold_training_auroc'] += fold_results['training_auroc'] if fold_index != "final" else fold_results['fold_training_auroc']
+        aggregated_fold_metrics['fold_validation_loss'] += fold_results['validation_loss'] if fold_index != "final" else fold_results['fold_validation_loss']
+        aggregated_fold_metrics['fold_validation_accuracy'] += fold_results['validation_accuracy'] if fold_index != "final" else fold_results['fold_validation_accuracy']
+        aggregated_fold_metrics['fold_validation_recall'] += fold_results['validation_recall'] if fold_index != "final" else fold_results['fold_validation_recall']
+        aggregated_fold_metrics['fold_validation_precision'] += fold_results['validation_precision'] if fold_index != "final" else fold_results['fold_validation_precision']
+        aggregated_fold_metrics['fold_validation_f1'] += fold_results['validation_f1'] if fold_index != "final" else fold_results['fold_validation_f1']
+        aggregated_fold_metrics['fold_validation_auroc'] += fold_results['validation_auroc'] if fold_index != "final" else fold_results['fold_validation_auroc']
+
+    # Calculate the average for each metric
+    for key in aggregated_fold_metrics.keys():
+        if key != 'fold':
+            aggregated_fold_metrics[key] /= num_results
+    
+    return aggregated_fold_metrics

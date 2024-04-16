@@ -65,16 +65,36 @@ def save_results(data_name, results, test=False):
         with open(results_file_path, 'w') as json_file:
             json.dump(final_results, json_file, indent=2)
 
+def save_fold_results(data_name, results):
+    path = RESULTS_DIR + f"/{data_name}/results/"
+    if not os.path.exists(path):
+        os.makedirs(path, exist_ok=True)
 
-def save_model(data_name, model, epoch=None, is_best=False):
+    results_file_path = path + 'fold_results.json'
+    if os.path.exists(results_file_path):
+        final_results = None
+        with open(results_file_path, 'r') as json_file:
+            final_results = json.load(json_file)
+        final_results.append(results)
+        with open(results_file_path, 'w') as json_file:
+            json.dump(final_results, json_file, indent=2)
+    else:
+        final_results = [results]
+        with open(results_file_path, 'w') as json_file:
+            json.dump(final_results, json_file, indent=2)
+
+
+def save_model(data_name, model, fold=None, epoch=None, is_best=False):
     path = RESULTS_DIR + f"/{data_name}/models/"
     if not os.path.exists(path):
         os.makedirs(path, exist_ok=True)
     if is_best:
         torch.save(model.state_dict(), f'{path}/mi_project_best.pt')
     else:
-        torch.save(model.state_dict(),
-                   f'{path}/mi_project_{epoch+1}.pt')
+        if fold != None:
+            torch.save(model.state_dict(), f'{path}/mi_project_fold_{fold}_epoch_{epoch+1}.pt')
+        else:
+            torch.save(model.state_dict(), f'{path}/mi_project_{epoch+1}.pt')
 
 def instantiate_dataset(dataset_name):
     if dataset_name == "AMIGOS":
