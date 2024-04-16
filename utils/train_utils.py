@@ -104,7 +104,8 @@ def find_best_model(dataset_name, withFold=False):
 
 # Fuction to reset the weights of a model
 def reset_weights(m):
+  print(f'Reset trainable parameters of model = {m}')
   for layer in m.children():
    if hasattr(layer, 'reset_parameters'):
-    print(f'Reset trainable parameters of layer = {layer}')
+    #print(f'Reset trainable parameters of layer = {layer}')
     layer.reset_parameters()
