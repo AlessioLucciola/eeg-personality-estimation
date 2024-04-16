@@ -1,11 +1,11 @@
 from config import SAVE_MODELS, SAVE_RESULTS, PATH_MODEL_TO_RESUME, RESUME_EPOCH, EPOCHS, USE_DML
 from utils.utils import save_results, save_model, save_configurations
 from torchmetrics import Accuracy, Recall, Precision, F1Score, AUROC
+from utils.train_utils import find_best_model
 from datetime import datetime
 from tqdm import tqdm
 import torch
 import wandb
-import copy
 
 def train_eval_loop(device,
                     dataloaders,
@@ -60,10 +60,6 @@ def train_eval_loop(device,
 
     training_total_step = len(train_loader) # Number of batches in the training set
     val_total_step = len(val_loader) # Number of batches in the validation set
-
-    # Initialize the best model and the best accuracy (for saving the best model)
-    best_model = None
-    best_accuracy = None
 
     # Define the metrics
     accuracy_metric = Accuracy(task="multilabel", num_labels=len(config["labels"]))
@@ -180,9 +176,6 @@ def train_eval_loop(device,
             print('Validation -> Epoch [{}/{}], Loss: {:.4f}, Accuracy: {:.4f}%, Recall: {:.4f}%, Precision: {:.4f}%, F1: {:.4f}%, AUROC: {:.4f}%'
                   .format(epoch+1, EPOCHS, epoch_val_loss/val_total_step, val_accuracy, val_recall, val_precision, val_f1, val_auroc))
 
-            if best_accuracy is None or val_accuracy < best_accuracy:
-                best_accuracy = val_accuracy
-                best_model = copy.deepcopy(model)
             current_results = {
                 'epoch': epoch+1,
                 'training_loss': epoch_tr_loss/training_total_step,
@@ -200,9 +193,10 @@ def train_eval_loop(device,
             }
             if SAVE_RESULTS:
                 save_results(data_name, current_results)
+            
+            find_best_model(data_name, withFold=False) # Find the best model based on the validation accuracy and save the associated epoch and fold in the configuration file
+
             if SAVE_MODELS:
                 save_model(data_name, model, epoch)
-            if epoch == EPOCHS-1 and SAVE_MODELS:
-                save_model(data_name, best_model, epoch=None, is_best=True)
 
         #scheduler.step()

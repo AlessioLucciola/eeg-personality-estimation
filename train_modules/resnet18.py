@@ -75,7 +75,7 @@ def main():
 
     criterion = get_criterion()
     
-    if config["validation_scheme"] == "split":
+    if config["validation_scheme"] == "SPLIT":
         train_eval_loop_split(device=device,
                             dataloaders=dataloaders,
                             model=model,
