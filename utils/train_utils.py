@@ -1,5 +1,7 @@
-from config import LEARNING_RATE, REG
+from config import LEARNING_RATE, REG, RESULTS_DIR
 import torch
+import json
+import os
 
 def get_optimizer(optimizer_name, parameters, lr=LEARNING_RATE, weight_decay=REG):
     if optimizer_name == "Adam":
@@ -65,3 +67,37 @@ def compute_average_fold_metrics(fold_metrics, fold_index):
             aggregated_fold_metrics[key] /= num_results
     
     return aggregated_fold_metrics
+
+def find_best_model(dataset_name, withFold=False):
+    path = RESULTS_DIR + f"/{dataset_name}/results/tr_val_results.json"
+
+    best_accuracy = float('-inf')
+    best_epoch = None
+    best_fold = None
+
+    if os.path.exists(path):
+        with open(path, 'r') as json_file:
+            results = json.load(json_file)
+
+            for result in results:
+                if withFold:
+                    fold = result['fold']
+                epoch = result['epoch']
+                accuracy = result['validation_accuracy']
+
+                if accuracy > best_accuracy:
+                    best_accuracy = accuracy
+                    best_epoch = epoch
+                    if withFold:
+                        best_fold = fold
+    
+    config_path = RESULTS_DIR + f"/{dataset_name}/configurations.json"
+    if os.path.exists(config_path):
+        with open(config_path, 'r') as json_file:
+            configurations = json.load(json_file)
+            configurations['best_accuracy'] = best_accuracy
+            configurations['best_epoch'] = best_epoch
+            if withFold:
+                configurations['best_fold'] = best_fold
+        with open(config_path, 'w') as json_file:
+            json.dump(configurations, json_file, indent=2)

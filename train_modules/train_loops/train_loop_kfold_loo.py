@@ -1,7 +1,7 @@
-from config import SAVE_MODELS, SAVE_RESULTS, PATH_MODEL_TO_RESUME, RESUME_EPOCH, EPOCHS, USE_DML
-from utils.utils import save_results, save_model, save_configurations, save_fold_results
+from utils.utils import save_results, save_model, save_configurations, save_fold_results, resume_folds_metrics
+from config import SAVE_MODELS, SAVE_RESULTS, PATH_MODEL_TO_RESUME, RESUME_EPOCH, EPOCHS, USE_DML, RESUME_FOLD
 from torchmetrics import Accuracy, Recall, Precision, F1Score, AUROC
-from utils.train_utils import compute_average_fold_metrics
+from utils.train_utils import compute_average_fold_metrics, find_best_model
 from datetime import datetime
 from tqdm import tqdm
 import torch
@@ -56,18 +56,23 @@ def train_eval_loop(device,
                 name=data_name
             )
 
-    folds_metrics = [] # List to store the metrics in all folds
+    if resume:
+        folds_metrics = resume_folds_metrics(data_name) # List to store the metrics in all folds
+    else:
+        folds_metrics = []
     
     dataloaders_num = len(dataloaders) # Number of dataloaders (folds) - k in k-fold CV, number of subjects in LOOCV
     for fold_i, (train_loader, val_loader) in dataloaders.items():
+        # If the training is to be resumed, skip the folds until the one to resume
+        if resume and fold_i < RESUME_FOLD:
+            continue
         training_total_step = len(train_loader) # Number of batches in the training set
         val_total_step = len(val_loader) # Number of batches in the validation set
 
-        fold_metrics = [] # List to store the metrics in a fold
-
-        # Initialize the best model and the best accuracy (for saving the best model)
-        best_model = None
-        best_accuracy = None
+        if resume:
+            fold_metrics = resume_folds_metrics(data_name, fold=RESUME_FOLD, epoch=RESUME_EPOCH) # List to store the metrics in a fold
+        else:
+            fold_metrics = [] # List to store the metrics in a fold
 
         # Define the metrics
         accuracy_metric = Accuracy(task="multilabel", num_labels=len(config["labels"]))
@@ -184,11 +189,7 @@ def train_eval_loop(device,
                 print('Validation -> Fold [{}/{}], Epoch [{}/{}], Loss: {:.4f}, Accuracy: {:.4f}%, Recall: {:.4f}%, Precision: {:.4f}%, F1: {:.4f}%, AUROC: {:.4f}%'
                     .format(fold_i+1, dataloaders_num, epoch+1, EPOCHS, epoch_val_loss/val_total_step, val_accuracy, val_recall, val_precision, val_f1, val_auroc))
 
-            """
-            if best_accuracy is None or val_accuracy < best_accuracy:
-                best_accuracy = val_accuracy
-                best_model = copy.deepcopy(model)
-            """
+
             current_fold_epoch_results = {
                 'fold': fold_i+1,
                 'epoch': epoch+1,
@@ -209,11 +210,11 @@ def train_eval_loop(device,
 
             if SAVE_RESULTS:
                 save_results(data_name, current_fold_epoch_results)
+            
+            find_best_model(data_name, withFold=True) # Find the best model based on the validation accuracy and save the associated epoch and fold in the configuration file
 
             if SAVE_MODELS:
                 save_model(data_name, model, epoch+1, fold=fold_i+1)
-                if epoch == EPOCHS-1:
-                    save_model(data_name, best_model, epoch=None, is_best=True)
 
             #scheduler.step() # Update the learning rate
         

@@ -102,3 +102,20 @@ def instantiate_dataset(dataset_name):
         return AMIGOSDataset(data_path=AMIGOS_FILES_DIR, metadata_path=AMIGOS_METADATA_FILE)
     else:
         raise ValueError(f"Dataset {dataset_name} is not supported.")
+    
+def resume_folds_metrics(dataset_name, fold, epoch):
+    if epoch is None and fold is None:
+        path = RESULTS_DIR + f"/{dataset_name}/results/fold_results.json"
+        if os.path.exists(path):
+            with open(path, 'r') as json_file:
+                return json.load(json_file)
+    else:
+        path = RESULTS_DIR + f"/{dataset_name}/results/tr_val_results.json"
+        if os.path.exists(path):
+            with open(path, 'r') as json_file:
+                all_results = json.load(json_file)
+                filtered_results = []
+                for result in all_results:
+                    if result['fold'] == fold and result['epoch'] <= epoch:
+                        filtered_results.append(result)
+                return filtered_results
