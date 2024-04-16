@@ -1,7 +1,7 @@
 from utils.utils import save_results, save_model, save_configurations, save_fold_results, resume_folds_metrics
 from config import SAVE_MODELS, SAVE_RESULTS, PATH_MODEL_TO_RESUME, RESUME_EPOCH, EPOCHS, USE_DML, RESUME_FOLD
+from utils.train_utils import compute_average_fold_metrics, find_best_model, reset_weights
 from torchmetrics import Accuracy, Recall, Precision, F1Score, AUROC
-from utils.train_utils import compute_average_fold_metrics, find_best_model
 from datetime import datetime
 from tqdm import tqdm
 import torch
@@ -81,10 +81,14 @@ def train_eval_loop(device,
         f1_metric = F1Score(task="multilabel", num_labels=len(config["labels"]), average='macro')
         auroc_metric = AUROC(task="multilabel", num_labels=len(config["labels"]))
 
+        fold_model = model # Copy the model for each fold
+        fold_model.apply(reset_weights) # Reset the weights of the model for each fold
+        fold_optimizer = optimizer # Copy the optimizer for each fold
+
         for epoch in range(RESUME_EPOCH if resume else 0, EPOCHS):
 
             # --Training--
-            model.train() # Set the model to training mode
+            fold_model.train() # Set the model to training mode
             # Define the tensors to store the predictions and the labels for the training set
             epoch_tr_preds = torch.tensor([]).to(device)
             epoch_tr_labels = torch.tensor([]).to(device)
@@ -97,7 +101,7 @@ def train_eval_loop(device,
                 tr_labels = tr_labels.to(device)
 
                 # Forward pass
-                tr_outputs = model(tr_data) # Prediction
+                tr_outputs = fold_model(tr_data) # Prediction
                 epoch_tr_outputs = torch.cat((epoch_tr_outputs, tr_outputs), 0)
                 
                 # Loss computation
@@ -105,9 +109,9 @@ def train_eval_loop(device,
                 epoch_tr_loss += tr_loss.item()
 
                 # Backward pass
-                optimizer.zero_grad()
+                fold_optimizer.zero_grad()
                 tr_loss.backward()
-                optimizer.step()
+                fold_optimizer.step()
                 
                 # Compute metrics
                 with torch.no_grad():
@@ -140,7 +144,7 @@ def train_eval_loop(device,
                 wandb.log({"Training AUROC": tr_auroc.item()})
             
             # --Validation--
-            model.eval() # Set the model to evaluation mode
+            fold_model.eval() # Set the model to evaluation mode
             with torch.no_grad():
                 # Define the tensors to store the predictions and the labels for the validation set
                 epoch_val_preds = torch.tensor([]).to(device)
@@ -155,7 +159,7 @@ def train_eval_loop(device,
                     val_labels = val_labels.to(device)
 
                     # Forward pass
-                    val_outputs = model(val_data)
+                    val_outputs = fold_model(val_data)
                     epoch_val_outputs = torch.cat((epoch_val_outputs, val_outputs), 0)
 
                     # Loss computation
@@ -214,7 +218,7 @@ def train_eval_loop(device,
             find_best_model(data_name, withFold=True) # Find the best model based on the validation accuracy and save the associated epoch and fold in the configuration file
 
             if SAVE_MODELS:
-                save_model(data_name, model, epoch+1, fold=fold_i+1)
+                save_model(data_name, fold_model, epoch+1, fold=fold_i+1)
 
             #scheduler.step() # Update the learning rate
         

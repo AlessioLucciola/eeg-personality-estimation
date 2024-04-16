@@ -101,3 +101,10 @@ def find_best_model(dataset_name, withFold=False):
                 configurations['best_fold'] = best_fold
         with open(config_path, 'w') as json_file:
             json.dump(configurations, json_file, indent=2)
+
+# Fuction to reset the weights of a model
+def reset_weights(m):
+  for layer in m.children():
+   if hasattr(layer, 'reset_parameters'):
+    print(f'Reset trainable parameters of layer = {layer}')
+    layer.reset_parameters()
