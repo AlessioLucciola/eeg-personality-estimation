@@ -170,6 +170,9 @@ def create_train_val_line_plots(metrics, data, models_name, validation_schemes, 
                 script_directory, "results", f"{save_plot_prefix}_train_{metric[0]}.png")
             plt.savefig(save_path)
             print(f"Plot saved as {save_path}")
+        
+def create_fold_line_plots(fold_data):
+    pass # TODO
 
 # ---CONFIGURATIONS--- #
 # Folder names of the tests to compare
@@ -208,3 +211,6 @@ create_train_val_line_plots(metrics=metrics,
                              validation_schemes=validation_schemes,
                              validation_settings=validation_settings
                             )
+
+for fold_data in folds_data:
+    create_fold_line_plots(fold_data)
