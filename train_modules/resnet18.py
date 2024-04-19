@@ -11,7 +11,8 @@ def main():
     set_seed(RANDOM_SEED)
     device = select_device()
     dataset = instantiate_dataset(DATASET_TO_USE)
-    dataloaders = EEG_dataloader(dataset=dataset, seed=RANDOM_SEED, batch_size=BATCH_SIZE, validation_scheme=VALIDATION_SCHEME).get_dataloaders()
+    dataloader = EEG_dataloader(dataset=dataset, seed=RANDOM_SEED, batch_size=BATCH_SIZE, validation_scheme=VALIDATION_SCHEME)
+    dataloaders = dataloader.get_dataloaders()
     model = ResNet18(in_channels=len(ELECTRODES),
                      sampling_rate=SAMPLING_RATE,
                      labels=dataset.labels,
@@ -76,6 +77,9 @@ def main():
     criterion = get_criterion()
     
     if config["validation_scheme"] == "SPLIT":
+        if resumed_configuration != None:
+            config["split_ratio"] = dataloader.split_ratio
+
         train_eval_loop_split(device=device,
                             dataloaders=dataloaders,
                             model=model,
@@ -86,6 +90,9 @@ def main():
                             resume=RESUME_TRAINING
                         )
     else:
+        if resumed_configuration != None:
+            config["k_folds"] = dataloader.k_folds if config.validation_scheme == "K-FOLDCV" else len(dataloader.dataset.subjects_ids)
+        
         train_eval_loop_kfold_loo(device=device,
                             dataloaders=dataloaders,
                             model=model,
