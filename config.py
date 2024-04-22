@@ -35,8 +35,8 @@ DROP_LAST: bool = False # Drop the last window if True
 
 # Mel spectrogram configurations
 MELS: int = 8 # Number of mel bands
-MELS_WINDOW_SIZE: float = 0.2 # Size of the window for the mel spectrogram
-MELS_WINDOW_STRIDE: float = 0.25 # Stride of the window for the mel spectrogram
+MELS_WINDOW_SIZE: float = 0.15 # Size of the window for the mel spectrogram
+MELS_WINDOW_STRIDE: float = 0.30 # Stride of the window for the mel spectrogram
 MELS_MIN_FREQ: int = 0 # Minimum frequency for the mel spectrogram
 MELS_MAX_FREQ: int = 50 # Maximum frequency for the mel spectrogram
 
@@ -44,13 +44,13 @@ MELS_MAX_FREQ: int = 50 # Maximum frequency for the mel spectrogram
 BATCH_SIZE: int = 32 # Batch size
 LEARNING_RATE: float = 1e-5 # Learning rate
 REG: float = 0.2 # Regularization parameter
-EPOCHS: int = 5 # Number of epochs
+EPOCHS: int = 7 # Number of epochs
 DROPOUT_P: float = 0.25 # Dropout probability
 THRESHOLD: float = 0.5 # Threshold for the binary classification
 VALIDATION_SCHEME: str = "LOOCV" # "LOOCV" | "K-FOLDCV" | "SPLIT"
-KFOLDCV: int = 2 # Number of folds for K-Fold Cross Validation
+KFOLDCV: int = 5 # Number of folds for K-Fold Cross Validation
 SPLIT_RATIO: float = 0.2 # Ratio for the train-validation split
-OPTIMIZER: str = "Adam" # "Adam" | "AdamW" | "SGD"
+OPTIMIZER: str = "AdamW" # "Adam" | "AdamW" | "SGD"
 SCHEDULER: str = "StepLR" # "StepLR" | "ReduceLROnPlateau" | "CosineAnnealingLR"
 SCHEDULER_STEP_SIZE: int = 10 # Step size for the scheduler
 SCHEDULER_GAMMA: float = 0.1 # Gamma for the scheduler

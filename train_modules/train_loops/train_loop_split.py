@@ -150,7 +150,7 @@ def train_eval_loop(device,
                 epoch_val_loss += val_loss.item() # Accumulate validation loss
 
                 # Compute metrics
-                val_preds = (val_outputs > config["threshold"]).long() # Convert the predictions to binary (for each label)
+                val_preds = (val_outputs >= config["threshold"]).long() # Convert the predictions to binary (for each label)
                 epoch_val_preds = torch.cat((epoch_val_preds, val_preds), 0)
                 epoch_val_labels = torch.cat((epoch_val_labels, val_labels), 0)
 
