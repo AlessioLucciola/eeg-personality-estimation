@@ -50,6 +50,16 @@ def get_criterion(criterion_name, smoothing_factor=0.1):
     else:
         raise ValueError(f"Criterion {criterion_name} is not supported.")
 
+def add_dropout_to_model(model, dropout_p=0.25):
+    for name, module in model.named_children():
+        if isinstance(module, torch.nn.ReLU):
+            dropout_layer = torch.nn.Dropout(p=dropout_p)
+            setattr(model, name, torch.nn.Sequential(module, dropout_layer))
+        elif isinstance(module, torch.nn.Module):
+            # Recursively add dropout to submodules
+            add_dropout_to_model(module, dropout_p=dropout_p)
+    return model
+
 def compute_average_fold_metrics(fold_metrics, fold_index):
     aggregated_fold_metrics = {
         'fold': fold_index,

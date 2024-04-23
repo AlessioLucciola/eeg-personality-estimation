@@ -1,4 +1,4 @@
-from config import DATASET_TO_USE, RANDOM_SEED, BATCH_SIZE, VALIDATION_SCHEME, ELECTRODES, SAMPLING_RATE, MELS, MELS_WINDOW_SIZE, MELS_WINDOW_STRIDE, MELS_MIN_FREQ, MELS_MAX_FREQ, DROPOUT_P, LEARNING_RATE, REG, RESUME_TRAINING, RESULTS_DIR, PATH_MODEL_TO_RESUME, RESUME_EPOCH, LEARNING_RATE, OPTIMIZER, SCHEDULER, SCHEDULER_STEP_SIZE, SCHEDULER_GAMMA, USE_WANDB, THRESHOLD, WINDOWS_SIZE, WINDOWS_STRIDE, CRITERION, LABEL_SMOOTHING_EPSILON, USE_PRETRAINED_MODELS
+from config import DATASET_TO_USE, RANDOM_SEED, BATCH_SIZE, VALIDATION_SCHEME, ELECTRODES, SAMPLING_RATE, MELS, MELS_WINDOW_SIZE, MELS_WINDOW_STRIDE, MELS_MIN_FREQ, MELS_MAX_FREQ, DROPOUT_P, LEARNING_RATE, REG, RESUME_TRAINING, RESULTS_DIR, PATH_MODEL_TO_RESUME, RESUME_EPOCH, LEARNING_RATE, OPTIMIZER, SCHEDULER, SCHEDULER_STEP_SIZE, SCHEDULER_GAMMA, USE_WANDB, THRESHOLD, WINDOWS_SIZE, WINDOWS_STRIDE, CRITERION, LABEL_SMOOTHING_EPSILON, USE_PRETRAINED_MODELS, ADD_DROPOUT_TO_MODEL
 from utils.utils import get_configurations, instantiate_dataset, set_seed, select_device
 from utils.train_utils import get_criterion, get_optimizer, get_scheduler
 from dataloaders.EEG_classification_dataloader import EEG_dataloader
@@ -26,6 +26,7 @@ def main():
                      learning_rate=LEARNING_RATE,
                      weight_decay=REG,
                      pretrained=USE_PRETRAINED_MODELS,
+                     add_dropout_to_resnet=ADD_DROPOUT_TO_MODEL,
                      device=device
                     ).to(device)
     resumed_configuration = None
@@ -79,6 +80,7 @@ def main():
             "mel_min_freq": MELS_MIN_FREQ,
             "mel_max_freq": MELS_MAX_FREQ,
             "dropout_p": DROPOUT_P,
+            "add_dropout_to_model": ADD_DROPOUT_TO_MODEL,
             "use_wandb": USE_WANDB 
         }
     

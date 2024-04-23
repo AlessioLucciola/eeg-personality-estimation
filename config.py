@@ -45,7 +45,7 @@ BATCH_SIZE: int = 32 # Batch size
 LEARNING_RATE: float = 1e-5 # Learning rate
 REG: float = 0.2 # Regularization parameter
 EPOCHS: int = 7 # Number of epochs
-DROPOUT_P: float = 0.25 # Dropout probability
+DROPOUT_P: float = 0.05 # Dropout probability
 THRESHOLD: float = 0.5 # Threshold for the binary classification
 VALIDATION_SCHEME: str = "SPLIT" # "LOOCV" | "K-FOLDCV" | "SPLIT"
 KFOLDCV: int = 2 # Number of folds for K-Fold Cross Validation
@@ -63,6 +63,7 @@ RESUME_FOLD: int = 0 # Fold to resume (only for K-Fold Cross Validation and Leav
 
 # Model configurations
 USE_PRETRAINED_MODELS: bool = False # Use a pretrained model if True
+ADD_DROPOUT_TO_MODEL: bool = True # Add dropout layers to the model if True
 
 # Miscellaneous assertions
 assert VALIDATION_SCHEME in validation_schemes, f"{VALIDATION_SCHEME} is not a supported validation scheme."
