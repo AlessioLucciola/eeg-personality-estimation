@@ -35,8 +35,8 @@ DROP_LAST: bool = False # Drop the last window if True
 
 # Mel spectrogram configurations
 MELS: int = 8 # Number of mel bands
-MELS_WINDOW_SIZE: float = 0.15 # Size of the window for the mel spectrogram
-MELS_WINDOW_STRIDE: float = 0.30 # Stride of the window for the mel spectrogram
+MELS_WINDOW_SIZE: float = 0.30 # Size of the window for the mel spectrogram
+MELS_WINDOW_STRIDE: float = 0.15 # Stride of the window for the mel spectrogram
 MELS_MIN_FREQ: int = 0 # Minimum frequency for the mel spectrogram
 MELS_MAX_FREQ: int = 50 # Maximum frequency for the mel spectrogram
 
@@ -47,13 +47,15 @@ REG: float = 0.2 # Regularization parameter
 EPOCHS: int = 7 # Number of epochs
 DROPOUT_P: float = 0.25 # Dropout probability
 THRESHOLD: float = 0.5 # Threshold for the binary classification
-VALIDATION_SCHEME: str = "LOOCV" # "LOOCV" | "K-FOLDCV" | "SPLIT"
+VALIDATION_SCHEME: str = "SPLIT" # "LOOCV" | "K-FOLDCV" | "SPLIT"
 KFOLDCV: int = 2 # Number of folds for K-Fold Cross Validation
 SPLIT_RATIO: float = 0.2 # Ratio for the train-validation split
 OPTIMIZER: str = "AdamW" # "Adam" | "AdamW" | "SGD"
 SCHEDULER: str = "StepLR" # "StepLR" | "ReduceLROnPlateau" | "CosineAnnealingLR"
+CRITERION: str = "BCEWithLogitsLoss" # "BCEWithLogitsLoss" | "CrossEntropyLoss"
 SCHEDULER_STEP_SIZE: int = 10 # Step size for the scheduler
 SCHEDULER_GAMMA: float = 0.1 # Gamma for the scheduler
+LABEL_SMOOTHING_EPSILON: float = 0.1 # Label smoothing (0.0 for no smoothing)
 RESUME_TRAINING: bool = False # Resume training if True (specify the path of model to resume and the epoch to start from)
 PATH_MODEL_TO_RESUME: str = "" # Name of the model to resume
 RESUME_EPOCH: int = 0 # Epoch to resume
@@ -65,6 +67,8 @@ assert DATASET_TO_USE in supported_datasets, f"{DATASET_TO_USE} is not a support
 assert OPTIMIZER in optimizers, f"{OPTIMIZER} is not a supported optimizer."
 assert 0 <= SPLIT_RATIO <= 1, f"Split ratio must be between 0 and 1, but got {SPLIT_RATIO}."
 assert 0 <= DROPOUT_P <= 1, f"Dropout probability must be between 0 and 1, but got {DROPOUT_P}."
+assert 0 <= THRESHOLD <= 1, f"Threshold must be between 0 and 1, but got {THRESHOLD}."
+assert 0 <= LABEL_SMOOTHING_EPSILON < 1, f"Label smoothing must be between 0 and 1, but got {LABEL_SMOOTHING_EPSILON}."
 assert 0 <= REG, f"Regularization parameter must be positive, but got {REG}."
 assert 0 < BATCH_SIZE, f"Batch size must be positive, but got {BATCH_SIZE}."
 assert 0 < LEARNING_RATE, f"Learning rate must be positive, but got {LEARNING_RATE}."

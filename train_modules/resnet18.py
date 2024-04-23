@@ -1,4 +1,4 @@
-from config import DATASET_TO_USE, RANDOM_SEED, BATCH_SIZE, VALIDATION_SCHEME, ELECTRODES, SAMPLING_RATE, MELS, MELS_WINDOW_SIZE, MELS_WINDOW_STRIDE, MELS_MIN_FREQ, MELS_MAX_FREQ, DROPOUT_P, LEARNING_RATE, REG, RESUME_TRAINING, RESULTS_DIR, PATH_MODEL_TO_RESUME, RESUME_EPOCH, LEARNING_RATE, OPTIMIZER, SCHEDULER, SCHEDULER_STEP_SIZE, SCHEDULER_GAMMA, USE_WANDB, THRESHOLD, WINDOWS_SIZE, WINDOWS_STRIDE
+from config import DATASET_TO_USE, RANDOM_SEED, BATCH_SIZE, VALIDATION_SCHEME, ELECTRODES, SAMPLING_RATE, MELS, MELS_WINDOW_SIZE, MELS_WINDOW_STRIDE, MELS_MIN_FREQ, MELS_MAX_FREQ, DROPOUT_P, LEARNING_RATE, REG, RESUME_TRAINING, RESULTS_DIR, PATH_MODEL_TO_RESUME, RESUME_EPOCH, LEARNING_RATE, OPTIMIZER, SCHEDULER, SCHEDULER_STEP_SIZE, SCHEDULER_GAMMA, USE_WANDB, THRESHOLD, WINDOWS_SIZE, WINDOWS_STRIDE, CRITERION, LABEL_SMOOTHING_EPSILON
 from utils.utils import get_configurations, instantiate_dataset, set_seed, select_device
 from utils.train_utils import get_criterion, get_optimizer, get_scheduler
 from dataloaders.EEG_classification_dataloader import EEG_dataloader
@@ -44,6 +44,10 @@ def main():
         step_size=resumed_configuration["scheduler_step_size"] if resumed_configuration != None else SCHEDULER_STEP_SIZE,
         gamma=resumed_configuration["scheduler_gamma"] if resumed_configuration != None else SCHEDULER_GAMMA
         )
+    criterion = get_criterion(
+        criterion_name=resumed_configuration["criterion"] if resumed_configuration != None else CRITERION,
+        smoothing_factor=resumed_configuration["label_smoothing_epsilon"] if resumed_configuration != None else LABEL_SMOOTHING_EPSILON
+    )
 
     if resumed_configuration == None:
         config = {
@@ -51,6 +55,8 @@ def main():
             "labels": dataset.labels,
             "num_classes": dataset.labels_classes,
             "optimizer": OPTIMIZER,
+            "criterion": CRITERION,
+            "label_smoothing_epsilon": LABEL_SMOOTHING_EPSILON,
             "lr": LEARNING_RATE,
             "reg": REG,
             "batch_size": BATCH_SIZE,
@@ -73,8 +79,6 @@ def main():
             "dropout_p": DROPOUT_P,
             "use_wandb": USE_WANDB 
         }
-
-    criterion = get_criterion()
     
     if config["validation_scheme"] == "SPLIT":
         if resumed_configuration != None:
