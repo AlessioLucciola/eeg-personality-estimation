@@ -61,6 +61,9 @@ PATH_MODEL_TO_RESUME: str = "" # Name of the model to resume
 RESUME_EPOCH: int = 0 # Epoch to resume
 RESUME_FOLD: int = 0 # Fold to resume (only for K-Fold Cross Validation and Leave-One-Out Cross Validation)
 
+# Model configurations
+USE_PRETRAINED_MODELS: bool = False # Use a pretrained model if True
+
 # Miscellaneous assertions
 assert VALIDATION_SCHEME in validation_schemes, f"{VALIDATION_SCHEME} is not a supported validation scheme."
 assert DATASET_TO_USE in supported_datasets, f"{DATASET_TO_USE} is not a supported dataset."

@@ -1,4 +1,4 @@
-from config import DATASET_TO_USE, RANDOM_SEED, BATCH_SIZE, VALIDATION_SCHEME, ELECTRODES, SAMPLING_RATE, MELS, MELS_WINDOW_SIZE, MELS_WINDOW_STRIDE, MELS_MIN_FREQ, MELS_MAX_FREQ, DROPOUT_P, LEARNING_RATE, REG, RESUME_TRAINING, RESULTS_DIR, PATH_MODEL_TO_RESUME, RESUME_EPOCH, LEARNING_RATE, OPTIMIZER, SCHEDULER, SCHEDULER_STEP_SIZE, SCHEDULER_GAMMA, USE_WANDB, THRESHOLD, WINDOWS_SIZE, WINDOWS_STRIDE, CRITERION, LABEL_SMOOTHING_EPSILON
+from config import DATASET_TO_USE, RANDOM_SEED, BATCH_SIZE, VALIDATION_SCHEME, ELECTRODES, SAMPLING_RATE, MELS, MELS_WINDOW_SIZE, MELS_WINDOW_STRIDE, MELS_MIN_FREQ, MELS_MAX_FREQ, DROPOUT_P, LEARNING_RATE, REG, RESUME_TRAINING, RESULTS_DIR, PATH_MODEL_TO_RESUME, RESUME_EPOCH, LEARNING_RATE, OPTIMIZER, SCHEDULER, SCHEDULER_STEP_SIZE, SCHEDULER_GAMMA, USE_WANDB, THRESHOLD, WINDOWS_SIZE, WINDOWS_STRIDE, CRITERION, LABEL_SMOOTHING_EPSILON, USE_PRETRAINED_MODELS
 from utils.utils import get_configurations, instantiate_dataset, set_seed, select_device
 from utils.train_utils import get_criterion, get_optimizer, get_scheduler
 from dataloaders.EEG_classification_dataloader import EEG_dataloader
@@ -25,8 +25,9 @@ def main():
                      dropout_p=DROPOUT_P,
                      learning_rate=LEARNING_RATE,
                      weight_decay=REG,
+                     pretrained=USE_PRETRAINED_MODELS,
                      device=device
-                     ).to(device)
+                    ).to(device)
     resumed_configuration = None
     if RESUME_TRAINING:
         model.load_state_dict(torch.load(
@@ -54,6 +55,7 @@ def main():
             "architecture": "ResNet18",
             "labels": dataset.labels,
             "num_classes": dataset.labels_classes,
+            "pretrained": USE_PRETRAINED_MODELS,
             "optimizer": OPTIMIZER,
             "criterion": CRITERION,
             "label_smoothing_epsilon": LABEL_SMOOTHING_EPSILON,
