@@ -1,7 +1,8 @@
 from utils.utils import save_results, save_model, save_configurations, save_fold_results, resume_folds_metrics
-from config import SAVE_MODELS, SAVE_RESULTS, PATH_MODEL_TO_RESUME, RESUME_EPOCH, EPOCHS, USE_DML, RESUME_FOLD
+from config import SAVE_MODELS, SAVE_RESULTS, PATH_MODEL_TO_RESUME, RESUME_EPOCH, EPOCHS, THRESHOLD, USE_DML, RESUME_FOLD, VALIDATION_SCHEME
 from utils.train_utils import compute_average_fold_metrics, find_best_model, reset_weights
-from torchmetrics import Accuracy, Recall, Precision, F1Score, AUROC
+from torchmetrics import AUROC, Accuracy, Recall, Precision, F1Score
+from torchmetrics.classification import MultilabelAUROC
 from datetime import datetime
 from tqdm import tqdm
 import torch
@@ -63,8 +64,12 @@ def train_eval_loop(device,
     
     dataloaders_num = len(dataloaders) # Number of dataloaders (folds) - k in k-fold CV, number of subjects in LOOCV
     for fold_i, (train_loader, val_loader) in list(dataloaders.items())[:3]: # TO DO: Remove the slicing for the final version
+        if VALIDATION_SCHEME == "LOOCV":
+            i, subject_id = fold_i
+        else:
+            i = fold_i
         # If the training is to be resumed, skip the folds until the one to resume
-        if resume and fold_i < RESUME_FOLD:
+        if resume and i < RESUME_FOLD:
             continue
         training_total_step = len(train_loader) # Number of batches in the training set
         val_total_step = len(val_loader) # Number of batches in the validation set
@@ -80,6 +85,7 @@ def train_eval_loop(device,
         precision_metric = Precision(task="multilabel", num_labels=len(config["labels"]), average='macro')
         f1_metric = F1Score(task="multilabel", num_labels=len(config["labels"]), average='macro')
         auroc_metric = AUROC(task="multilabel", num_labels=len(config["labels"]))
+        #auroc_metric = MultilabelAUROC(num_labels=len(config["labels"]), average="macro", thresholds=[THRESHOLD])
 
         fold_model = model # Copy the model for each fold
         fold_model.apply(reset_weights) # Reset the weights of the model for each fold
@@ -94,7 +100,7 @@ def train_eval_loop(device,
             epoch_tr_labels = torch.tensor([]).to(device)
             epoch_tr_outputs = torch.tensor([]).to(device)
             epoch_tr_loss = 0
-            for _, tr_batch in enumerate(tqdm(train_loader, desc=f"Training Fold [{fold_i+1}/{dataloaders_num}], Epoch [{epoch+1}/{EPOCHS}]", leave=False)):
+            for _, tr_batch in enumerate(tqdm(train_loader, desc=f"Training Fold [{i+1}/{dataloaders_num}], Epoch [{epoch+1}/{EPOCHS}]", leave=False)):
                 # Select the data and the labels
                 tr_data, tr_labels = tr_batch['eeg_data'], tr_batch['labels']
                 tr_data = tr_data.to(device)
@@ -115,15 +121,21 @@ def train_eval_loop(device,
                 
                 # Compute metrics
                 with torch.no_grad():
-                    tr_preds = (tr_outputs >= config["threshold"]).float() # Convert the predictions to binary (for each label)
+                    tr_preds = (tr_outputs >= config["threshold"]) # Convert the predictions to binary (for each label)
                     epoch_tr_preds = torch.cat((epoch_tr_preds, tr_preds), 0)
                     epoch_tr_labels = torch.cat((epoch_tr_labels, tr_labels), 0)
             
             with torch.no_grad():
+                epoch_tr_preds = epoch_tr_preds.long()
+                epoch_tr_labels = epoch_tr_labels.long()
+                epoch_tr_outputs = epoch_tr_outputs.float()
                 if USE_DML:
-                    epoch_tr_preds = epoch_tr_preds.long().cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
-                    epoch_tr_labels = epoch_tr_labels.long().cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
-                    epoch_tr_outputs = epoch_tr_outputs.float().cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
+                    epoch_tr_preds = epoch_tr_preds.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
+                    epoch_tr_labels = epoch_tr_labels.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
+                    epoch_tr_outputs = epoch_tr_outputs.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
+                
+                for i in range(len(epoch_tr_preds)):
+                    print(epoch_tr_preds[i], epoch_tr_labels[i])
                 
                 # Compute metrics
                 tr_accuracy = accuracy_metric(epoch_tr_preds, epoch_tr_labels) * 100
@@ -133,7 +145,7 @@ def train_eval_loop(device,
                 tr_auroc = auroc_metric(epoch_tr_outputs, epoch_tr_labels) * 100
 
                 print('Training -> Fold [{}/{}], Epoch [{}/{}], Loss: {:.4f}, Accuracy: {:.4f}%, Recall: {:.4f}%, Precision: {:.4f}%, F1: {:.4f}%, AUROC: {:.4f}%'
-                    .format(fold_i+1, dataloaders_num, epoch+1, EPOCHS, epoch_tr_loss/training_total_step, tr_accuracy, tr_recall, tr_precision, tr_f1, tr_auroc))
+                    .format(i+1, dataloaders_num, epoch+1, EPOCHS, epoch_tr_loss/training_total_step, tr_accuracy, tr_recall, tr_precision, tr_f1, tr_auroc))
 
             if config["use_wandb"]:
                 wandb.log({"Training Loss": epoch_tr_loss/training_total_step})
@@ -152,7 +164,7 @@ def train_eval_loop(device,
                 epoch_val_outputs = torch.tensor([]).to(device)
                 epoch_val_loss = 0
 
-                for _, val_batch in enumerate(tqdm(val_loader, desc=f"Validation Fold [{fold_i+1}/{dataloaders_num}], Epoch [{epoch+1}/{EPOCHS}]", leave=False)):
+                for _, val_batch in enumerate(tqdm(val_loader, desc=f"Validation Fold [{i+1}/{dataloaders_num}], Epoch [{epoch+1}/{EPOCHS}]", leave=False)):
                     # Select the data and the labels
                     val_data, val_labels = val_batch['eeg_data'], val_batch['labels']
                     val_data = val_data.to(device)
@@ -167,14 +179,17 @@ def train_eval_loop(device,
                     epoch_val_loss += val_loss.item() # Accumulate validation loss
 
                     # Compute metrics
-                    val_preds = (val_outputs > config["threshold"]).long() # Convert the predictions to binary (for each label)
+                    val_preds = (val_outputs > config["threshold"]) # Convert the predictions to binary (for each label)
                     epoch_val_preds = torch.cat((epoch_val_preds, val_preds), 0)
                     epoch_val_labels = torch.cat((epoch_val_labels, val_labels), 0)
 
+                epoch_val_preds = epoch_val_preds.long()
+                epoch_val_labels = epoch_val_labels.long()
+                epoch_val_outputs = epoch_val_outputs.float()
                 if USE_DML:
-                    epoch_val_preds = epoch_val_preds.long().cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
-                    epoch_val_labels = epoch_val_labels.long().cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
-                    epoch_val_outputs = epoch_val_outputs.float().cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
+                    epoch_val_preds = epoch_val_preds.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
+                    epoch_val_labels = epoch_val_labels.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
+                    epoch_val_outputs = epoch_val_outputs.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
                 
                 # Compute metrics
                 val_accuracy = accuracy_metric(epoch_val_preds, epoch_val_labels) * 100
@@ -191,11 +206,11 @@ def train_eval_loop(device,
                     wandb.log({"Validation F1": val_f1.item()})
                     wandb.log({"Validation AUROC": val_auroc.item()})
                 print('Validation -> Fold [{}/{}], Epoch [{}/{}], Loss: {:.4f}, Accuracy: {:.4f}%, Recall: {:.4f}%, Precision: {:.4f}%, F1: {:.4f}%, AUROC: {:.4f}%'
-                    .format(fold_i+1, dataloaders_num, epoch+1, EPOCHS, epoch_val_loss/val_total_step, val_accuracy, val_recall, val_precision, val_f1, val_auroc))
+                    .format(i+1, dataloaders_num, epoch+1, EPOCHS, epoch_val_loss/val_total_step, val_accuracy, val_recall, val_precision, val_f1, val_auroc))
 
 
             current_fold_epoch_results = {
-                'fold': fold_i+1,
+                'fold': i+1,
                 'epoch': epoch+1,
                 'training_loss': epoch_tr_loss/training_total_step,
                 'training_accuracy': tr_accuracy.item(),
@@ -218,11 +233,11 @@ def train_eval_loop(device,
             find_best_model(data_name, withFold=True) # Find the best model based on the validation accuracy and save the associated epoch and fold in the configuration file
 
             if SAVE_MODELS:
-                save_model(data_name, fold_model, epoch+1, fold=fold_i+1)
+                save_model(data_name, fold_model, epoch+1, fold=i+1)
 
             #scheduler.step() # Update the learning rate
         
-        final_fold_metrics = compute_average_fold_metrics(fold_metrics=fold_metrics, fold_index=fold_i+1) # Compute the average metrics for the current fold
+        final_fold_metrics = compute_average_fold_metrics(fold_metrics=fold_metrics, fold_index=i+1) # Compute the average metrics for the current fold
         folds_metrics.append(final_fold_metrics) # Append the results for the current fold
         # At the end of each fold, save the results if the configuration is set to True
         if SAVE_RESULTS:

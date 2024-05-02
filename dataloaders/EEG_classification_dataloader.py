@@ -53,7 +53,7 @@ class EEG_dataloader(DataLoader):
             val_dataset = torch.utils.data.Subset(self.dataset, val_idx)
             train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
             val_dataloader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=False)
-            loo_dataloaders[subject_id] = tuple((train_dataloader, val_dataloader))
+            loo_dataloaders[tuple((i, subject_id))] = tuple((train_dataloader, val_dataloader))
         return loo_dataloaders
     
     # K-Fold Cross Validation
