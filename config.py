@@ -26,7 +26,7 @@ SAVE_MODELS: bool = False # Save models if True
 # EEGNet configurations
 WINDOWS_SIZE: float = 3 # Size of the sliding window
 WINDOWS_STRIDE: float = 3 # Stride of the sliding window
-SAMPLING_RATE: int = 256 # Sampling rate of the EEG data
+SAMPLING_RATE: int = 128 # Sampling rate of the EEG data
 ELECTRODES: List[str] = ["AF3", "F7", "F3", "FC5", "T7", "P7", "O1", "O2",
               "P8", "T8", "FC6", "F4", "F8", "AF4"] # Labels of the electrodes to consider
 DISCRETIZE_LABELS: bool = True # Discretize the labels if True
@@ -35,35 +35,35 @@ DROP_LAST: bool = False # Drop the last window if True
 
 # Mel spectrogram configurations
 MELS: int = 8 # Number of mel bands
-MELS_WINDOW_SIZE: float = 0.30 # Size of the window for the mel spectrogram
-MELS_WINDOW_STRIDE: float = 0.15 # Stride of the window for the mel spectrogram
+MELS_WINDOW_SIZE: float = 0.05 # Size of the window for the mel spectrogram
+MELS_WINDOW_STRIDE: float = 0.02 # Stride of the window for the mel spectrogram
 MELS_MIN_FREQ: int = 0 # Minimum frequency for the mel spectrogram
 MELS_MAX_FREQ: int = 50 # Maximum frequency for the mel spectrogram
 
 # Training configurations
-BATCH_SIZE: int = 32 # Batch size
+BATCH_SIZE: int = 128 # Batch size
 LEARNING_RATE: float = 1e-5 # Learning rate
 REG: float = 0.2 # Regularization parameter
-EPOCHS: int = 7 # Number of epochs
-DROPOUT_P: float = 0.05 # Dropout probability
+EPOCHS: int = 30 # Number of epochs
+DROPOUT_P: float = 0.1 # Dropout probability
 THRESHOLD: float = 0.5 # Threshold for the binary classification
 VALIDATION_SCHEME: str = "SPLIT" # "LOOCV" | "K-FOLDCV" | "SPLIT"
-KFOLDCV: int = 2 # Number of folds for K-Fold Cross Validation
+KFOLDCV: int = 3 # Number of folds for K-Fold Cross Validation
 SPLIT_RATIO: float = 0.2 # Ratio for the train-validation split
 OPTIMIZER: str = "AdamW" # "Adam" | "AdamW" | "SGD"
 SCHEDULER: str = "StepLR" # "StepLR" | "ReduceLROnPlateau" | "CosineAnnealingLR"
 CRITERION: str = "BCEWithLogitsLoss" # "BCEWithLogitsLoss" | "CrossEntropyLoss"
 SCHEDULER_STEP_SIZE: int = 10 # Step size for the scheduler
 SCHEDULER_GAMMA: float = 0.1 # Gamma for the scheduler
-LABEL_SMOOTHING_EPSILON: float = 0.1 # Label smoothing (0.0 for no smoothing)
+LABEL_SMOOTHING_EPSILON: float = 0.2 # Label smoothing (0.0 for no smoothing)
 RESUME_TRAINING: bool = False # Resume training if True (specify the path of model to resume and the epoch to start from)
 PATH_MODEL_TO_RESUME: str = "" # Name of the model to resume
 RESUME_EPOCH: int = 0 # Epoch to resume
 RESUME_FOLD: int = 0 # Fold to resume (only for K-Fold Cross Validation and Leave-One-Out Cross Validation)
 
 # Model configurations
-USE_PRETRAINED_MODELS: bool = False # Use a pretrained model if True
-ADD_DROPOUT_TO_MODEL: bool = True # Add dropout layers to the model if True
+USE_PRETRAINED_MODELS: bool = True # Use a pretrained model if True
+ADD_DROPOUT_TO_MODEL: bool = False # Add dropout layers to the model if True
 
 # Miscellaneous assertions
 assert VALIDATION_SCHEME in validation_schemes, f"{VALIDATION_SCHEME} is not a supported validation scheme."

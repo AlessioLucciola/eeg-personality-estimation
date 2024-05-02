@@ -62,7 +62,7 @@ def train_eval_loop(device,
         folds_metrics = []
     
     dataloaders_num = len(dataloaders) # Number of dataloaders (folds) - k in k-fold CV, number of subjects in LOOCV
-    for fold_i, (train_loader, val_loader) in dataloaders.items():
+    for fold_i, (train_loader, val_loader) in list(dataloaders.items())[:3]: # TO DO: Remove the slicing for the final version
         # If the training is to be resumed, skip the folds until the one to resume
         if resume and fold_i < RESUME_FOLD:
             continue
@@ -123,7 +123,7 @@ def train_eval_loop(device,
                 if USE_DML:
                     epoch_tr_preds = epoch_tr_preds.long().cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
                     epoch_tr_labels = epoch_tr_labels.long().cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
-                    epoch_tr_outputs = epoch_tr_outputs.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
+                    epoch_tr_outputs = epoch_tr_outputs.float().cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
                 
                 # Compute metrics
                 tr_accuracy = accuracy_metric(epoch_tr_preds, epoch_tr_labels) * 100
@@ -174,7 +174,7 @@ def train_eval_loop(device,
                 if USE_DML:
                     epoch_val_preds = epoch_val_preds.long().cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
                     epoch_val_labels = epoch_val_labels.long().cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
-                    epoch_val_outputs = epoch_val_outputs.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
+                    epoch_val_outputs = epoch_val_outputs.float().cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
                 
                 # Compute metrics
                 val_accuracy = accuracy_metric(epoch_val_preds, epoch_val_labels) * 100
