@@ -53,7 +53,7 @@ class EEG_dataloader(DataLoader):
             val_dataset = torch.utils.data.Subset(self.dataset, val_idx)
             train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
             val_dataloader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=False)
-            loo_dataloaders[i] = tuple((train_dataloader, val_dataloader))
+            loo_dataloaders[subject_id] = tuple((train_dataloader, val_dataloader))
         return loo_dataloaders
     
     # K-Fold Cross Validation
@@ -77,9 +77,20 @@ if __name__ == "__main__":
     dataloaders = EEG_dataloader(dataset=amigos_dataset, validation_scheme="LOOCV").get_dataloaders()
 
     # Just for debugging purposes
-    dataloader_test = dataloaders[2]
+    subject_id = 2
+    dataloader_test = dataloaders[subject_id]
     train_dataloader, val_dataloader = dataloader_test
+    is_train_contain_subject = False
+    is_val_contain_subject = True
     for batch in train_dataloader:
-        print("tr: " + str(batch['subject_id']))
+        for el in batch['subject_id']:
+            if el == subject_id:
+                is_train_contain_subject = True
+    print("Train: " + str(is_train_contain_subject))
     for batch in val_dataloader:
-        print("val: " + str(batch['subject_id']))
+        for el in batch['subject_id']:
+            if el != subject_id:
+                print(el)
+                is_val_contain_subject = False
+    print("Val: " + str(is_val_contain_subject))
+    ###
