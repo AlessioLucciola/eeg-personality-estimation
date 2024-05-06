@@ -103,9 +103,12 @@ def train_eval_loop(device,
                 epoch_tr_labels = torch.cat((epoch_tr_labels, tr_labels), 0)
         
         with torch.no_grad():
+            epoch_tr_preds = epoch_tr_preds.long()
+            epoch_tr_labels = epoch_tr_labels.long()
+            epoch_tr_outputs = epoch_tr_outputs.float()
             if USE_DML:
-                epoch_tr_preds = epoch_tr_preds.long().cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
-                epoch_tr_labels = epoch_tr_labels.long().cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
+                epoch_tr_preds = epoch_tr_preds.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
+                epoch_tr_labels = epoch_tr_labels.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
                 epoch_tr_outputs = epoch_tr_outputs.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
             
             # Compute metrics
@@ -154,9 +157,12 @@ def train_eval_loop(device,
                 epoch_val_preds = torch.cat((epoch_val_preds, val_preds), 0)
                 epoch_val_labels = torch.cat((epoch_val_labels, val_labels), 0)
 
+            epoch_val_preds = epoch_val_preds.long()
+            epoch_val_labels = epoch_val_labels.long()
+            epoch_val_outputs = epoch_val_outputs.float()
             if USE_DML:
-                epoch_val_preds = epoch_val_preds.long().cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
-                epoch_val_labels = epoch_val_labels.long().cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
+                epoch_val_preds = epoch_val_preds.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
+                epoch_val_labels = epoch_val_labels.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
                 epoch_val_outputs = epoch_val_outputs.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
             
             # Compute metrics
