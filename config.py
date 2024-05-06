@@ -18,7 +18,7 @@ AMIGOS_NUM_CLASSES: int = 2
 
 # Miscellanous configurations
 RANDOM_SEED: int = 42 # Random seed
-USE_DML: bool = False # Use DirectML library if True (for AMD GPUs)
+USE_DML: bool = True # Use DirectML library if True (for AMD GPUs)
 USE_WANDB: bool = False # Use Weights & Biases for logging if True
 SAVE_RESULTS: bool = True # Save results in JSON files if True
 SAVE_MODELS: bool = False # Save models if True
@@ -63,7 +63,7 @@ RESUME_FOLD: int = 0 # Fold to resume (only for K-Fold Cross Validation and Leav
 
 # Model configurations
 USE_PRETRAINED_MODELS: bool = True # Use a pretrained model if True
-ADD_DROPOUT_TO_MODEL: bool = False # Add dropout layers to the model if True
+ADD_DROPOUT_TO_MODEL: bool = True # Add dropout layers to the model if True
 
 # Miscellaneous assertions
 assert VALIDATION_SCHEME in validation_schemes, f"{VALIDATION_SCHEME} is not a supported validation scheme."

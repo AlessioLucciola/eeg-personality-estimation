@@ -64,7 +64,7 @@ def train_eval_loop(device,
     
     dataloaders_num = len(dataloaders) # Number of dataloaders (folds) - k in k-fold CV, number of subjects in LOOCV
     for fold_i, (train_loader, val_loader) in list(dataloaders.items())[:3]: # TO DO: Remove the slicing for the final version
-        if VALIDATION_SCHEME == "LOOCV":
+        if config["validation_scheme"] == "LOOCV":
             i, subject_id = fold_i
         else:
             i = fold_i
@@ -100,7 +100,10 @@ def train_eval_loop(device,
             epoch_tr_labels = torch.tensor([]).to(device)
             epoch_tr_outputs = torch.tensor([]).to(device)
             epoch_tr_loss = 0
-            for _, tr_batch in enumerate(tqdm(train_loader, desc=f"Training Fold [{i+1}/{dataloaders_num}], Epoch [{epoch+1}/{EPOCHS}]", leave=False)):
+            training_description = f"Training Fold [{i+1}/{dataloaders_num}], Epoch [{epoch+1}/{EPOCHS}]"
+            if config["validation_scheme"] == "LOOCV":
+                training_description += f", Subject [{subject_id}]"
+            for _, tr_batch in enumerate(tqdm(train_loader, desc=training_description, leave=False)):
                 # Select the data and the labels
                 tr_data, tr_labels = tr_batch['eeg_data'], tr_batch['labels']
                 tr_data = tr_data.to(device)
@@ -134,9 +137,6 @@ def train_eval_loop(device,
                     epoch_tr_labels = epoch_tr_labels.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
                     epoch_tr_outputs = epoch_tr_outputs.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
                 
-                for i in range(len(epoch_tr_preds)):
-                    print(epoch_tr_preds[i], epoch_tr_labels[i])
-                
                 # Compute metrics
                 tr_accuracy = accuracy_metric(epoch_tr_preds, epoch_tr_labels) * 100
                 tr_recall = recall_metric(epoch_tr_preds, epoch_tr_labels) * 100
@@ -164,7 +164,10 @@ def train_eval_loop(device,
                 epoch_val_outputs = torch.tensor([]).to(device)
                 epoch_val_loss = 0
 
-                for _, val_batch in enumerate(tqdm(val_loader, desc=f"Validation Fold [{i+1}/{dataloaders_num}], Epoch [{epoch+1}/{EPOCHS}]", leave=False)):
+                validation_description = f"Validation Fold [{i+1}/{dataloaders_num}], Epoch [{epoch+1}/{EPOCHS}]"
+                if config["validation_scheme"] == "LOOCV":
+                    validation_description += f", Subject [{subject_id}]"
+                for _, val_batch in enumerate(tqdm(val_loader, desc=validation_description, leave=False)):
                     # Select the data and the labels
                     val_data, val_labels = val_batch['eeg_data'], val_batch['labels']
                     val_data = val_data.to(device)
@@ -191,6 +194,9 @@ def train_eval_loop(device,
                     epoch_val_labels = epoch_val_labels.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
                     epoch_val_outputs = epoch_val_outputs.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
                 
+                for j in range(len(epoch_val_preds)):
+                    print(epoch_val_preds[j], epoch_val_labels[j])
+                
                 # Compute metrics
                 val_accuracy = accuracy_metric(epoch_val_preds, epoch_val_labels) * 100
                 val_recall = recall_metric(epoch_val_preds, epoch_val_labels) * 100
@@ -208,7 +214,6 @@ def train_eval_loop(device,
                 print('Validation -> Fold [{}/{}], Epoch [{}/{}], Loss: {:.4f}, Accuracy: {:.4f}%, Recall: {:.4f}%, Precision: {:.4f}%, F1: {:.4f}%, AUROC: {:.4f}%'
                     .format(i+1, dataloaders_num, epoch+1, EPOCHS, epoch_val_loss/val_total_step, val_accuracy, val_recall, val_precision, val_f1, val_auroc))
 
-
             current_fold_epoch_results = {
                 'fold': i+1,
                 'epoch': epoch+1,
@@ -225,6 +230,8 @@ def train_eval_loop(device,
                 'validation_f1': val_f1.item(),
                 'validation_auroc': val_auroc.item()
             }
+            if config["validation_scheme"] == "LOOCV":
+                current_fold_epoch_results["subject"] = subject_id
             fold_metrics.append(current_fold_epoch_results) # Append the results for the current fold and epoch
 
             if SAVE_RESULTS:
