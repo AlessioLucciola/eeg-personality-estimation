@@ -71,10 +71,6 @@ class ResNet18(nn.Module):
         if self.add_dropout_to_resnet:
             self.resnet18 = add_dropout_to_model(self.resnet18, self.dropout_p)
         
-    def forward(self, eegs):
-        eegs = eegs.to(self.device) # Move data to device
-        spectrogram = self.spectrogram_module(eegs).to(self.device) # Compute the mel spectrogram
-        x = self.resnet18(spectrogram) # Forward pass
-        del eegs # Free memory to avoid DirectML errors
-        del spectrogram # Free memory to avoid DirectML errors
+    def forward(self, x):
+        x = self.resnet18(x) # Forward pass
         return torch.sigmoid(x)

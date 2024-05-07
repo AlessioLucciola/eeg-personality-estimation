@@ -63,6 +63,7 @@ class MelSpectrogram(nn.Module):
         spectrogram = mel_fn(eeg_data)  # Compute mel spectrogram of the eeg_data - (b c m s)
         if self.get_decibels:
             spectrogram = 10 * torch.log10(spectrogram) # Convert to dB scale
+        spectrogram = einops.rearrange(spectrogram, "b s c m -> b c s m") # Switch back to (b, c, s, m)
         # Rearrange the dimensions in case the input was not batched (useful for plotting)
         if not is_batched:
             spectrogram = einops.rearrange(spectrogram, "b c s m -> (b s) c m")

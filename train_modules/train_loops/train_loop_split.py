@@ -79,7 +79,7 @@ def train_eval_loop(device,
         epoch_tr_loss = 0
         for _, tr_batch in enumerate(tqdm(train_loader, desc=f"Training Epoch [{epoch+1}/{EPOCHS}]", leave=False)):
             # Select the data and the labels
-            tr_data, tr_labels = tr_batch['eeg_data'], tr_batch['labels']
+            tr_data, tr_labels = tr_batch['spectrogram'], tr_batch['labels']
             tr_data = tr_data.to(device)
             tr_labels = tr_labels.to(device)
 
@@ -140,7 +140,7 @@ def train_eval_loop(device,
 
             for _, val_batch in enumerate(tqdm(val_loader, desc=f"Validation Epoch [{epoch+1}/{EPOCHS}]", leave=False)):
                 # Select the data and the labels
-                val_data, val_labels = val_batch['eeg_data'], val_batch['labels']
+                val_data, val_labels = val_batch['spectrogram'], val_batch['labels']
                 val_data = val_data.to(device)
                 val_labels = val_labels.to(device)
 

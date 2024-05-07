@@ -47,7 +47,7 @@ REG: float = 0.2 # Regularization parameter
 EPOCHS: int = 30 # Number of epochs
 DROPOUT_P: float = 0.1 # Dropout probability
 THRESHOLD: float = 0.5 # Threshold for the binary classification
-VALIDATION_SCHEME: str = "LOOCV" # "LOOCV" | "K-FOLDCV" | "SPLIT"
+VALIDATION_SCHEME: str = "SPLIT" # "LOOCV" | "K-FOLDCV" | "SPLIT"
 KFOLDCV: int = 3 # Number of folds for K-Fold Cross Validation
 SPLIT_RATIO: float = 0.2 # Ratio for the train-validation split
 OPTIMIZER: str = "AdamW" # "Adam" | "AdamW" | "SGD"
@@ -55,15 +55,15 @@ SCHEDULER: str = "StepLR" # "StepLR" | "ReduceLROnPlateau" | "CosineAnnealingLR"
 CRITERION: str = "BCEWithLogitsLoss" # "BCEWithLogitsLoss" | "CrossEntropyLoss"
 SCHEDULER_STEP_SIZE: int = 10 # Step size for the scheduler
 SCHEDULER_GAMMA: float = 0.1 # Gamma for the scheduler
-LABEL_SMOOTHING_EPSILON: float = 0.2 # Label smoothing (0.0 for no smoothing)
+LABEL_SMOOTHING_EPSILON: float = 0.0 # Label smoothing (0.0 for no smoothing)
 RESUME_TRAINING: bool = False # Resume training if True (specify the path of model to resume and the epoch to start from)
 PATH_MODEL_TO_RESUME: str = "" # Name of the model to resume
 RESUME_EPOCH: int = 0 # Epoch to resume
 RESUME_FOLD: int = 0 # Fold to resume (only for K-Fold Cross Validation and Leave-One-Out Cross Validation)
 
 # Model configurations
-USE_PRETRAINED_MODELS: bool = True # Use a pretrained model if True
-ADD_DROPOUT_TO_MODEL: bool = True # Add dropout layers to the model if True
+USE_PRETRAINED_MODELS: bool = False # Use a pretrained model if True
+ADD_DROPOUT_TO_MODEL: bool = False # Add dropout layers to the model if True
 
 # Miscellaneous assertions
 assert VALIDATION_SCHEME in validation_schemes, f"{VALIDATION_SCHEME} is not a supported validation scheme."

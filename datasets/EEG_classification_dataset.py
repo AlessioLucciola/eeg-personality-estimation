@@ -48,9 +48,9 @@ class EEGClassificationDataset(Dataset, ABC):
         self.eegs_data = self.discard_corrupted_experiments(self.eegs_data)
 
         # Plot EEG data sample before normalization
-        #if MAKE_PLOTS:
-        #    for i in tqdm(range(len(self.eegs_data)), desc="--PLOTS-- Plotting EEG data sample before normalization..", unit="subject", leave=False):
-        #        plot_sample(self.eegs_data[i][0], self.electrodes, dataset_name=self.dataset_name, data_normalized=False, title=f"EEG data sample for subject {self.subjects_data[i]} before normalization")
+        if MAKE_PLOTS:
+            for i in tqdm(range(len(self.eegs_data)), desc="--PLOTS-- Plotting EEG data sample before normalization..", unit="subject", leave=False):
+                plot_sample(self.eegs_data[i][0], self.electrodes, dataset_name=self.dataset_name, data_normalized=False, title=f"EEG data sample for subject {self.subjects_data[i]} before normalization")
 
         # Normalizes the EEG data if the NORMALIZE_DATA flag is set to True
         if NORMALIZE_DATA:
@@ -58,9 +58,9 @@ class EEGClassificationDataset(Dataset, ABC):
             self.eegs_data = self.normalize_data(self.eegs_data)
         
         # Plot the EEG data sample after normalization
-        #if MAKE_PLOTS:
-        #    for i in tqdm(range(len(self.eegs_data)), desc="--PLOTS-- Plotting EEG data sample after normalization..", unit="subject", leave=False):
-        #        plot_sample(self.eegs_data[i][0], self.electrodes, dataset_name=self.dataset_name, data_normalized=True, title=f"EEG data sample for subject {self.subjects_data[i]} after normalization")
+        if MAKE_PLOTS:
+            for i in tqdm(range(len(self.eegs_data)), desc="--PLOTS-- Plotting EEG data sample after normalization..", unit="subject", leave=False):
+                plot_sample(self.eegs_data[i][0], self.electrodes, dataset_name=self.dataset_name, data_normalized=True, title=f"EEG data sample for subject {self.subjects_data[i]} after normalization")
 
         # Plot the amplitudes distribution of the EEG data after normalization
         if MAKE_PLOTS:
@@ -109,7 +109,19 @@ class EEGClassificationDataset(Dataset, ABC):
                 if spectrogram_plots_counter[self.windows[i]["subject_id"]] < 2:
                     spectrogram_plots_counter[self.windows[i]["subject_id"]] += 1
                     plot_mel_spectrogram(self.windows[i]["eeg_data"], spectrogram_function=spectrogram_module, rows_name=self.electrodes, dataset_name=self.dataset_name, title=f"Mel spectrogram of EEG data for subject {self.windows[i]['subject_id']} experiment {self.windows[i]['experiment']} window {i}")
-        
+
+        # Load the mel spectrogram module
+        spectrogram_module = MelSpectrogram(
+            sampling_rate=self.sampling_rate,
+            window_size=MELS_WINDOW_SIZE,
+            window_stride=MELS_WINDOW_STRIDE,
+            device=select_device(),
+            mels=MELS,
+            min_freq=MELS_MIN_FREQ,
+            max_freq=MELS_MAX_FREQ
+        )
+        self.windows = self.get_mel_spectrograms(spectrogram_module)
+
     def __len__(self):
         return len(self.windows)
     
@@ -118,6 +130,7 @@ class EEGClassificationDataset(Dataset, ABC):
         parsed_labels = torch.tensor(list(window["labels"].values()), dtype=torch.float)
         return {
             "eeg_data": window["eeg_data"].astype(np.float32),
+            "spectrogram": window["spectrogram"],
             "sample_rate": self.sampling_rate,
             "subject_id": window["subject_id"],
             "labels": parsed_labels,
@@ -184,4 +197,11 @@ class EEGClassificationDataset(Dataset, ABC):
                         "labels": self.labels_data[i]
                     }
                     windows.append(window)
+        return windows
+    
+    def get_mel_spectrograms(self, spectrogram_module):
+        windows = self.windows
+        for i in tqdm(range(len(windows)), desc="Computing mel spectrograms of the windows..", unit="window", leave=False):
+            window_spectrogram = spectrogram_module(windows[i]["eeg_data"])
+            windows[i]["spectrogram"] = window_spectrogram
         return windows
