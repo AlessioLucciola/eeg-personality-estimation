@@ -1,8 +1,10 @@
 from config import USE_DML, MELS, MELS_WINDOW_SIZE, MELS_WINDOW_STRIDE, MELS_MAX_FREQ, MELS_MIN_FREQ, SAMPLING_RATE
 from utils.utils import select_device
 from torchaudio import transforms
+from tqdm import tqdm
 import torch.nn as nn
 import numpy as np
+import random
 import einops
 import torch
 import math
@@ -69,56 +71,43 @@ class MelSpectrogram(nn.Module):
             spectrogram = einops.rearrange(spectrogram, "b c s m -> (b s) c m")
         return spectrogram
 
-'''
-class MelSpectrogram(nn.Module):
-    def __init__(
-            self,
-            sampling_rate: int,
-            window_size: Union[int, float],
-            window_stride: Union[int, float],
-            device: any,
-            mels: int = 8,
-            min_freq: int = 0,
-            max_freq: int = 50,
-    ):
-        super().__init__()
-        self.sampling_rate = sampling_rate
-        self.min_freq = min_freq
-        self.max_freq = max_freq
-        self.device = device
-        self.mels = mels
-        self.window_size = math.floor(window_size * self.sampling_rate)
-        self.window_stride = math.floor(window_stride * self.sampling_rate)
-
-    def forward(self, eegs):
-        is_batched = True if len(eegs.shape) == 3 else False
-        if not is_batched:
-            eegs = einops.rearrange(eegs, "s c -> () s c")
-        window_size = min(self.window_size, eegs.shape[1])
-        window_stride = min(self.window_stride, window_size // 2)
+def apply_augmentation_to_spectrograms(data, time_mask_param, freq_mask_param):
+    print("--AUGMENTATION-- apply_regularization flag set to True. Mel spectrograms will be augmented.")
+    for i in tqdm(range(len(data)), desc="Applying augmentations to training data..", leave=False):
+        mel_spectrogram = data[i]["spectrogram"]
+        # Apply SpecAugment if the random number is greater than 0.5
+        if random.random() > 0.5:
+            mel_spectrogram = spec_augment(mel_spectrogram, time_mask_param, freq_mask_param)
         
-        spectrograms = []
-        eegs = einops.rearrange(eegs, "b s c -> b c s")
-        for eeg in eegs:
-            mel_spec = self.compute_mel_spectrogram(eeg.cpu().numpy(), window_size=window_size, window_stride=window_stride) # DirectML (GPU) does not support the mel spectrogram computation
-            spectrograms.append(mel_spec)
-        spectrograms = np.stack(spectrograms)
-        spectrograms = torch.tensor(spectrograms, dtype=torch.float32)
-        return spectrograms
+        # Apply additive noise if the random number is greater than 0.5
+        if random.random() > 0.5:
+            mel_spectrogram = add_noise(mel_spectrogram)
+        
+        # Apply flipping if the random number is greater than 0.75
+        if random.random() > 0.75:
+            mel_spectrogram = flip(mel_spectrogram)
+        data[i]["spectrogram"] = mel_spectrogram
+    
+    return data
 
-    def compute_mel_spectrogram(self, eeg, window_size, window_stride):
-        mel_spec = librosa.feature.melspectrogram(
-            y=eeg,
-            sr=self.sampling_rate,
-            n_fft=max(128, self.window_size),
-            hop_length=window_stride,
-            win_length=window_size,
-            power=1,
-            n_mels=self.mels,
-            fmin=self.min_freq,
-            fmax=self.max_freq,
-            pad_mode="constant",
-        )
-        mel_spec_db = librosa.power_to_db(mel_spec, ref=1)  # Convert to dB scale
-        return mel_spec_db
-'''
+def spec_augment(mel_spectrogram, time_mask_param, freq_mask_param):
+    # Apply frequency masking
+    freq_masker = transforms.FrequencyMasking(freq_mask_param=freq_mask_param)
+    mel_spectrogram = freq_masker(mel_spectrogram)
+
+    # Apply time masking
+    time_masker = transforms.TimeMasking(time_mask_param=time_mask_param)
+    mel_spectrogram = time_masker(mel_spectrogram)
+
+    return mel_spectrogram
+
+def add_noise(mel_spectrogram):
+    noise_level = 0.05  # Additive noise parameters
+    noise = torch.randn_like(mel_spectrogram) * noise_level # Generate random noise
+    mel_spectrogram += noise # Add noise to the mel spectrogram
+    return mel_spectrogram
+
+def flip(mel_spectrogram):
+    # Flip along the time axis
+    mel_spectrogram = torch.flip(mel_spectrogram, dims=[2])
+    return mel_spectrogram

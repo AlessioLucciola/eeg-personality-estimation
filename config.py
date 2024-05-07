@@ -32,6 +32,9 @@ ELECTRODES: List[str] = ["AF3", "F7", "F3", "FC5", "T7", "P7", "O1", "O2",
 DISCRETIZE_LABELS: bool = True # Discretize the labels if True
 NORMALIZE_DATA: bool = True # Normalize the EEG data if True
 DROP_LAST: bool = False # Drop the last window if True
+APPLY_AUGMENTATION: bool = True # Apply data augmentations to mel spectrograms if True
+AUGMENTATION_FREQ_MAX_PARAM = 0.25 # Maximum possible length of the frequency mask
+AUGMENTATION_TIME_MAX_PARAM = 0.25 # Maximum possible length of the time mask
 
 # Mel spectrogram configurations
 MELS: int = 8 # Number of mel bands

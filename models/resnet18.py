@@ -1,5 +1,4 @@
 from utils.train_utils import add_dropout_to_model
-from utils.eeg_utils import MelSpectrogram
 import torchvision.models as models
 from typing import List
 from torch import nn
@@ -41,14 +40,6 @@ class ResNet18(nn.Module):
         self.pretrained = pretrained
         self.add_dropout_to_resnet = add_dropout_to_resnet
         self.device = device
-        self.spectrogram_module = MelSpectrogram(sampling_rate=self.sampling_rate,
-                                            window_size=self.mel_window_size,
-                                            window_stride=self.mel_window_stride,
-                                            device=self.device,
-                                            mels=self.mels,
-                                            min_freq=self.mel_min_freq,
-                                            max_freq=self.mel_max_freq
-                                        )
         
         self.dropout = nn.Dropout(p=self.dropout_p) # Dropout layer
         self.resnet18 = models.resnet18(weights=models.ResNet18_Weights.DEFAULT if self.pretrained else None) # Load pretrained weights if pretrained
