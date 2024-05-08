@@ -1,7 +1,6 @@
 from utils.utils import resume_starting_weights, save_results, save_model, save_configurations, save_fold_results, resume_folds_metrics, save_starting_weights
+from utils.train_utils import compute_average_fold_metrics, find_best_model, load_metrics, measure_performances, reset_weights
 from config import SAVE_MODELS, SAVE_RESULTS, PATH_MODEL_TO_RESUME, RESUME_EPOCH, EPOCHS, USE_DML, RESUME_FOLD
-from utils.train_utils import compute_average_fold_metrics, find_best_model, reset_weights
-from torchmetrics import AUROC, Accuracy, Recall, Precision, F1Score
 from datetime import datetime
 from tqdm import tqdm
 import torch
@@ -81,11 +80,7 @@ def train_eval_loop(device,
             fold_metrics = [] # List to store the metrics in a fold
 
         # Define the metrics
-        accuracy_metric = Accuracy(task="multilabel", num_labels=len(config["labels"]))
-        recall_metric = Recall(task="multilabel", num_labels=len(config["labels"]), average='macro')
-        precision_metric = Precision(task="multilabel", num_labels=len(config["labels"]), average='macro')
-        f1_metric = F1Score(task="multilabel", num_labels=len(config["labels"]), average='macro')
-        auroc_metric = AUROC(task="multilabel", num_labels=len(config["labels"]))
+        accuracy_metric, recall_metric, precision_metric, f1_metric, auroc_metric, label_metrics = load_metrics(num_labels=len(config["labels"]))
 
         fold_model = model # Copy the model for each fold
         fold_model = reset_weights(model=fold_model, weights=starting_weights) # Reset the weights of the model for each fold
@@ -138,14 +133,32 @@ def train_eval_loop(device,
                     epoch_tr_outputs = epoch_tr_outputs.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
                 
                 # Compute metrics
-                tr_accuracy = accuracy_metric(epoch_tr_preds, epoch_tr_labels) * 100
-                tr_recall = recall_metric(epoch_tr_preds, epoch_tr_labels) * 100
-                tr_precision = precision_metric(epoch_tr_preds, epoch_tr_labels) * 100
-                tr_f1 = f1_metric(epoch_tr_preds, epoch_tr_labels) * 100
-                tr_auroc = auroc_metric(epoch_tr_outputs, epoch_tr_labels) * 100
+                tr_accuracy, tr_recall, tr_precision, tr_f1, tr_auroc = measure_performances(
+                    acc_metric=accuracy_metric,
+                    rec_metric=recall_metric,
+                    prec_metric=precision_metric,
+                    f1_metric=f1_metric,
+                    auroc_metric=auroc_metric,
+                    preds=epoch_tr_preds,
+                    labels=epoch_tr_labels,
+                    outputs=epoch_tr_outputs
+                )
 
                 print('Training -> Fold [{}/{}], Epoch [{}/{}], Loss: {:.4f}, Accuracy: {:.4f}%, Recall: {:.4f}%, Precision: {:.4f}%, F1: {:.4f}%, AUROC: {:.4f}%'
                     .format(i+1, dataloaders_num, epoch+1, EPOCHS, epoch_tr_loss/training_total_step, tr_accuracy, tr_recall, tr_precision, tr_f1, tr_auroc))
+                
+                for label, metrics in label_metrics.items():
+                    label_accuracy, label_recall, label_precision, label_f1, label_auroc = measure_performances(
+                        acc_metric=metrics['accuracy'],
+                        rec_metric=metrics['recall'],
+                        prec_metric=metrics['precision'],
+                        f1_metric=metrics['f1'],
+                        auroc_metric=metrics['auroc'],
+                        preds=epoch_tr_preds[:, label],
+                        labels=epoch_tr_labels[:, label],
+                        outputs=epoch_tr_outputs[:, label]
+                    )
+                    print(f'Training -> Fold [{i+1}/{dataloaders_num}], Epoch [{epoch+1}/{EPOCHS}], Metrics for Label {label} -> Accuracy: {label_accuracy}, Recall: {label_recall}, Precision: {label_precision}, F1: {label_f1}, AUROC: {label_auroc}')
 
             if config["use_wandb"]:
                 wandb.log({"Training Loss": epoch_tr_loss/training_total_step})
@@ -195,11 +208,32 @@ def train_eval_loop(device,
                     epoch_val_outputs = epoch_val_outputs.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
                 
                 # Compute metrics
-                val_accuracy = accuracy_metric(epoch_val_preds, epoch_val_labels) * 100
-                val_recall = recall_metric(epoch_val_preds, epoch_val_labels) * 100
-                val_precision = precision_metric(epoch_val_preds, epoch_val_labels) * 100
-                val_f1 = f1_metric(epoch_val_preds, epoch_val_labels) * 100
-                val_auroc = auroc_metric(epoch_val_outputs, epoch_val_labels) * 100
+                val_accuracy, val_recall, val_precision, val_f1, val_auroc = measure_performances(
+                    acc_metric=accuracy_metric,
+                    rec_metric=recall_metric,
+                    prec_metric=precision_metric,
+                    f1_metric=f1_metric,
+                    auroc_metric=auroc_metric,
+                    preds=epoch_val_preds,
+                    labels=epoch_val_labels,
+                    outputs=epoch_val_outputs
+                )
+
+                print('Validation -> Fold [{}/{}], Epoch [{}/{}], Loss: {:.4f}, Accuracy: {:.4f}%, Recall: {:.4f}%, Precision: {:.4f}%, F1: {:.4f}%, AUROC: {:.4f}%'
+                    .format(i+1, dataloaders_num, epoch+1, EPOCHS, epoch_val_loss/val_total_step, val_accuracy, val_recall, val_precision, val_f1, val_auroc))
+                
+                for label, metrics in label_metrics.items():
+                    label_accuracy, label_recall, label_precision, label_f1, label_auroc = measure_performances(
+                        acc_metric=metrics['accuracy'],
+                        rec_metric=metrics['recall'],
+                        prec_metric=metrics['precision'],
+                        f1_metric=metrics['f1'],
+                        auroc_metric=metrics['auroc'],
+                        preds=epoch_val_preds[:, label],
+                        labels=epoch_val_labels[:, label],
+                        outputs=epoch_val_outputs[:, label]
+                    )
+                    print(f'Validation -> Fold [{i+1}/{dataloaders_num}], Epoch [{epoch+1}/{EPOCHS}], Metrics for Label {label} -> Accuracy: {label_accuracy}, Recall: {label_recall}, Precision: {label_precision}, F1: {label_f1}, AUROC: {label_auroc}')
 
                 if config["use_wandb"]:
                     wandb.log({"Validation Loss": epoch_val_loss/val_total_step})
@@ -208,8 +242,6 @@ def train_eval_loop(device,
                     wandb.log({"Validation Precision": val_precision.item()})
                     wandb.log({"Validation F1": val_f1.item()})
                     wandb.log({"Validation AUROC": val_auroc.item()})
-                print('Validation -> Fold [{}/{}], Epoch [{}/{}], Loss: {:.4f}, Accuracy: {:.4f}%, Recall: {:.4f}%, Precision: {:.4f}%, F1: {:.4f}%, AUROC: {:.4f}%'
-                    .format(i+1, dataloaders_num, epoch+1, EPOCHS, epoch_val_loss/val_total_step, val_accuracy, val_recall, val_precision, val_f1, val_auroc))
 
             current_fold_epoch_results = {
                 'fold': i+1,

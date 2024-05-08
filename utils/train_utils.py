@@ -1,3 +1,4 @@
+from torchmetrics import AUROC, Accuracy, Recall, Precision, F1Score
 from config import LEARNING_RATE, REG, RESULTS_DIR
 import torch
 import json
@@ -136,8 +137,42 @@ def find_best_model(dataset_name, withFold=False):
         with open(config_path, 'w') as json_file:
             json.dump(configurations, json_file, indent=2)
 
-# Fuction to reset the weights of a model
+# Function to reset the weights of a model
 def reset_weights(model, weights):
   print("--TRAIN-- Resetting the weights of the model at epoch 1..")
   model.load_state_dict(weights)
   return model
+
+def load_metrics(num_labels):
+    accuracy_metric = Accuracy(task="multilabel", num_labels=num_labels)
+    recall_metric = Recall(task="multilabel", num_labels=num_labels, average='macro')
+    precision_metric = Precision(task="multilabel", num_labels=num_labels, average='macro')
+    f1_metric = F1Score(task="multilabel", num_labels=num_labels, average='macro')
+    auroc_metric = AUROC(task="multilabel", num_labels=num_labels)
+    label_metrics = {
+        label: {
+            'accuracy': Accuracy(task="binary"),
+            'recall': Recall(task="binary", average='macro'),
+            'precision': Precision(task="binary", average='macro'),
+            'f1': F1Score(task="binary", average='macro'),
+            'auroc': AUROC(task="binary")
+        } for label in range(num_labels)
+    }
+    return accuracy_metric, recall_metric, precision_metric, f1_metric, auroc_metric, label_metrics
+
+def measure_performances(
+        acc_metric: Accuracy,
+        rec_metric: Recall,
+        prec_metric: Precision,
+        f1_metric: F1Score,
+        auroc_metric: AUROC,
+        preds: torch.Tensor,
+        labels: torch.Tensor,
+        outputs: torch.Tensor
+    ):
+    accuracy = acc_metric(preds, labels) * 100
+    recall = rec_metric(preds, labels) * 100
+    precision = prec_metric(preds, labels) * 100
+    f1 = f1_metric(preds, labels) * 100
+    auroc = auroc_metric(outputs, labels) * 100
+    return accuracy, recall, precision, f1, auroc

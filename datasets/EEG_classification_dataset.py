@@ -200,7 +200,7 @@ class EEGClassificationDataset(Dataset, ABC):
         return windows
     
     def get_mel_spectrograms(self, spectrogram_module):
-        windows = self.windows[:100]
+        windows = self.windows[:5000]
         for i in tqdm(range(len(windows)), desc="Computing mel spectrograms of the windows..", unit="window", leave=False):
             window_spectrogram = spectrogram_module(windows[i]["eeg_data"]) # Compute mel spectrogram of the EEG data
             windows[i]["spectrogram"] = window_spectrogram # Update the window with the mel spectrogram
