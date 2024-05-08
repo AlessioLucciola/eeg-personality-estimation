@@ -137,9 +137,7 @@ def find_best_model(dataset_name, withFold=False):
             json.dump(configurations, json_file, indent=2)
 
 # Fuction to reset the weights of a model
-def reset_weights(m):
-  #print(f'Reset trainable parameters of model = {m}')
-  for layer in m.children():
-   if hasattr(layer, 'reset_parameters'):
-    print(f'Reset trainable parameters of layer = {layer}')
-    layer.reset_parameters()
+def reset_weights(model, weights):
+  print("--TRAIN-- Resetting the weights of the model at epoch 1..")
+  model.load_state_dict(weights)
+  return model

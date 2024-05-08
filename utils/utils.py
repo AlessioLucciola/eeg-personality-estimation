@@ -89,12 +89,12 @@ def save_model(data_name, model, fold=None, epoch=None, is_best=False):
     if not os.path.exists(path):
         os.makedirs(path, exist_ok=True)
     if is_best:
-        torch.save(model.state_dict(), f'{path}/mi_project_best.pt')
+        torch.save(model.state_dict(), f'{path}/personality_estimation_best.pt')
     else:
         if fold != None:
-            torch.save(model.state_dict(), f'{path}/mi_project_fold_{fold}_epoch_{epoch+1}.pt')
+            torch.save(model.state_dict(), f'{path}/personality_estimation_fold_{fold}_epoch_{epoch+1}.pt')
         else:
-            torch.save(model.state_dict(), f'{path}/mi_project_{epoch+1}.pt')
+            torch.save(model.state_dict(), f'{path}/personality_estimation_{epoch+1}.pt')
 
 def instantiate_dataset(dataset_name):
     if dataset_name == "AMIGOS":
@@ -119,3 +119,12 @@ def resume_folds_metrics(dataset_name, fold, epoch):
                     if result['fold'] == fold and result['epoch'] <= epoch:
                         filtered_results.append(result)
                 return filtered_results
+            
+def save_starting_weights(weights, path):
+    data_path = os.path.join(RESULTS_DIR, path)
+    if not os.path.exists(data_path):
+        os.makedirs(data_path, exist_ok=True)
+    torch.save(weights, data_path + f'/model_starting_weights.pt')
+
+def resume_starting_weights(path):
+    return torch.load(f'{RESULTS_DIR}/{path}/model_starting_weights.pt')

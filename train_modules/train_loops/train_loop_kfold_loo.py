@@ -1,8 +1,7 @@
-from utils.utils import save_results, save_model, save_configurations, save_fold_results, resume_folds_metrics
-from config import SAVE_MODELS, SAVE_RESULTS, PATH_MODEL_TO_RESUME, RESUME_EPOCH, EPOCHS, THRESHOLD, USE_DML, RESUME_FOLD, VALIDATION_SCHEME
+from utils.utils import resume_starting_weights, save_results, save_model, save_configurations, save_fold_results, resume_folds_metrics, save_starting_weights
+from config import SAVE_MODELS, SAVE_RESULTS, PATH_MODEL_TO_RESUME, RESUME_EPOCH, EPOCHS, USE_DML, RESUME_FOLD
 from utils.train_utils import compute_average_fold_metrics, find_best_model, reset_weights
 from torchmetrics import AUROC, Accuracy, Recall, Precision, F1Score
-from torchmetrics.classification import MultilabelAUROC
 from datetime import datetime
 from tqdm import tqdm
 import torch
@@ -18,6 +17,7 @@ def train_eval_loop(device,
                     criterion,
                     resume=False):
 
+    starting_weights = None # Variable to store the starting weights of the model (useful for resetting the model at each fold)
     # If the model is to be resumed, load the model and the optimizer
     if resume:
         data_name = PATH_MODEL_TO_RESUME
@@ -39,16 +39,15 @@ def train_eval_loop(device,
                     resume=resume,
                     name=data_name
                 )
+        starting_weights = resume_starting_weights(data_name) # Load the starting weights of the model
     else:
         # Definition of the parameters to create folders where to save data (plots and models)
         current_datetime = datetime.now()
         current_datetime_str = current_datetime.strftime("%Y-%m-%d_%H-%M-%S")
         data_name = f"{config['architecture']}_{current_datetime_str}"
-
         if SAVE_RESULTS:
             # Save configurations in JSON
             save_configurations(data_name, config)
-
         if config["use_wandb"]:
             wandb.init(
                 project="personality_estimation",
@@ -56,7 +55,9 @@ def train_eval_loop(device,
                 resume=resume,
                 name=data_name
             )
-
+        starting_weights = copy.deepcopy(model.state_dict()) # Save the starting weights of the model
+        save_starting_weights(weights=starting_weights, path=data_name) # Save the starting weights of the model
+        
     if resume:
         folds_metrics = resume_folds_metrics(data_name) # List to store the metrics in all folds
     else:
@@ -85,10 +86,9 @@ def train_eval_loop(device,
         precision_metric = Precision(task="multilabel", num_labels=len(config["labels"]), average='macro')
         f1_metric = F1Score(task="multilabel", num_labels=len(config["labels"]), average='macro')
         auroc_metric = AUROC(task="multilabel", num_labels=len(config["labels"]))
-        #auroc_metric = MultilabelAUROC(num_labels=len(config["labels"]), average="macro", thresholds=[THRESHOLD])
 
         fold_model = model # Copy the model for each fold
-        fold_model.apply(reset_weights) # Reset the weights of the model for each fold
+        fold_model = reset_weights(model=fold_model, weights=starting_weights) # Reset the weights of the model for each fold
         fold_optimizer = optimizer # Copy the optimizer for each fold
 
         for epoch in range(RESUME_EPOCH if resume else 0, EPOCHS):
@@ -105,7 +105,7 @@ def train_eval_loop(device,
                 training_description += f", Subject [{subject_id}]"
             for _, tr_batch in enumerate(tqdm(train_loader, desc=training_description, leave=False)):
                 # Select the data and the labels
-                tr_data, tr_labels = tr_batch['eeg_data'], tr_batch['labels']
+                tr_data, tr_labels = tr_batch['spectrogram'], tr_batch['labels']
                 tr_data = tr_data.to(device)
                 tr_labels = tr_labels.to(device)
 
@@ -169,7 +169,7 @@ def train_eval_loop(device,
                     validation_description += f", Subject [{subject_id}]"
                 for _, val_batch in enumerate(tqdm(val_loader, desc=validation_description, leave=False)):
                     # Select the data and the labels
-                    val_data, val_labels = val_batch['eeg_data'], val_batch['labels']
+                    val_data, val_labels = val_batch['spectrogram'], val_batch['labels']
                     val_data = val_data.to(device)
                     val_labels = val_labels.to(device)
 
@@ -193,9 +193,6 @@ def train_eval_loop(device,
                     epoch_val_preds = epoch_val_preds.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
                     epoch_val_labels = epoch_val_labels.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
                     epoch_val_outputs = epoch_val_outputs.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
-                
-                for j in range(len(epoch_val_preds)):
-                    print(epoch_val_preds[j], epoch_val_labels[j])
                 
                 # Compute metrics
                 val_accuracy = accuracy_metric(epoch_val_preds, epoch_val_labels) * 100
