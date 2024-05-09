@@ -71,20 +71,19 @@ class MelSpectrogram(nn.Module):
             spectrogram = einops.rearrange(spectrogram, "b c s m -> (b s) c m")
         return spectrogram
 
-def apply_augmentation_to_spectrograms(data, time_mask_param, freq_mask_param):
-    print("--AUGMENTATION-- apply_regularization flag set to True. Mel spectrograms will be augmented.")
-    for i in tqdm(range(len(data)), desc="Applying augmentations to training data..", leave=False):
+def apply_augmentation_to_spectrograms(data, time_mask_param, freq_mask_param, k_fold_index=None):
+    for i in tqdm(range(len(data)), desc=f"Applying augmentations to training data.." if k_fold_index is None else f"Applying augmentations to training data (Fold {k_fold_index})..", leave=False):
         mel_spectrogram = data[i]["spectrogram"]
         # Apply SpecAugment if the random number is greater than 0.5
-        if random.random() > 0.5:
+        if random.random() > 0.25:
             mel_spectrogram = spec_augment(mel_spectrogram, time_mask_param, freq_mask_param)
         
         # Apply additive noise if the random number is greater than 0.5
-        if random.random() > 0.5:
+        if random.random() > 0.25:
             mel_spectrogram = add_noise(mel_spectrogram)
         
         # Apply flipping if the random number is greater than 0.75
-        if random.random() > 0.75:
+        if random.random() > 0.5:
             mel_spectrogram = flip(mel_spectrogram)
         data[i]["spectrogram"] = mel_spectrogram
     
@@ -102,7 +101,7 @@ def spec_augment(mel_spectrogram, time_mask_param, freq_mask_param):
     return mel_spectrogram
 
 def add_noise(mel_spectrogram):
-    noise_level = 0.05  # Additive noise parameters
+    noise_level = 0.1  # Additive noise parameters
     noise = torch.randn_like(mel_spectrogram) * noise_level # Generate random noise
     mel_spectrogram += noise # Add noise to the mel spectrogram
     return mel_spectrogram
