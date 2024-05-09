@@ -30,6 +30,7 @@ class EEG_dataloader(DataLoader):
         self.split_ratio = split_ratio
         self.apply_augmentation = apply_augmentation
         if self.apply_augmentation:
+            print("--AUGMENTATION-- apply_regularization flag set to True. Mel spectrograms will be augmented.")
             self.augmentation_freq_max_param = augmentation_freq_max_param
             self.augmentation_time_max_param = augmentation_time_max_param
 
@@ -47,7 +48,7 @@ class EEG_dataloader(DataLoader):
         print(f"--VALIDATION SCHEME-- Split is selected with test_size of {self.split_ratio*100}%.")
         train_df, test_df = train_test_split(self.dataset, test_size=self.split_ratio, random_state=self.seed)
         if self.apply_augmentation:
-            train_df = apply_augmentation_to_spectrograms(train_df, time_mask_param=self.augmentation_time_max_param, freq_mask_param=self.augmentation_freq_max_param)
+            train_df = apply_augmentation_to_spectrograms(train_df, time_mask_param=self.augmentation_time_max_param, freq_mask_param=self.augmentation_freq_max_param, k_fold_index=None)
         train_dataloader = DataLoader(train_df, batch_size=self.batch_size, shuffle=True)
         test_dataloader = DataLoader(test_df, batch_size=self.batch_size, shuffle=False)
         return tuple((train_dataloader, test_dataloader))
@@ -62,7 +63,7 @@ class EEG_dataloader(DataLoader):
             train_dataset = torch.utils.data.Subset(self.dataset, train_idx)
             val_dataset = torch.utils.data.Subset(self.dataset, val_idx)
             if self.apply_augmentation:
-                train_dataset = apply_augmentation_to_spectrograms(train_dataset, time_mask_param=self.augmentation_time_max_param, freq_mask_param=self.augmentation_freq_max_param)
+                train_dataset = apply_augmentation_to_spectrograms(train_dataset, time_mask_param=self.augmentation_time_max_param, freq_mask_param=self.augmentation_freq_max_param, k_fold_index=i+1)
             train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
             val_dataloader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=False)
             loo_dataloaders[tuple((i, subject_id))] = tuple((train_dataloader, val_dataloader))
@@ -76,7 +77,7 @@ class EEG_dataloader(DataLoader):
         for i, (train_idx, val_idx) in enumerate(kfold.split(self.dataset)):
             train_dataset = torch.utils.data.Subset(self.dataset, train_idx)
             if self.apply_augmentation:
-                train_dataset = apply_augmentation_to_spectrograms(train_dataset, time_mask_param=self.augmentation_time_max_param, freq_mask_param=self.augmentation_freq_max_param)
+                train_dataset = apply_augmentation_to_spectrograms(train_dataset, time_mask_param=self.augmentation_time_max_param, freq_mask_param=self.augmentation_freq_max_param, k_fold_index=i+1)
             val_dataset = torch.utils.data.Subset(self.dataset, val_idx)
             train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
             val_dataloader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=False)

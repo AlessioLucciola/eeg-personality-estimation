@@ -1,10 +1,10 @@
-from config import DATASET_TO_USE, RANDOM_SEED, BATCH_SIZE, USE_DML, VALIDATION_SCHEME, ELECTRODES, SAMPLING_RATE, MELS, MELS_WINDOW_SIZE, MELS_WINDOW_STRIDE, MELS_MIN_FREQ, MELS_MAX_FREQ, DROPOUT_P, LEARNING_RATE, REG, RESUME_TRAINING, RESULTS_DIR, PATH_MODEL_TO_RESUME, RESUME_EPOCH, LEARNING_RATE, OPTIMIZER, SCHEDULER, SCHEDULER_STEP_SIZE, SCHEDULER_GAMMA, USE_WANDB, THRESHOLD, WINDOWS_SIZE, WINDOWS_STRIDE, CRITERION, LABEL_SMOOTHING_EPSILON, USE_PRETRAINED_MODELS, ADD_DROPOUT_TO_MODEL, APPLY_AUGMENTATION
 from utils.utils import get_configurations, instantiate_dataset, set_seed, select_device
 from utils.train_utils import get_criterion, get_optimizer, get_scheduler
 from dataloaders.EEG_classification_dataloader import EEG_dataloader
 from train_modules.train_loops.train_loop_split import train_eval_loop as train_eval_loop_split
 from train_modules.train_loops.train_loop_kfold_loo import train_eval_loop as train_eval_loop_kfold_loo
 from models.resnet18 import ResNet18
+from config import *
 import torch
 
 def main():
@@ -56,6 +56,7 @@ def main():
             "architecture": "ResNet18",
             "labels": dataset.labels,
             "num_classes": dataset.labels_classes,
+            "evaluate_each_label": EVALUATE_EACH_LABEL,
             "pretrained": USE_PRETRAINED_MODELS,
             "optimizer": OPTIMIZER,
             "criterion": CRITERION,
@@ -102,7 +103,7 @@ def main():
                         )
     else:
         if resumed_configuration != None:
-            config["k_folds"] = dataloader.k_folds if config.validation_scheme == "K-FOLDCV" else len(dataloader.dataset.subjects_ids)
+            config["k_folds"] = dataloader.k_folds if config["validation_scheme"] == "K-FOLDCV" else len(dataloader.dataset.subjects_ids)
         
         train_eval_loop_kfold_loo(device=device,
                             dataloaders=dataloaders,
