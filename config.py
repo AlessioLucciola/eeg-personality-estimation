@@ -51,7 +51,7 @@ REG: float = 0.1 # Regularization parameter
 EPOCHS: int = 10 # Number of epochs
 DROPOUT_P: float = 0.1 # Dropout probability
 THRESHOLD: float = 0.5 # Threshold for the binary classification
-VALIDATION_SCHEME: str = "K-FOLDCV" # "LOOCV" | "K-FOLDCV" | "SPLIT"
+VALIDATION_SCHEME: str = "SPLIT" # "LOOCV" | "K-FOLDCV" | "SPLIT"
 KFOLDCV: int = 3 # Number of folds for K-Fold Cross Validation
 SPLIT_RATIO: float = 0.2 # Ratio for the train-validation split
 OPTIMIZER: str = "AdamW" # "Adam" | "AdamW" | "SGD"
@@ -65,6 +65,12 @@ RESUME_TRAINING: bool = False # Resume training if True (specify the path of mod
 PATH_MODEL_TO_RESUME: str = "" # Name of the model to resume
 RESUME_EPOCH: int = 0 # Epoch to resume
 RESUME_FOLD: int = 0 # Fold to resume (only for K-Fold Cross Validation and Leave-One-Out Cross Validation)
+
+
+# Transformer configurations
+NUM_HEADS: int = 4 # Number of heads in the transformer
+NUM_LAYERS: int = 3 # Number of layers in the transformer
+HIDDEN_SIZE: int = 256 # Hidden size in the transformer
 
 # Model configurations
 USE_PRETRAINED_MODELS: bool = False # Use a pretrained model if True
