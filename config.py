@@ -31,8 +31,8 @@ ELECTRODES: List[str] = ["AF3", "F7", "F3", "FC5", "T7", "P7", "O1", "O2",
               "P8", "T8", "FC6", "F4", "F8", "AF4"] # Labels of the electrodes to consider
 DISCRETIZE_LABELS: bool = True # Discretize the labels if True
 NORMALIZE_DATA: bool = True # Normalize the EEG data if True
-DROP_LAST: bool = False # Drop the last window if True
-APPLY_AUGMENTATION: bool = True # Apply data augmentations to mel spectrograms if True
+DROP_LAST: bool = False # Drop the last window if True (if False, zero-pad the last window)
+APPLY_AUGMENTATION: bool = False # Apply data augmentations to mel spectrograms if True
 AUGMENTATION_FREQ_MAX_PARAM = 0.35 # Maximum possible length of the frequency mask
 AUGMENTATION_TIME_MAX_PARAM = 0.35 # Maximum possible length of the time mask
 
@@ -47,7 +47,7 @@ MELS_MAX_FREQ: int = 50 # Maximum frequency for the mel spectrogram
 EVALUATE_EACH_LABEL: bool = True # Evaluate each label separately if True
 BATCH_SIZE: int = 128 # Batch size
 LEARNING_RATE: float = 1e-5 # Learning rate
-REG: float = 0.2 # Regularization parameter
+REG: float = 0.1 # Regularization parameter
 EPOCHS: int = 10 # Number of epochs
 DROPOUT_P: float = 0.1 # Dropout probability
 THRESHOLD: float = 0.5 # Threshold for the binary classification

@@ -63,7 +63,7 @@ def train_eval_loop(device,
         folds_metrics = []
     
     dataloaders_num = len(dataloaders) # Number of dataloaders (folds) - k in k-fold CV, number of subjects in LOOCV
-    for fold_i, (train_loader, val_loader) in list(dataloaders.items())[:3]: # TO DO: Remove the slicing for the final version
+    for fold_i, (train_loader, val_loader) in list(dataloaders.items()):
         if config["validation_scheme"] == "LOOCV":
             i, subject_id = fold_i # i is the index of the fold, subject_id is the subject to leave out for validation in LOOCV
         else:

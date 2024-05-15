@@ -78,6 +78,7 @@ def compute_average_fold_metrics(fold_metrics, fold_index, evaluate_each_label=F
                 if metric != 'loss':
                     final_fold_metrics[f'fold_training_{metric}_label_{label}'] = 0
                     final_fold_metrics[f'fold_validation_{metric}_label_{label}'] = 0
+    
     # If the fold is final, aggregate the metrics of each fold
     if fold_index == "final":
         num_results = len(fold_metrics) # Get the number of results
@@ -106,7 +107,14 @@ def compute_average_fold_metrics(fold_metrics, fold_index, evaluate_each_label=F
         return final_fold_metrics
     else:
         # If the fold is not final, simply return the metrics for the latest epoch
-        fold_results = fold_metrics[-1]
+        max_accuracy = float('-inf')
+        max_accuracy_epoch = None
+        for fi, fold in enumerate(fold_metrics):
+            if fold['validation_accuracy'] > max_accuracy:
+                max_accuracy = fold['validation_accuracy']
+                max_accuracy_epoch = fi
+
+        fold_results = fold_metrics[max_accuracy_epoch]
         # Aggregate metrics
         for metric in metrics:
             final_fold_metrics[f'fold_training_{metric}'] += fold_results[f'training_{metric}']
