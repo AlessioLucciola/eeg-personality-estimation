@@ -208,19 +208,19 @@ def get_positional_encoding(positional_encoding_name, max_position_embeddings=10
                     max_position_embeddings: int = max_position_embeddings
             ):
                 super().__init__()
-                assert isinstance(max_position_embeddings, int) and max_position_embeddings >= 1
                 self.max_position_embeddings = max_position_embeddings
 
-            def forward(self, x: torch.Tensor):
+            def forward(self, x):
                 sequence_length, embeddings_dim = self.max_position_embeddings, x.shape[-1]
                 pe = torch.zeros(sequence_length, embeddings_dim, device=x.device)
-                position = torch.arange(0, sequence_length, device=x.device).unsqueeze(1)
-                div_term = torch.exp((torch.arange(0, embeddings_dim, 2, dtype=torch.float, device=x.device) * -(math.log(10000.0) / embeddings_dim)))
-                pe[:, 0::2] = torch.sin(position.float() * div_term)
-                pe[:, 1::2] = torch.cos(position.float() * div_term)
-                del position, div_term
-                pe = pe[:x.shape[1]].repeat(x.shape[0], 1, 1)[:, :x.shape[1]]
-                assert pe.shape == x.shape
+                position = torch.arange(0, sequence_length, dtype=torch.float, device=x.device).unsqueeze(1)
+                div_term = torch.exp(torch.arange(0, embeddings_dim, 2, dtype=torch.float, device=x.device) * 
+                                    -(math.log(10000.0) / embeddings_dim))
+                pe[:, 0::2] = torch.sin(position * div_term)
+                pe[:, 1::2] = torch.cos(position * div_term)
+                pe = pe.unsqueeze(0).repeat(x.shape[0], 1, 1)
+                pe = pe[:, :x.shape[1], :]  # Ensure the positional encoding matches the input sequence length
+                assert pe.shape == x.shape, f"Expected shape {x.shape}, but got {pe.shape}"
                 return pe
         return GetSinusoidalPositionalEmbeddings()
     else:

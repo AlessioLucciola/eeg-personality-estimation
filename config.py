@@ -1,5 +1,5 @@
 from shared.constants import validation_schemes, supported_datasets, optimizers, positional_encodings
-from typing import List
+from typing import List, Union
 import os
 
 # General dataset configurations
@@ -73,7 +73,7 @@ NUM_ENCODERS: int = 3 # Number of encoder layers in the transformer
 NUM_DECODERS: int = 3 # Number of decoder layers in the transformer
 USE_ENCODER_ONLY: bool = False # Use only the encoder part of the transformer if True
 HIDDEN_SIZE: int = 256 # Hidden size in the transformer
-POSITIONAL_ENCODING: str = None # "sinusoidal" | None
+POSITIONAL_ENCODING: Union[str, None] = "sinusoidal" # "sinusoidal" | None
 USE_LEARNABLE_TOKEN: bool = True # Use learnable token if True (append a learnable token to the input)
 
 # Model configurations

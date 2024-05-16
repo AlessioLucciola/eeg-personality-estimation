@@ -93,9 +93,9 @@ class ViT(nn.Module):
         x = self.merge_mels(x) # Merge the mel bands (b c s m -> b s (c m))
         #print(x.shape)
         if self.positional_encoding is not None:
-            x = self.positional_encoding(x) # Add positional encoding
+            x = x + self.positional_encoding(x) # Add positional encoding
             if not self.use_encoder_only:
-                label_tokens = self.positional_encoding(label_tokens) # Add positional encoding to the label tokens
+                label_tokens = label_tokens + self.positional_encoding(label_tokens) # Add positional encoding to the label tokens
         #print(self.cls.weight.shape)
         if self.use_learnable_token:
             cls_token = self.cls.weight.expand(x.size(0), -1, -1)  # Expand cls token to the batch size
