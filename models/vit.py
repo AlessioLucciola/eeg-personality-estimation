@@ -12,7 +12,9 @@ class ViT(nn.Module):
                  mels: int,
                  hidden_size: int,
                  num_heads: int,
-                 num_layers: int,
+                 num_encoders: int,
+                 num_decoders: int,
+                 use_encoder_only: bool,
                  device: any,
                  positional_encoding: nn.Module = None,
                  use_learnable_token: bool = True
@@ -27,7 +29,9 @@ class ViT(nn.Module):
         self.mels = mels
         self.hidden_size = hidden_size
         self.num_heads = num_heads
-        self.num_layers = num_layers
+        self.num_encoders = num_encoders
+        self.num_decoders = num_decoders
+        self.use_encoder_only = use_encoder_only
         self.positional_encoding = positional_encoding
         self.use_learnable_token = use_learnable_token
         self.device = device
@@ -43,14 +47,25 @@ class ViT(nn.Module):
                 activation=nn.functional.relu,
                 nhead=self.num_heads,
             ),
-            num_layers=num_layers,
+            num_layers=self.num_encoders,
         )
 
-        # TO DO: Add the decoder layer and the associated logic to deal with it
+        if not self.use_encoder_only:
+            self.labels_embedding = nn.Embedding(len(self.labels), self.hidden_size)
+            self.decoder = nn.TransformerDecoder(
+                decoder_layer=nn.TransformerDecoderLayer(
+                    batch_first=True,
+                    d_model=self.hidden_size,
+                    dim_feedforward=self.hidden_size * 4,
+                    dropout=self.dropout_p,
+                    activation=nn.functional.relu,
+                    nhead=self.num_heads,
+                ),
+                num_layers=self.num_decoders,
+            )
 
         if self.use_learnable_token:
             self.cls = nn.Embedding(1, self.hidden_size)
-
 
         # Prepare the data for the transformer by merging the mel bands
         self.merge_mels = nn.Sequential(
@@ -72,18 +87,26 @@ class ViT(nn.Module):
         self.classifier = nn.Sequential(*self.fc_layers)
         
     def forward(self, x):
-        print(x.shape)
+        if not self.use_encoder_only:
+            label_tokens = self.labels_embedding.weight.expand(x.size(0), -1, -1)  # Expand label tokens to the batch size
+        #print(x.shape)
         x = self.merge_mels(x) # Merge the mel bands (b c s m -> b s (c m))
-        print(x.shape)
+        #print(x.shape)
         if self.positional_encoding is not None:
             x = self.positional_encoding(x) # Add positional encoding
-        print(self.cls.weight.shape)
+            if not self.use_encoder_only:
+                label_tokens = self.positional_encoding(label_tokens) # Add positional encoding to the label tokens
+        #print(self.cls.weight.shape)
         if self.use_learnable_token:
-            batch_size = x.size(0)
-            cls_token = self.cls.weight.expand(batch_size, -1, -1)  # Expand cls token to the batch size
+            cls_token = self.cls.weight.expand(x.size(0), -1, -1)  # Expand cls token to the batch size
             x = torch.cat([cls_token, x], dim=1)  # Add learnable token
         print(x.shape)
-        x = self.encoder(x)[:, 0, :]
+        x = self.encoder(x)
+        print(x.shape)
+        if self.use_encoder_only:
+            x = x[:, 0, :]
+        else:
+            x = self.decoder(label_tokens, x)[:, 0, :]
         print(x.shape)
         x = self.classifier(x)
         print(x.shape)

@@ -69,9 +69,11 @@ RESUME_FOLD: int = 0 # Fold to resume (only for K-Fold Cross Validation and Leav
 
 # Transformer configurations
 NUM_HEADS: int = 4 # Number of heads in the transformer
-NUM_LAYERS: int = 3 # Number of layers in the transformer
+NUM_ENCODERS: int = 3 # Number of encoder layers in the transformer
+NUM_DECODERS: int = 3 # Number of decoder layers in the transformer
+USE_ENCODER_ONLY: bool = False # Use only the encoder part of the transformer if True
 HIDDEN_SIZE: int = 256 # Hidden size in the transformer
-POSITIONAL_ENCODING: str = "sinusoidal" # "sinusoidal" | None
+POSITIONAL_ENCODING: str = None # "sinusoidal" | None
 USE_LEARNABLE_TOKEN: bool = True # Use learnable token if True (append a learnable token to the input)
 
 # Model configurations
@@ -82,7 +84,7 @@ ADD_DROPOUT_TO_MODEL: bool = False # Add dropout layers to the model if True
 assert VALIDATION_SCHEME in validation_schemes, f"{VALIDATION_SCHEME} is not a supported validation scheme."
 assert DATASET_TO_USE in supported_datasets, f"{DATASET_TO_USE} is not a supported dataset."
 assert OPTIMIZER in optimizers, f"{OPTIMIZER} is not a supported optimizer."
-assert POSITIONAL_ENCODING in positional_encodings, f"{POSITIONAL_ENCODING} is not a supported positional encoding."
+assert POSITIONAL_ENCODING in positional_encodings or POSITIONAL_ENCODING is None, f"{POSITIONAL_ENCODING} is not a supported positional encoding."
 assert 0 <= SPLIT_RATIO <= 1, f"Split ratio must be between 0 and 1, but got {SPLIT_RATIO}."
 assert 0 <= DROPOUT_P <= 1, f"Dropout probability must be between 0 and 1, but got {DROPOUT_P}."
 assert 0 <= THRESHOLD <= 1, f"Threshold must be between 0 and 1, but got {THRESHOLD}."
