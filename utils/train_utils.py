@@ -1,6 +1,7 @@
 from torchmetrics import AUROC, Accuracy, Recall, Precision, F1Score
 from config import LEARNING_RATE, REG, RESULTS_DIR
 import torch
+import math
 import json
 import os
 
@@ -198,3 +199,29 @@ def measure_performances(
     f1 = f1_metric(preds, labels) * 100
     auroc = auroc_metric(outputs, labels) * 100
     return accuracy, recall, precision, f1, auroc
+
+def get_positional_encoding(positional_encoding_name, max_position_embeddings=1024):
+    if positional_encoding_name == "sinusoidal":
+        class GetSinusoidalPositionalEmbeddings(torch.nn.Module):
+            def __init__(
+                    self,
+                    max_position_embeddings: int = max_position_embeddings
+            ):
+                super().__init__()
+                assert isinstance(max_position_embeddings, int) and max_position_embeddings >= 1
+                self.max_position_embeddings = max_position_embeddings
+
+            def forward(self, x: torch.Tensor):
+                sequence_length, embeddings_dim = self.max_position_embeddings, x.shape[-1]
+                pe = torch.zeros(sequence_length, embeddings_dim, device=x.device)
+                position = torch.arange(0, sequence_length, device=x.device).unsqueeze(1)
+                div_term = torch.exp((torch.arange(0, embeddings_dim, 2, dtype=torch.float, device=x.device) * -(math.log(10000.0) / embeddings_dim)))
+                pe[:, 0::2] = torch.sin(position.float() * div_term)
+                pe[:, 1::2] = torch.cos(position.float() * div_term)
+                del position, div_term
+                pe = pe[:x.shape[1]].repeat(x.shape[0], 1, 1)[:, :x.shape[1]]
+                assert pe.shape == x.shape
+                return pe
+        return GetSinusoidalPositionalEmbeddings()
+    else:
+        raise ValueError(f"Positional encoding {positional_encoding_name} is not supported.")

@@ -64,4 +64,4 @@ class ResNet18(nn.Module):
         
     def forward(self, x):
         x = self.resnet18(x) # Forward pass
-        return torch.sigmoid(x)
+        return x

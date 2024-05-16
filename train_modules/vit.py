@@ -1,5 +1,5 @@
 from utils.utils import get_configurations, instantiate_dataset, set_seed, select_device
-from utils.train_utils import get_criterion, get_optimizer, get_scheduler
+from utils.train_utils import get_criterion, get_optimizer, get_positional_encoding, get_scheduler
 from dataloaders.EEG_classification_dataloader import EEG_dataloader
 from train_modules.train_loops.train_loop_split import train_eval_loop as train_eval_loop_split
 from train_modules.train_loops.train_loop_kfold_loo import train_eval_loop as train_eval_loop_kfold_loo
@@ -13,21 +13,37 @@ def main():
     dataset = instantiate_dataset(DATASET_TO_USE)
     dataloader = EEG_dataloader(dataset=dataset, seed=RANDOM_SEED, batch_size=BATCH_SIZE, validation_scheme=VALIDATION_SCHEME)
     dataloaders = dataloader.get_dataloaders()
+
+    resumed_configuration = None
+    if RESUME_TRAINING:
+        resumed_configuration = get_configurations(PATH_MODEL_TO_RESUME)
+
+    # Positional encoding initialization
+    positional_encoding_name = resumed_configuration["positional_encoding"] if resumed_configuration != None else POSITIONAL_ENCODING
+    if positional_encoding_name is not None:
+        positional_encoding = get_positional_encoding(
+            positional_encoding_name=positional_encoding_name
+        )
+    else:
+        positional_encoding = None
+
     model = ViT(in_channels=len(ELECTRODES),
             labels=dataset.labels,
             labels_classes=dataset.labels_classes,
-            hidden_size=HIDDEN_SIZE,
-            num_heads=NUM_HEADS,
-            num_layers=NUM_LAYERS,
-            mels=MELS,
-            dropout_p=DROPOUT_P,
+            hidden_size=resumed_configuration["transformer_hidden_size"] if resumed_configuration != None else HIDDEN_SIZE,
+            num_heads=resumed_configuration["transformer_num_heads"] if resumed_configuration != None else NUM_HEADS,
+            num_layers=resumed_configuration["transformer_num_layers"] if resumed_configuration != None else NUM_LAYERS,
+            mels=resumed_configuration["mels"] if resumed_configuration != None else MELS,
+            dropout_p=resumed_configuration["dropout_p"] if resumed_configuration != None else DROPOUT_P,
+            positional_encoding=positional_encoding,
+            use_learnable_token=resumed_configuration["use_learnable_token"] if resumed_configuration != None else USE_LEARNABLE_TOKEN,
             device=device
         ).to(device)
-    resumed_configuration = None
+    
     if RESUME_TRAINING:
         model.load_state_dict(torch.load(
             f"{RESULTS_DIR}/{PATH_MODEL_TO_RESUME}/models/mi_project_{RESUME_EPOCH}.pt"))
-        resumed_configuration = get_configurations(PATH_MODEL_TO_RESUME)
+        
     optimizer = get_optimizer(
         optimizer_name=resumed_configuration["optimizer"] if resumed_configuration != None else OPTIMIZER,
         parameters=model.parameters(),
@@ -78,6 +94,8 @@ def main():
             "transformer_hidden_size": HIDDEN_SIZE,
             "transformer_num_heads": NUM_HEADS,
             "transformer_num_layers": NUM_LAYERS,
+            "positional_encoding": POSITIONAL_ENCODING,
+            "use_learnable_token": USE_LEARNABLE_TOKEN,
             "dropout_p": DROPOUT_P,
             "is_data_augmented": APPLY_AUGMENTATION,
             "use_dml": USE_DML,

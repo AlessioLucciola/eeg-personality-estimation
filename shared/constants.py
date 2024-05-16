@@ -35,3 +35,7 @@ schedulers = [
     "MultiStepLR",
     "ReduceLROnPlateau"
 ]
+
+positional_encodings = [
+    "sinusoidal"
+]
