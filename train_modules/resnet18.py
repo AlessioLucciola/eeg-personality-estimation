@@ -8,32 +8,30 @@ from config import *
 import torch
 
 def main():
-    set_seed(RANDOM_SEED)
+    resumed_configuration = None
+    if RESUME_TRAINING:
+        resumed_configuration = get_configurations(PATH_MODEL_TO_RESUME)
+
+    seed = resumed_configuration["seed"] if resumed_configuration != None else RANDOM_SEED
+    set_seed(seed)
     device = select_device()
-    dataset = instantiate_dataset(DATASET_TO_USE)
-    dataloader = EEG_dataloader(dataset=dataset, seed=RANDOM_SEED, batch_size=BATCH_SIZE, validation_scheme=VALIDATION_SCHEME)
+    dataset = instantiate_dataset(resumed_configuration["dataset"] if resumed_configuration != None else DATASET_TO_USE)
+    dataloader = EEG_dataloader(dataset=dataset, seed=seed, batch_size=resumed_configuration["batch_size"] if resumed_configuration != None else BATCH_SIZE, validation_scheme=resumed_configuration["validation_scheme"] if resumed_configuration != None else VALIDATION_SCHEME)
     dataloaders = dataloader.get_dataloaders()
-    model = ResNet18(in_channels=len(ELECTRODES),
-                     sampling_rate=SAMPLING_RATE,
+
+    model = ResNet18(in_channels=len(resumed_configuration["electrodes"]) if resumed_configuration != None else len(ELECTRODES),
                      labels=dataset.labels,
                      labels_classes=dataset.labels_classes,
-                     mels=MELS,
-                     mel_window_size=MELS_WINDOW_SIZE,
-                     mel_window_stride=MELS_WINDOW_STRIDE,
-                     mel_min_freq=MELS_MIN_FREQ,
-                     mel_max_freq=MELS_MAX_FREQ,
-                     dropout_p=DROPOUT_P,
-                     learning_rate=LEARNING_RATE,
-                     weight_decay=REG,
-                     pretrained=USE_PRETRAINED_MODELS,
-                     add_dropout_to_resnet=ADD_DROPOUT_TO_MODEL,
+                     dropout_p=resumed_configuration["dropout_p"] if resumed_configuration != None else DROPOUT_P,
+                     pretrained=resumed_configuration["use_pretrained_models"] if resumed_configuration != None else USE_PRETRAINED_MODELS,
+                     add_dropout_to_resnet=resumed_configuration["add_dropout_to_model"] if resumed_configuration != None else ADD_DROPOUT_TO_MODEL,
                      device=device
                     ).to(device)
-    resumed_configuration = None
+
     if RESUME_TRAINING:
         model.load_state_dict(torch.load(
             f"{RESULTS_DIR}/{PATH_MODEL_TO_RESUME}/models/mi_project_{RESUME_EPOCH}.pt"))
-        resumed_configuration = get_configurations(PATH_MODEL_TO_RESUME)
+
     optimizer = get_optimizer(
         optimizer_name=resumed_configuration["optimizer"] if resumed_configuration != None else OPTIMIZER,
         parameters=model.parameters(),
@@ -55,8 +53,10 @@ def main():
         config = {
             "architecture": "ResNet18",
             "labels": dataset.labels,
+            "discretize_labels": DISCRETIZE_LABELS,
             "num_classes": dataset.labels_classes,
             "evaluate_each_label": EVALUATE_EACH_LABEL,
+            "normalize_data": NORMALIZE_DATA,
             "pretrained": USE_PRETRAINED_MODELS,
             "optimizer": OPTIMIZER,
             "criterion": CRITERION,

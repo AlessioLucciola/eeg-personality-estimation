@@ -100,14 +100,14 @@ class ViT(nn.Module):
         if self.use_learnable_token:
             cls_token = self.cls.weight.expand(x.size(0), -1, -1)  # Expand cls token to the batch size
             x = torch.cat([cls_token, x], dim=1)  # Add learnable token
-        print(x.shape)
+        #print(x.shape)
         x = self.encoder(x)
-        print(x.shape)
+        #print(x.shape)
         if self.use_encoder_only:
             x = x[:, 0, :]
         else:
             x = self.decoder(label_tokens, x)[:, 0, :]
-        print(x.shape)
+        #print(x.shape)
         x = self.classifier(x)
-        print(x.shape)
+        #print(x.shape)
         return x

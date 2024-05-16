@@ -8,15 +8,16 @@ from config import *
 import torch
 
 def main():
-    set_seed(RANDOM_SEED)
-    device = select_device()
-    dataset = instantiate_dataset(DATASET_TO_USE)
-    dataloader = EEG_dataloader(dataset=dataset, seed=RANDOM_SEED, batch_size=BATCH_SIZE, validation_scheme=VALIDATION_SCHEME)
-    dataloaders = dataloader.get_dataloaders()
-
     resumed_configuration = None
     if RESUME_TRAINING:
         resumed_configuration = get_configurations(PATH_MODEL_TO_RESUME)
+
+    seed = resumed_configuration["seed"] if resumed_configuration != None else RANDOM_SEED
+    set_seed(seed)
+    device = select_device()
+    dataset = instantiate_dataset(resumed_configuration["dataset"] if resumed_configuration != None else DATASET_TO_USE)
+    dataloader = EEG_dataloader(dataset=dataset, seed=seed, batch_size=resumed_configuration["batch_size"] if resumed_configuration != None else BATCH_SIZE, validation_scheme=resumed_configuration["validation_scheme"] if resumed_configuration != None else VALIDATION_SCHEME)
+    dataloaders = dataloader.get_dataloaders()
 
     # Positional encoding initialization
     positional_encoding_name = resumed_configuration["positional_encoding"] if resumed_configuration != None else POSITIONAL_ENCODING
@@ -27,7 +28,7 @@ def main():
     else:
         positional_encoding = None
 
-    model = ViT(in_channels=len(ELECTRODES),
+    model = ViT(in_channels=len(resumed_configuration["electrodes"]) if resumed_configuration != None else len(ELECTRODES),
             labels=dataset.labels,
             labels_classes=dataset.labels_classes,
             hidden_size=resumed_configuration["transformer_hidden_size"] if resumed_configuration != None else HIDDEN_SIZE,

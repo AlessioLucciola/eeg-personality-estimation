@@ -1,36 +1,36 @@
-from config import DATASET_TO_USE, RANDOM_SEED, BATCH_SIZE, VALIDATION_SCHEME, ELECTRODES, SAMPLING_RATE, MELS, MELS_WINDOW_SIZE, MELS_WINDOW_STRIDE, MELS_MIN_FREQ, MELS_MAX_FREQ, DROPOUT_P, LEARNING_RATE, REG, RESUME_TRAINING, RESULTS_DIR, PATH_MODEL_TO_RESUME, RESUME_EPOCH, LEARNING_RATE, OPTIMIZER, SCHEDULER, SCHEDULER_STEP_SIZE, SCHEDULER_GAMMA, USE_WANDB, THRESHOLD, WINDOWS_SIZE, WINDOWS_STRIDE, CRITERION, LABEL_SMOOTHING_EPSILON, USE_PRETRAINED_MODELS
 from utils.utils import get_configurations, instantiate_dataset, set_seed, select_device
 from utils.train_utils import get_criterion, get_optimizer, get_scheduler
 from dataloaders.EEG_classification_dataloader import EEG_dataloader
 from train_modules.train_loops.train_loop_split import train_eval_loop as train_eval_loop_split
 from train_modules.train_loops.train_loop_kfold_loo import train_eval_loop as train_eval_loop_kfold_loo
 from models.custom_cnn import CustomCNN
+from config import *
 import torch
 
 def main():
-    set_seed(RANDOM_SEED)
+    resumed_configuration = None
+    if RESUME_TRAINING:
+        resumed_configuration = get_configurations(PATH_MODEL_TO_RESUME)
+
+    seed = resumed_configuration["seed"] if resumed_configuration != None else RANDOM_SEED
+    set_seed(seed)
     device = select_device()
-    dataset = instantiate_dataset(DATASET_TO_USE)
-    dataloader = EEG_dataloader(dataset=dataset, seed=RANDOM_SEED, batch_size=BATCH_SIZE, validation_scheme=VALIDATION_SCHEME)
+    dataset = instantiate_dataset(resumed_configuration["dataset"] if resumed_configuration != None else DATASET_TO_USE)
+    dataloader = EEG_dataloader(dataset=dataset, seed=seed, batch_size=resumed_configuration["batch_size"] if resumed_configuration != None else BATCH_SIZE, validation_scheme=resumed_configuration["validation_scheme"] if resumed_configuration != None else VALIDATION_SCHEME)
     dataloaders = dataloader.get_dataloaders()
-    model = CustomCNN(in_channels=len(ELECTRODES),
-                     sampling_rate=SAMPLING_RATE,
+    
+    
+    model = CustomCNN(in_channels=len(resumed_configuration["electrodes"]) if resumed_configuration != None else len(ELECTRODES),
                      labels=dataset.labels,
                      labels_classes=dataset.labels_classes,
-                     mels=MELS,
-                     mel_window_size=MELS_WINDOW_SIZE,
-                     mel_window_stride=MELS_WINDOW_STRIDE,
-                     mel_min_freq=MELS_MIN_FREQ,
-                     mel_max_freq=MELS_MAX_FREQ,
-                     dropout_p=DROPOUT_P,
-                     weight_decay=REG,
+                     dropout_p=resumed_configuration["dropout_p"] if resumed_configuration != None else DROPOUT_P,
                      device=device
                     ).to(device)
-    resumed_configuration = None
+
     if RESUME_TRAINING:
         model.load_state_dict(torch.load(
             f"{RESULTS_DIR}/{PATH_MODEL_TO_RESUME}/models/mi_project_{RESUME_EPOCH}.pt"))
-        resumed_configuration = get_configurations(PATH_MODEL_TO_RESUME)
+
     optimizer = get_optimizer(
         optimizer_name=resumed_configuration["optimizer"] if resumed_configuration != None else OPTIMIZER,
         parameters=model.parameters(),
@@ -52,7 +52,10 @@ def main():
         config = {
             "architecture": "CustomCNN",
             "labels": dataset.labels,
+            "discretize_labels": DISCRETIZE_LABELS,
             "num_classes": dataset.labels_classes,
+            "evaluate_each_label": EVALUATE_EACH_LABEL,
+            "normalize_data": NORMALIZE_DATA,
             "optimizer": OPTIMIZER,
             "criterion": CRITERION,
             "label_smoothing_epsilon": LABEL_SMOOTHING_EPSILON,
@@ -76,7 +79,8 @@ def main():
             "mel_min_freq": MELS_MIN_FREQ,
             "mel_max_freq": MELS_MAX_FREQ,
             "dropout_p": DROPOUT_P,
-            "use_wandb": USE_WANDB 
+            "use_wandb": USE_WANDB,
+            "use_dml": USE_DML
         }
     
     if config["validation_scheme"] == "SPLIT":
@@ -94,7 +98,7 @@ def main():
                         )
     else:
         if resumed_configuration != None:
-            config["k_folds"] = dataloader.k_folds if config.validation_scheme == "K-FOLDCV" else len(dataloader.dataset.subjects_ids)
+            config["k_folds"] = dataloader.k_folds if config["validation_scheme"] == "K-FOLDCV" else len(dataloader.dataset.subjects_ids)
         
         train_eval_loop_kfold_loo(device=device,
                             dataloaders=dataloaders,
