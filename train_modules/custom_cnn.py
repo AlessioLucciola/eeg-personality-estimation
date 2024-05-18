@@ -29,7 +29,7 @@ def main():
 
     if RESUME_TRAINING:
         model.load_state_dict(torch.load(
-            f"{RESULTS_DIR}/{PATH_MODEL_TO_RESUME}/models/mi_project_{RESUME_EPOCH}.pt"))
+            f"{RESULTS_DIR}/{PATH_MODEL_TO_RESUME}/models/personality_estimation_{RESUME_EPOCH}.pt"))
 
     optimizer = get_optimizer(
         optimizer_name=resumed_configuration["optimizer"] if resumed_configuration != None else OPTIMIZER,

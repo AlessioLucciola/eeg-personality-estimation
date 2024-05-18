@@ -21,7 +21,7 @@ RANDOM_SEED: int = 42 # Random seed
 USE_DML: bool = True # Use DirectML library if True (for AMD GPUs)
 USE_WANDB: bool = False # Use Weights & Biases for logging if True
 SAVE_RESULTS: bool = True # Save results in JSON files if True
-SAVE_MODELS: bool = False # Save models if True
+SAVE_MODELS: bool = True # Save models if True
 
 # EEGNet configurations
 WINDOWS_SIZE: float = 3 # Size of the sliding window
@@ -49,9 +49,9 @@ BATCH_SIZE: int = 128 # Batch size
 LEARNING_RATE: float = 1e-5 # Learning rate
 REG: float = 0.1 # Regularization parameter
 EPOCHS: int = 10 # Number of epochs
-DROPOUT_P: float = 0.1 # Dropout probability
+DROPOUT_P: float = 0.15 # Dropout probability
 THRESHOLD: float = 0.5 # Threshold for the binary classification
-VALIDATION_SCHEME: str = "SPLIT" # "LOOCV" | "K-FOLDCV" | "SPLIT"
+VALIDATION_SCHEME: str = "LOOCV" # "LOOCV" | "K-FOLDCV" | "SPLIT"
 KFOLDCV: int = 3 # Number of folds for K-Fold Cross Validation
 SPLIT_RATIO: float = 0.2 # Ratio for the train-validation split
 OPTIMIZER: str = "AdamW" # "Adam" | "AdamW" | "SGD"
@@ -59,13 +59,12 @@ SCHEDULER: str = "StepLR" # "StepLR" | "ReduceLROnPlateau" | "CosineAnnealingLR"
 CRITERION: str = "BCEWithLogitsLoss" # "BCEWithLogitsLoss" | "CrossEntropyLoss"
 SCHEDULER_STEP_SIZE: int = 10 # Step size for the scheduler
 SCHEDULER_GAMMA: float = 0.1 # Gamma for the scheduler
-LABEL_SMOOTHING_EPSILON: float = 0.0 # Label smoothing (0.0 for no smoothing)
+LABEL_SMOOTHING_EPSILON: float = 0.1 # Label smoothing (0.0 for no smoothing)
 # Resume training configurations
-RESUME_TRAINING: bool = False # Resume training if True (specify the path of model to resume and the epoch to start from)
-PATH_MODEL_TO_RESUME: str = "" # Name of the model to resume
-RESUME_EPOCH: int = 0 # Epoch to resume
-RESUME_FOLD: int = 0 # Fold to resume (only for K-Fold Cross Validation and Leave-One-Out Cross Validation)
-
+RESUME_TRAINING: bool = True # Resume training if True (specify the path of model to resume and the epoch to start from)
+PATH_MODEL_TO_RESUME: str = "ViT_2024-05-18_14-35-19" # Name of the model to resume
+RESUME_EPOCH: int = 1 # Epoch to resume
+RESUME_FOLD: int = 2 # Fold to resume (only for K-Fold Cross Validation and Leave-One-Out Cross Validation)
 
 # Transformer configurations
 NUM_HEADS: int = 4 # Number of heads in the transformer
@@ -76,7 +75,7 @@ HIDDEN_SIZE: int = 256 # Hidden size in the transformer
 POSITIONAL_ENCODING: Union[str, None] = "sinusoidal" # "sinusoidal" | None
 USE_LEARNABLE_TOKEN: bool = True # Use learnable token if True (append a learnable token to the input)
 
-# Model configurations
+# CNN configurations
 USE_PRETRAINED_MODELS: bool = False # Use a pretrained model if True
 ADD_DROPOUT_TO_MODEL: bool = False # Add dropout layers to the model if True
 

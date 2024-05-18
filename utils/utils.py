@@ -92,9 +92,9 @@ def save_model(data_name, model, fold=None, epoch=None, is_best=False):
         torch.save(model.state_dict(), f'{path}/personality_estimation_best.pt')
     else:
         if fold != None:
-            torch.save(model.state_dict(), f'{path}/personality_estimation_fold_{fold}_epoch_{epoch+1}.pt')
+            torch.save(model.state_dict(), f'{path}/personality_estimation_fold_{fold}_epoch_{epoch}.pt')
         else:
-            torch.save(model.state_dict(), f'{path}/personality_estimation_{epoch+1}.pt')
+            torch.save(model.state_dict(), f'{path}/personality_estimation_{epoch}.pt')
 
 def instantiate_dataset(dataset_name):
     if dataset_name == "AMIGOS":
@@ -103,7 +103,7 @@ def instantiate_dataset(dataset_name):
     else:
         raise ValueError(f"Dataset {dataset_name} is not supported.")
     
-def resume_folds_metrics(dataset_name, fold, epoch):
+def resume_folds_metrics(dataset_name, fold=None, epoch=None):
     if epoch is None and fold is None:
         path = RESULTS_DIR + f"/{dataset_name}/results/fold_results.json"
         if os.path.exists(path):

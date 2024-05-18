@@ -69,7 +69,7 @@ def train_eval_loop(device,
         else:
             i = fold_i # i is the index of the fold
         # If the training is to be resumed, skip the folds until the one to resume
-        if resume and i < RESUME_FOLD:
+        if resume and i < RESUME_FOLD-1:
             continue
         training_total_step = len(train_loader) # Number of batches in the training set
         val_total_step = len(val_loader) # Number of batches in the validation set
@@ -313,7 +313,7 @@ def train_eval_loop(device,
             find_best_model(data_name, withFold=True) # Find the best model based on the validation accuracy and save the associated epoch and fold in the configuration file
 
             if SAVE_MODELS:
-                save_model(data_name, fold_model, epoch+1, fold=i+1)
+                save_model(data_name, model=fold_model, epoch=epoch+1, fold=i+1, is_best=False)
 
             #scheduler.step() # Update the learning rate
         

@@ -16,7 +16,10 @@ def main():
     set_seed(seed)
     device = select_device()
     dataset = instantiate_dataset(resumed_configuration["dataset"] if resumed_configuration != None else DATASET_TO_USE)
-    dataloader = EEG_dataloader(dataset=dataset, seed=seed, batch_size=resumed_configuration["batch_size"] if resumed_configuration != None else BATCH_SIZE, validation_scheme=resumed_configuration["validation_scheme"] if resumed_configuration != None else VALIDATION_SCHEME)
+    dataloader = EEG_dataloader(dataset=dataset,
+                                seed=seed,
+                                batch_size=resumed_configuration["batch_size"] if resumed_configuration != None else BATCH_SIZE,
+                                validation_scheme=resumed_configuration["validation_scheme"] if resumed_configuration != None else VALIDATION_SCHEME)
     dataloaders = dataloader.get_dataloaders()
 
     # Positional encoding initialization
@@ -44,8 +47,8 @@ def main():
         ).to(device)
     
     if RESUME_TRAINING:
-        model.load_state_dict(torch.load(
-            f"{RESULTS_DIR}/{PATH_MODEL_TO_RESUME}/models/mi_project_{RESUME_EPOCH}.pt"))
+        model_path = f"{RESULTS_DIR}/{PATH_MODEL_TO_RESUME}/models/personality_estimation_{RESUME_EPOCH}.pt" if resumed_configuration["validation_scheme"] == "SPLIT" else f"{RESULTS_DIR}/{PATH_MODEL_TO_RESUME}/models/personality_estimation_fold_{RESUME_FOLD}_epoch_{RESUME_EPOCH}.pt"
+        model.load_state_dict(torch.load(model_path))
         
     optimizer = get_optimizer(
         optimizer_name=resumed_configuration["optimizer"] if resumed_configuration != None else OPTIMIZER,
@@ -106,9 +109,11 @@ def main():
             "use_dml": USE_DML,
             "use_wandb": USE_WANDB 
         }
+    else:
+        config = resumed_configuration
     
     if config["validation_scheme"] == "SPLIT":
-        if resumed_configuration != None:
+        if resumed_configuration is None:
             config["split_ratio"] = dataloader.split_ratio
 
         train_eval_loop_split(device=device,
@@ -121,7 +126,7 @@ def main():
                             resume=RESUME_TRAINING
                         )
     else:
-        if resumed_configuration != None:
+        if resumed_configuration is None:
             config["k_folds"] = dataloader.k_folds if config["validation_scheme"] == "K-FOLDCV" else len(dataloader.dataset.subjects_ids)
         
         train_eval_loop_kfold_loo(device=device,
