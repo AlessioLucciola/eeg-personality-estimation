@@ -63,7 +63,7 @@ LABEL_SMOOTHING_EPSILON: float = 0.1 # Label smoothing (0.0 for no smoothing)
 # Resume training configurations
 RESUME_TRAINING: bool = True # Resume training if True (specify the path of model to resume and the epoch to start from)
 PATH_MODEL_TO_RESUME: str = "ViT_2024-05-18_14-35-19" # Name of the model to resume
-RESUME_EPOCH: int = 1 # Epoch to resume
+RESUME_EPOCH: int = 10 # Epoch to resume
 RESUME_FOLD: int = 2 # Fold to resume (only for K-Fold Cross Validation and Leave-One-Out Cross Validation)
 
 # Transformer configurations
@@ -133,6 +133,6 @@ assert isinstance(AMIGOS_METADATA_FILE, str), f"AMIGOS metadata file must be a s
 assert isinstance(AMIGOS_NUM_CLASSES, int), f"AMIGOS number of classes must be an integer, but got {AMIGOS_NUM_CLASSES}."
 
 if RESUME_TRAINING:
-    assert EPOCHS > RESUME_EPOCH, f"The epoch to resume must be less than the total number of epochs to reach, but got {RESUME_EPOCH} and {EPOCHS}."
+    assert EPOCHS >= RESUME_EPOCH, f"The epoch to resume must be less or equal than the total number of epochs to reach, but got {RESUME_EPOCH} and {EPOCHS}."
 
 

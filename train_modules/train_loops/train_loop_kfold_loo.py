@@ -71,6 +71,9 @@ def train_eval_loop(device,
         # If the training is to be resumed, skip the folds until the one to resume
         if resume and i < RESUME_FOLD-1:
             continue
+        # If the training is to be resumed, and the latest epoch reached is the last one of a fold, skip to the next fold
+        if resume and RESUME_EPOCH == EPOCHS and i == RESUME_FOLD-1:
+            continue
         training_total_step = len(train_loader) # Number of batches in the training set
         val_total_step = len(val_loader) # Number of batches in the validation set
 
@@ -86,7 +89,12 @@ def train_eval_loop(device,
         fold_model = reset_weights(model=fold_model, weights=starting_weights) # Reset the weights of the model for each fold
         fold_optimizer = optimizer # Copy the optimizer for each fold
 
-        for epoch in range(RESUME_EPOCH if resume else 0, EPOCHS):
+        if resume:
+            if RESUME_EPOCH == EPOCHS or RESUME_EPOCH == 0 or fold_i != RESUME_FOLD-1:
+                epoch_to_resume_from = 0
+            else:
+                epoch_to_resume_from = RESUME_EPOCH
+        for epoch in range(epoch_to_resume_from if resume else 0, EPOCHS):
 
             # --Training--
             fold_model.train() # Set the model to training mode
