@@ -90,7 +90,7 @@ def train_eval_loop(device,
         fold_optimizer = optimizer # Copy the optimizer for each fold
 
         if resume:
-            if RESUME_EPOCH == EPOCHS or RESUME_EPOCH == 0 or fold_i != RESUME_FOLD-1:
+            if RESUME_EPOCH == EPOCHS and fold_i == RESUME_FOLD-1:
                 epoch_to_resume_from = 0
             else:
                 epoch_to_resume_from = RESUME_EPOCH
