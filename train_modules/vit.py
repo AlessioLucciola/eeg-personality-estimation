@@ -43,6 +43,7 @@ def main():
             dropout_p=resumed_configuration["dropout_p"] if resumed_configuration != None else DROPOUT_P,
             positional_encoding=positional_encoding,
             use_learnable_token=resumed_configuration["use_learnable_token"] if resumed_configuration != None else USE_LEARNABLE_TOKEN,
+            merge_mels_typology=resumed_configuration["merge_mels_typology"] if resumed_configuration != None else MERGE_MELS_TYPOLOGY,
             device=device
         ).to(device)
     
@@ -102,6 +103,7 @@ def main():
             "transformer_num_encoder_layers": NUM_ENCODERS,
             "transformer_num_decoder_layers": NUM_DECODERS,
             "use_encoder_only": USE_ENCODER_ONLY,
+            "merge_mels_typology": MERGE_MELS_TYPOLOGY,
             "positional_encoding": POSITIONAL_ENCODING,
             "use_learnable_token": USE_LEARNABLE_TOKEN,
             "dropout_p": DROPOUT_P,
@@ -127,7 +129,7 @@ def main():
                         )
     else:
         if resumed_configuration is None:
-            config["k_folds"] = dataloader.k_folds if config["validation_scheme"] == "K-FOLDCV" else len(dataloader.dataset.subjects_ids)
+            config["k_folds"] = dataloader.k_folds if config["validation_scheme"] == "K-FOLDCV" else len(dataloader.dataset.subject_ids)
         
         train_eval_loop_kfold_loo(device=device,
                             dataloaders=dataloaders,

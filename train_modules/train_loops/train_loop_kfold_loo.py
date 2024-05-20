@@ -15,7 +15,7 @@ def train_eval_loop(device,
                     scheduler,
                     criterion,
                     resume=False):
-
+    fold_dataloaders = list(dataloaders.items()) # Select the training and validation dataloaders
     starting_weights = None # Variable to store the starting weights of the model (useful for resetting the model at each fold)
     # If the model is to be resumed, load the model and the optimizer
     if resume:
@@ -54,6 +54,8 @@ def train_eval_loop(device,
                 resume=resume,
                 name=data_name
             )
+        with torch.no_grad():
+            model(next(iter(fold_dataloaders[0][1][0]))['spectrogram'].to(device)) # Initialize the model for adding the dynamic MergeMels layer
         starting_weights = copy.deepcopy(model.state_dict()) # Save the starting weights of the model
         save_starting_weights(weights=starting_weights, path=data_name) # Save the starting weights of the model
         
@@ -63,7 +65,7 @@ def train_eval_loop(device,
         folds_metrics = []
     
     dataloaders_num = len(dataloaders) # Number of dataloaders (folds) - k in k-fold CV, number of subjects in LOOCV
-    for fold_i, (train_loader, val_loader) in list(dataloaders.items()):
+    for fold_i, (train_loader, val_loader) in fold_dataloaders:
         if config["validation_scheme"] == "LOOCV":
             i, subject_id = fold_i # i is the index of the fold, subject_id is the subject to leave out for validation in LOOCV
         else:

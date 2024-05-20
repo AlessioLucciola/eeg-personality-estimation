@@ -1,4 +1,4 @@
-from shared.constants import validation_schemes, supported_datasets, optimizers, positional_encodings
+from shared.constants import validation_schemes, supported_datasets, optimizers, positional_encodings, merge_mels_typologies
 from typing import List, Union
 import os
 
@@ -61,19 +61,20 @@ SCHEDULER_STEP_SIZE: int = 10 # Step size for the scheduler
 SCHEDULER_GAMMA: float = 0.1 # Gamma for the scheduler
 LABEL_SMOOTHING_EPSILON: float = 0.1 # Label smoothing (0.0 for no smoothing)
 # Resume training configurations
-RESUME_TRAINING: bool = True # Resume training if True (specify the path of model to resume and the epoch to start from)
+RESUME_TRAINING: bool = False # Resume training if True (specify the path of model to resume and the epoch to start from)
 PATH_MODEL_TO_RESUME: str = "ViT_2024-05-18_14-35-19" # Name of the model to resume
-RESUME_EPOCH: int = 10 # Epoch to resume
-RESUME_FOLD: int = 2 # Fold to resume (only for K-Fold Cross Validation and Leave-One-Out Cross Validation)
+RESUME_EPOCH: int = 6 # Epoch to resume
+RESUME_FOLD: int = 3 # Fold to resume (only for K-Fold Cross Validation and Leave-One-Out Cross Validation)
 
 # Transformer configurations
 NUM_HEADS: int = 4 # Number of heads in the transformer
-NUM_ENCODERS: int = 3 # Number of encoder layers in the transformer
-NUM_DECODERS: int = 3 # Number of decoder layers in the transformer
+NUM_ENCODERS: int = 6 # Number of encoder layers in the transformer
+NUM_DECODERS: int = 6 # Number of decoder layers in the transformer
 USE_ENCODER_ONLY: bool = False # Use only the encoder part of the transformer if True
 HIDDEN_SIZE: int = 256 # Hidden size in the transformer
 POSITIONAL_ENCODING: Union[str, None] = "sinusoidal" # "sinusoidal" | None
 USE_LEARNABLE_TOKEN: bool = True # Use learnable token if True (append a learnable token to the input)
+MERGE_MELS_TYPOLOGY: str = "channels" # "channels" | "samples" (merge the mel bends leaving the channel dimension or the samples dimension inalterated)
 
 # CNN configurations
 USE_PRETRAINED_MODELS: bool = False # Use a pretrained model if True
@@ -84,6 +85,7 @@ assert VALIDATION_SCHEME in validation_schemes, f"{VALIDATION_SCHEME} is not a s
 assert DATASET_TO_USE in supported_datasets, f"{DATASET_TO_USE} is not a supported dataset."
 assert OPTIMIZER in optimizers, f"{OPTIMIZER} is not a supported optimizer."
 assert POSITIONAL_ENCODING in positional_encodings or POSITIONAL_ENCODING is None, f"{POSITIONAL_ENCODING} is not a supported positional encoding."
+assert MERGE_MELS_TYPOLOGY in merge_mels_typologies, f"{MERGE_MELS_TYPOLOGY} is not a supported typology for merging the mel bands."
 assert 0 <= SPLIT_RATIO <= 1, f"Split ratio must be between 0 and 1, but got {SPLIT_RATIO}."
 assert 0 <= DROPOUT_P <= 1, f"Dropout probability must be between 0 and 1, but got {DROPOUT_P}."
 assert 0 <= THRESHOLD <= 1, f"Threshold must be between 0 and 1, but got {THRESHOLD}."

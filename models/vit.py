@@ -1,4 +1,4 @@
-from einops.layers.torch import Rearrange
+from utils.eeg_utils import MergeMels
 from typing import List
 from torch import nn
 import torch
@@ -15,6 +15,7 @@ class ViT(nn.Module):
                  num_encoders: int,
                  num_decoders: int,
                  use_encoder_only: bool,
+                 merge_mels_typology: str,
                  device: any,
                  positional_encoding: nn.Module = None,
                  use_learnable_token: bool = True
@@ -34,6 +35,7 @@ class ViT(nn.Module):
         self.use_encoder_only = use_encoder_only
         self.positional_encoding = positional_encoding
         self.use_learnable_token = use_learnable_token
+        self.merge_mels_typology = merge_mels_typology
         self.device = device
         
         self.dropout = nn.Dropout(p=self.dropout_p) # Dropout layer
@@ -68,16 +70,12 @@ class ViT(nn.Module):
             self.cls = nn.Embedding(1, self.hidden_size)
 
         # Prepare the data for the transformer by merging the mel bands
-        self.merge_mels = nn.Sequential(
-            nn.Conv2d(
-                in_channels=self.in_channels,
-                out_channels=self.hidden_size,
-                kernel_size=(self.mels, 1), # TO DO: Try to modify the kernel size to see if it improves the model
-                stride=1,
-                padding=0,
-            ),
-            Rearrange("b c m s -> b s (c m)")
-        )
+        self.merge_mels = MergeMels(mel_spectrogram=self.mels,
+                                    hidden_size=self.hidden_size,
+                                    typology=self.merge_mels_typology,
+                                    device=self.device
+                                    )
+        self.merge_mels = self.merge_mels.to(self.device)
 
         # Add the classifier
         self.fc_layers = []
@@ -90,7 +88,7 @@ class ViT(nn.Module):
         if not self.use_encoder_only:
             label_tokens = self.labels_embedding.weight.expand(x.size(0), -1, -1)  # Expand label tokens to the batch size
         #print(x.shape)
-        x = self.merge_mels(x) # Merge the mel bands (b c s m -> b s (c m))
+        x = self.merge_mels(x) # Merge the mel bands (merging typology is defined in the configuration file)
         #print(x.shape)
         if self.positional_encoding is not None:
             x = x + self.positional_encoding(x) # Add positional encoding

@@ -39,3 +39,8 @@ schedulers = [
 positional_encodings = [
     "sinusoidal"
 ]
+
+merge_mels_typologies = [
+    "channels",
+    "samples"
+]

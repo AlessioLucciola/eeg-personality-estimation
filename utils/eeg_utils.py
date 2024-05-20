@@ -1,6 +1,7 @@
 from config import USE_DML, MELS, MELS_WINDOW_SIZE, MELS_WINDOW_STRIDE, MELS_MAX_FREQ, MELS_MIN_FREQ, SAMPLING_RATE
 from utils.utils import select_device
 from torchaudio import transforms
+from einops import rearrange
 from tqdm import tqdm
 import torch.nn as nn
 import numpy as np
@@ -110,3 +111,40 @@ def flip(mel_spectrogram):
     # Flip along the time axis
     mel_spectrogram = torch.flip(mel_spectrogram, dims=[2])
     return mel_spectrogram
+
+class MergeMels(nn.Module):
+    def __init__(self, mel_spectrogram, hidden_size, device, typology="channels"):
+        super().__init__()
+        self.hidden_size = hidden_size
+        self.typology = typology
+        self.mel_spectrogram = mel_spectrogram
+        self.device = device
+        self.conv2d = None
+
+    def initialize_conv(self, x):
+        self.in_channels = x.size(3) if self.typology == "channels" else x.size(1)
+        self.conv2d = nn.Conv2d(
+            in_channels=self.in_channels,
+            out_channels=self.hidden_size,
+            kernel_size=(self.mel_spectrogram, 1),
+            stride=1,
+            padding=0,
+        ).to(self.device)
+    
+    def forward(self, x):
+        x = x.to(self.device)
+
+        if self.conv2d is None:
+            self.initialize_conv(x)
+
+        if self.typology == "channels":
+            x = rearrange(x, "b c m s -> b s m c")
+        
+        x = self.conv2d(x)
+
+        if self.typology == "channels":
+            x = rearrange(x, "b s m c -> b c (m s)")
+        elif self.typology == "samples":
+            x = rearrange(x, "b c m s -> b s (c m)")
+
+        return x
