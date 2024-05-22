@@ -32,7 +32,7 @@ class AMIGOSDataset(EEGClassificationDataset):
         eegs_list = deque()
         labels_list = deque()
         subjects_list = deque()
-        #TO DO: Controllare che la struttura di eegs_list allo stato attuale abbia senso
+ 
         for egg_file, eeg_data in tqdm(eeg_df.items(), desc="Parsing EEG data..", unit="subject", leave=False):
             _, subject_id = self.parse_amigos_file_names(egg_file) # Parse the file name to get the subject ID
             subjects_list.append(subject_id) # Append the subject ID

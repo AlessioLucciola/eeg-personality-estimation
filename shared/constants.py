@@ -6,12 +6,28 @@ amigos_labels = {
     "Creativity (openness)": 4
 }
 
+ascertain_labels = {
+    "Extroversion": 0,
+    "Agreeableness": 1,
+    "Conscientiousness": 2,	
+    "Emotional Stability": 3,
+    "Openness (Creativity)": 4
+}
+
 amigos_labels_reverse = {
     0: 'Extroversion',
     1: 'Agreeableness',
     2: 'Conscientiousness',
     3: 'Emotional Stability',
     4: 'Creativity (openness)'
+}
+
+ascertain_labels_reverse = {
+    0: 'Extraversion',
+    1: 'Agreeableness',
+    2: 'Conscientiousness',
+    3: 'Emotional Stability',
+    4: 'Openness'
 }
 
 validation_schemes = [
@@ -21,7 +37,8 @@ validation_schemes = [
 ]
 
 supported_datasets = [
-    "AMIGOS"
+    "AMIGOS",
+    "ASCERTAIN"
 ]
 
 optimizers = [

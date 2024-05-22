@@ -13,4 +13,5 @@ openpyxl
 seaborn
 einops
 psutil
+xlrd
 mne

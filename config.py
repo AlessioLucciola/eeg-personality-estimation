@@ -6,7 +6,7 @@ import os
 DATA_DIR: str = "data"
 RESULTS_DIR: str = "results"
 PLOTS_DIR: str = "plots"
-DATASET_TO_USE: str = "AMIGOS" # "AMIGOS"
+DATASET_TO_USE: str = "AMIGOS" # "AMIGOS" | "ASCERTAIN"
 PRINT_DATASET_DEBUG: bool = False # Print debug information during dataset upload if True
 MAKE_PLOTS: bool = False # Make plots if True (it takes some time to generate the plots!)
 
@@ -15,6 +15,15 @@ AMIGOS_DATASET_DIR: str = os.path.join(DATA_DIR, "amigos")
 AMIGOS_FILES_DIR: str = os.path.join(AMIGOS_DATASET_DIR, "files")
 AMIGOS_METADATA_FILE: str = os.path.join(AMIGOS_DATASET_DIR, "Participants_Personality.xlsx")
 AMIGOS_NUM_CLASSES: int = 2
+ELECTRODES: List[str] = ["AF3", "F7", "F3", "FC5", "T7", "P7", "O1", "O2",
+              "P8", "T8", "FC6", "F4", "F8", "AF4"] if DATASET_TO_USE == "AMIGOS" \
+            else ["ch1", "ch2", "ch3", "ch4", "ch5", "ch6", "ch7", "ch8"] # Labels of the electrodes to consider
+
+# ASCERTAIN dataset configurations
+ASCERTAIN_DATASET_DIR: str = os.path.join(DATA_DIR, "ascertain")
+ASCERTAIN_FILES_DIR: str = os.path.join(ASCERTAIN_DATASET_DIR, "files")
+ASCERTAIN_METADATA_FILE: str = os.path.join(ASCERTAIN_DATASET_DIR, "Personality_Details.xls")
+ASCERTAIN_NUM_CLASSES: int = 2
 
 # Miscellanous configurations
 RANDOM_SEED: int = 42 # Random seed
@@ -27,8 +36,6 @@ SAVE_MODELS: bool = True # Save models if True
 WINDOWS_SIZE: float = 3 # Size of the sliding window
 WINDOWS_STRIDE: float = 3 # Stride of the sliding window
 SAMPLING_RATE: int = 128 # Sampling rate of the EEG data
-ELECTRODES: List[str] = ["AF3", "F7", "F3", "FC5", "T7", "P7", "O1", "O2",
-              "P8", "T8", "FC6", "F4", "F8", "AF4"] # Labels of the electrodes to consider
 DISCRETIZE_LABELS: bool = True # Discretize the labels if True
 NORMALIZE_DATA: bool = True # Normalize the EEG data if True
 DROP_LAST: bool = False # Drop the last window if True (if False, zero-pad the last window)
