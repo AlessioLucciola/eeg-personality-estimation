@@ -6,7 +6,7 @@ import os
 DATA_DIR: str = "data"
 RESULTS_DIR: str = "results"
 PLOTS_DIR: str = "plots"
-DATASET_TO_USE: str = "AMIGOS" # "AMIGOS" | "ASCERTAIN"
+DATASET_TO_USE: str = "ASCERTAIN" # "AMIGOS" | "ASCERTAIN"
 PRINT_DATASET_DEBUG: bool = False # Print debug information during dataset upload if True
 MAKE_PLOTS: bool = False # Make plots if True (it takes some time to generate the plots!)
 

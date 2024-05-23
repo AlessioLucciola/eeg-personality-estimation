@@ -146,7 +146,6 @@ class EEGClassificationDataset(Dataset, ABC):
         data_discarded = False
         for i, subject_experiment in enumerate(tqdm(eegs_data, desc="--DATASET--Discarding corrupted experiments..", unit="experiment", leave=False)):
             eegs_data[i] = [trial for trial in subject_experiment if np.count_nonzero(np.isnan(trial)) <= trial.size*0.9]
-            eegs_data[i] = [trial for trial in eegs_data[i] if np.count_nonzero(np.isnan(trial)) <= trial.size*0.9]
             discarded_experiments = len(subject_experiment) - len(eegs_data[i])
             if discarded_experiments > 0:
                 data_discarded = True
@@ -162,11 +161,12 @@ class EEGClassificationDataset(Dataset, ABC):
         for i, subject_experiment in enumerate(tqdm(eegs_data, desc="Normalizing EEG data..", unit="experiment", leave=False)):
             scaler = mne.decoding.Scaler(info=mne.create_info(ch_names=self.electrodes, sfreq=self.sampling_rate, verbose=False, ch_types="eeg"), scalings="mean") # Initializes the scaler
             for j, trial in enumerate(subject_experiment):
+                trial = np.nan_to_num(trial) # Replaces NaN values with 0
                 trial_scaled = einops.rearrange(trial, "s c -> () c s")
                 trial_scaled = scaler.fit_transform(trial_scaled)
                 trial_scaled = einops.rearrange(trial_scaled, "b c s -> s (b c)") # Normalizes the data
-                trial_scaled = np.nan_to_num(trial_scaled) # Replaces NaN values with 0
-                trial_scaled = 2 * ((trial_scaled - trial_scaled.min(axis=0)) / (trial_scaled.max(axis=0) - trial_scaled.min(axis=0) + epsilon)) - 1 # Normalizes between -1 and 1
+                div = (trial_scaled.max(axis=0) - trial_scaled.min(axis=0)) + epsilon
+                trial_scaled = 2 * ((trial_scaled - trial_scaled.min(axis=0)) / div) - 1 # Normalizes between -1 and 1
                 subject_experiment[j] = trial_scaled # Updates the EEG data
             eegs_data[i] = subject_experiment
         return eegs_data
