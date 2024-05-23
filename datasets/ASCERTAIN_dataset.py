@@ -72,6 +72,8 @@ class ASCERTAINDataset(EEGClassificationDataset):
                         file_path = os.path.join(self.data_path, subject_folder, file)
                         eeg_data = io.loadmat(file_path, simplify_cells=True)['ThisEEG'].astype(np.float32) # Load the EEG data (only the 'ThisEEG' field is needed
                         eeg_data = einops.rearrange(eeg_data, "c s -> s c")
+                        if eeg_data.shape[1] == 9:
+                            eeg_data = eeg_data[:, :8]
                         subject_experiments.append(eeg_data)
                 electrodes_data.append(tuple((subject_experiments, subject_id)))
             else:

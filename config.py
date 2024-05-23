@@ -30,7 +30,7 @@ RANDOM_SEED: int = 42 # Random seed
 USE_DML: bool = True # Use DirectML library if True (for AMD GPUs)
 USE_WANDB: bool = False # Use Weights & Biases for logging if True
 SAVE_RESULTS: bool = True # Save results in JSON files if True
-SAVE_MODELS: bool = True # Save models if True
+SAVE_MODELS: bool = False # Save models if True
 
 # EEGNet configurations
 WINDOWS_SIZE: float = 3 # Size of the sliding window
@@ -55,10 +55,10 @@ EVALUATE_EACH_LABEL: bool = True # Evaluate each label separately if True
 BATCH_SIZE: int = 128 # Batch size
 LEARNING_RATE: float = 1e-5 # Learning rate
 REG: float = 0.1 # Regularization parameter
-EPOCHS: int = 10 # Number of epochs
-DROPOUT_P: float = 0.15 # Dropout probability
+EPOCHS: int = 150 # Number of epochs
+DROPOUT_P: float = 0.1 # Dropout probability
 THRESHOLD: float = 0.5 # Threshold for the binary classification
-VALIDATION_SCHEME: str = "LOOCV" # "LOOCV" | "K-FOLDCV" | "SPLIT"
+VALIDATION_SCHEME: str = "SPLIT" # "LOOCV" | "K-FOLDCV" | "SPLIT"
 KFOLDCV: int = 3 # Number of folds for K-Fold Cross Validation
 SPLIT_RATIO: float = 0.2 # Ratio for the train-validation split
 OPTIMIZER: str = "AdamW" # "Adam" | "AdamW" | "SGD"
