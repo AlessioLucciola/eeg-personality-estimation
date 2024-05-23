@@ -23,7 +23,8 @@ class EEGClassificationDataset(Dataset, ABC):
                  electrodes: List[str] = ELECTRODES,
                  window_size: int = WINDOWS_SIZE,
                  window_stride: int = WINDOWS_STRIDE,
-                 drop_last: bool = DROP_LAST
+                 drop_last: bool = DROP_LAST,
+                 device: str = select_device()
                 ):
         super().__init__()
 
@@ -39,6 +40,7 @@ class EEGClassificationDataset(Dataset, ABC):
         self.window_size = window_size
         self.window_stride = window_stride
         self.drop_last = drop_last
+        self.device = device
         self.samples_per_window = int(np.floor(self.sampling_rate * self.window_size)) # Number of samples per window
         self.samples_per_stride = int(np.floor(self.sampling_rate * self.window_stride)) # Number of samples per stride
         
@@ -99,7 +101,7 @@ class EEGClassificationDataset(Dataset, ABC):
                 sampling_rate=self.sampling_rate,
                 window_size=MELS_WINDOW_SIZE,
                 window_stride=MELS_WINDOW_STRIDE,
-                device=select_device(),
+                device=self.device,
                 mels=MELS,
                 min_freq=MELS_MIN_FREQ,
                 max_freq=MELS_MAX_FREQ
@@ -115,7 +117,7 @@ class EEGClassificationDataset(Dataset, ABC):
             sampling_rate=self.sampling_rate,
             window_size=MELS_WINDOW_SIZE,
             window_stride=MELS_WINDOW_STRIDE,
-            device=select_device(),
+            device=self.device,
             mels=MELS,
             min_freq=MELS_MIN_FREQ,
             max_freq=MELS_MAX_FREQ
@@ -144,6 +146,7 @@ class EEGClassificationDataset(Dataset, ABC):
         data_discarded = False
         for i, subject_experiment in enumerate(tqdm(eegs_data, desc="--DATASET--Discarding corrupted experiments..", unit="experiment", leave=False)):
             eegs_data[i] = [trial for trial in subject_experiment if np.count_nonzero(np.isnan(trial)) <= trial.size*0.9]
+            eegs_data[i] = [trial for trial in eegs_data[i] if np.count_nonzero(np.isnan(trial)) <= trial.size*0.9]
             discarded_experiments = len(subject_experiment) - len(eegs_data[i])
             if discarded_experiments > 0:
                 data_discarded = True

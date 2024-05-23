@@ -5,6 +5,8 @@ from tqdm import tqdm
 from scipy import io
 from config import *
 import pandas as pd
+import numpy as np
+import einops
 
 class ASCERTAINDataset(EEGClassificationDataset):
     def __init__(self,
@@ -33,12 +35,10 @@ class ASCERTAINDataset(EEGClassificationDataset):
         for eeg_data, subject_id in tqdm(eeg_df, desc="Parsing EEG data..", unit="subject", leave=False):
             subjects_list.append(subject_id) # Append the subject ID
             eegs_list.append(eeg_data) # Append the EEG data of the subject
-            print(subject_id)
             labels_dict = metadata_df[metadata_df['Subject ID'] == subject_id].iloc[0, 1:].to_dict() # Extract the personality traits of the subject
-            print(labels_dict)
             mapped_labels_dict = {ascertain_labels[key]: value for key, value in labels_dict.items()} # Map column names to their corresponding integer values
             labels_list.append(mapped_labels_dict) # Append the personality traits of the subject
-        print(eegs_list, labels_list, subjects_list)
+        return list(eegs_list), list(labels_list), list(subjects_list)
 
 
     def upload_metadata(self):
@@ -61,21 +61,28 @@ class ASCERTAINDataset(EEGClassificationDataset):
         return metadata_df
     
     def upload_eeg_data(self):
+        missing_subjects = []
         electrodes_data = []
         for subject_folder in tqdm(os.listdir(self.data_path), desc="Uploading EEG data..", unit="subject", leave=False):
             subject_id = int(subject_folder[-2:]) # Extract the subject ID from the folder name (last two characters)
-            for file in os.listdir(os.path.join(self.data_path, subject_folder)):
-                if file.endswith('.mat'):
-                    file_path = os.path.join(self.data_path, subject_folder, file)
-                    eeg_data = io.loadmat(file_path, simplify_cells=True)
-                    electrodes_data.append(tuple((eeg_data, subject_id)))
+            if subject_id in self.subject_ids:
+                subject_experiments = [] 
+                for file in os.listdir(os.path.join(self.data_path, subject_folder)):
+                    if file.endswith('.mat'):
+                        file_path = os.path.join(self.data_path, subject_folder, file)
+                        eeg_data = io.loadmat(file_path, simplify_cells=True)['ThisEEG'].astype(np.float32) # Load the EEG data (only the 'ThisEEG' field is needed
+                        eeg_data = einops.rearrange(eeg_data, "c s -> s c")
+                        subject_experiments.append(eeg_data)
+                electrodes_data.append(tuple((subject_experiments, subject_id)))
+            else:
+                missing_subjects.append(subject_id)
+        if PRINT_DATASET_DEBUG:
+            if len(missing_subjects) > 0:
+                print(f"--DATASET-- Missing personality traits of these subjects (the associated files won't be considered): {missing_subjects}")
+            else:
+                print("--DATASET-- All subjects have associated personality traits")
+
         return electrodes_data
-    
-    def check_metadata_validity(self, metadata_df, eeg_df):
-        # Check if the metadata file is valid
-        # TO DO: Implement this method (check if all personality stats are present in the metadata file)
-        # If not, don't consider the corresponding user's EEG data
-        pass
 
 if __name__ == "__main__":
     dataset = ASCERTAINDataset(data_path=ASCERTAIN_FILES_DIR, metadata_path=ASCERTAIN_METADATA_FILE)
