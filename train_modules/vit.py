@@ -15,7 +15,11 @@ def main():
     seed = resumed_configuration["seed"] if resumed_configuration != None else RANDOM_SEED
     set_seed(seed)
     device = select_device()
-    dataset = instantiate_dataset(resumed_configuration["dataset"] if resumed_configuration != None else DATASET_TO_USE)
+    dataset = instantiate_dataset(
+        dataset_name=resumed_configuration["dataset"] if resumed_configuration != None else DATASET_TO_USE,
+        apply_label_discretization=resumed_configuration["discretize_labels"] if resumed_configuration != None else DISCRETIZE_LABELS,
+        discretization_method=resumed_configuration["discretization_method"] if resumed_configuration != None else DISCRETIZATION_METHOD
+    )
     dataloader = EEG_dataloader(dataset=dataset,
                                 seed=seed,
                                 batch_size=resumed_configuration["batch_size"] if resumed_configuration != None else BATCH_SIZE,
@@ -26,7 +30,8 @@ def main():
     positional_encoding_name = resumed_configuration["positional_encoding"] if resumed_configuration != None else POSITIONAL_ENCODING
     if positional_encoding_name is not None:
         positional_encoding = get_positional_encoding(
-            positional_encoding_name=positional_encoding_name
+            positional_encoding_name=positional_encoding_name,
+            hidden_size=resumed_configuration["transformer_hidden_size"] if resumed_configuration != None else HIDDEN_SIZE
         )
     else:
         positional_encoding = None
@@ -73,6 +78,7 @@ def main():
             "architecture": "ViT",
             "labels": dataset.labels,
             "discretize_labels": DISCRETIZE_LABELS,
+            "discretization_method": DISCRETIZATION_METHOD,
             "num_classes": dataset.labels_classes,
             "evaluate_each_label": EVALUATE_EACH_LABEL,
             "normalize_data": NORMALIZE_DATA,

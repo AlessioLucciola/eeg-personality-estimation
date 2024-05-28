@@ -54,10 +54,16 @@ schedulers = [
 ]
 
 positional_encodings = [
-    "sinusoidal"
+    "sinusoidal",
+    "learnable"
 ]
 
 merge_mels_typologies = [
     "channels",
     "samples"
+]
+
+discretization_methods = [
+    "personality_mean",
+    "fixed_mean"
 ]

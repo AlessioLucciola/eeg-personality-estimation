@@ -44,7 +44,7 @@ class ViT(nn.Module):
             encoder_layer=nn.TransformerEncoderLayer(
                 batch_first=True,
                 d_model=self.hidden_size,
-                dim_feedforward=self.hidden_size * 4,
+                dim_feedforward=self.hidden_size*4,
                 dropout=self.dropout_p,
                 activation=nn.functional.relu,
                 nhead=self.num_heads,
@@ -58,7 +58,7 @@ class ViT(nn.Module):
                 decoder_layer=nn.TransformerDecoderLayer(
                     batch_first=True,
                     d_model=self.hidden_size,
-                    dim_feedforward=self.hidden_size * 4,
+                    dim_feedforward=self.hidden_size*4,
                     dropout=self.dropout_p,
                     activation=nn.functional.relu,
                     nhead=self.num_heads,
@@ -86,8 +86,9 @@ class ViT(nn.Module):
         
     def forward(self, x):
         if not self.use_encoder_only:
-            label_tokens = self.labels_embedding.weight.expand(x.size(0), -1, -1)  # Expand label tokens to the batch size
-        #print(x.shape)
+            label_indices = torch.arange(len(self.labels), device=x.device).unsqueeze(0) # # Create a 2D tensor of label indices with shape (1, num_labels)
+            label_tokens = self.labels_embedding(label_indices)  # Embed the label indices (1, num_labels, hidden_size)
+            label_tokens = label_tokens.expand(x.shape[0], -1, -1)  # # Repeat the label tokens across the batch dimension (batch_size, num_labels, hidden_size)
         x = self.merge_mels(x) # Merge the mel bands (merging typology is defined in the configuration file)
         #print(x.shape)
         if self.positional_encoding is not None:
@@ -96,7 +97,7 @@ class ViT(nn.Module):
                 label_tokens = label_tokens + self.positional_encoding(label_tokens) # Add positional encoding to the label tokens
         #print(self.cls.weight.shape)
         if self.use_learnable_token:
-            cls_token = self.cls.weight.expand(x.size(0), -1, -1)  # Expand cls token to the batch size
+            cls_token = self.cls(torch.tensor([0], device=self.device)).repeat(x.shape[0], 1, 1)  # Expand cls token to the batch size
             x = torch.cat([cls_token, x], dim=1)  # Add learnable token
         #print(x.shape)
         x = self.encoder(x)

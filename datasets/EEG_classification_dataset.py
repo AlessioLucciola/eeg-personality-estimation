@@ -10,6 +10,7 @@ import numpy as np
 import einops
 import torch
 import mne
+import os
 
 class EEGClassificationDataset(Dataset, ABC):
     def __init__(self,
@@ -19,6 +20,8 @@ class EEGClassificationDataset(Dataset, ABC):
                  subject_ids: List[str],
                  labels: List[str],
                  labels_classes: int,
+                 discretization_method: str,
+                 apply_label_discretization: bool,
                  sampling_rate: int = SAMPLING_RATE,
                  electrodes: List[str] = ELECTRODES,
                  window_size: int = WINDOWS_SIZE,
@@ -36,6 +39,8 @@ class EEGClassificationDataset(Dataset, ABC):
         self.labels = labels
         self.labels_classes = labels_classes
         self.sampling_rate = sampling_rate
+        self.apply_label_discretization = apply_label_discretization
+        self.discretization_method = discretization_method
         self.electrodes = electrodes
         self.window_size = window_size
         self.window_stride = window_stride
@@ -161,9 +166,12 @@ class EEGClassificationDataset(Dataset, ABC):
         for i, subject_experiment in enumerate(tqdm(eegs_data, desc="Normalizing EEG data..", unit="experiment", leave=False)):
             scaler = mne.decoding.Scaler(info=mne.create_info(ch_names=self.electrodes, sfreq=self.sampling_rate, verbose=False, ch_types="eeg"), scalings="mean") # Initializes the scaler
             for j, trial in enumerate(subject_experiment):
-                trial = np.nan_to_num(trial) # Replaces NaN values with 0
-                trial_scaled = einops.rearrange(trial, "s c -> () c s")
-                trial_scaled = scaler.fit_transform(trial_scaled)
+                trial = np.nan_to_num(trial).astype(float) # Replaces NaN values with 0
+                trial = einops.rearrange(trial, "s c -> c s") # Rearranges the data
+                # Filters the data between 1 and 50 Hz (this is done before other preprocessing steps to remove noise and artifacts from the EEG data)
+                trial = mne.filter.filter_data(trial, sfreq=self.sampling_rate, l_freq=1, h_freq=50, filter_length="auto", verbose=False, n_jobs=os.cpu_count()-2)
+                trial_scaled = einops.rearrange(trial, "c s -> () c s")
+                trial_scaled = scaler.fit_transform(trial_scaled) # Scales the data
                 trial_scaled = einops.rearrange(trial_scaled, "b c s -> s (b c)") # Normalizes the data
                 div = (trial_scaled.max(axis=0) - trial_scaled.min(axis=0)) + epsilon
                 trial_scaled = 2 * ((trial_scaled - trial_scaled.min(axis=0)) / div) - 1 # Normalizes between -1 and 1

@@ -1,4 +1,4 @@
-from shared.constants import validation_schemes, supported_datasets, optimizers, positional_encodings, merge_mels_typologies
+from shared.constants import validation_schemes, supported_datasets, optimizers, positional_encodings, merge_mels_typologies, discretization_methods
 from typing import List, Union
 import os
 
@@ -6,7 +6,7 @@ import os
 DATA_DIR: str = "data"
 RESULTS_DIR: str = "results"
 PLOTS_DIR: str = "plots"
-DATASET_TO_USE: str = "ASCERTAIN" # "AMIGOS" | "ASCERTAIN"
+DATASET_TO_USE: str = "AMIGOS" # "AMIGOS" | "ASCERTAIN"
 PRINT_DATASET_DEBUG: bool = False # Print debug information during dataset upload if True
 MAKE_PLOTS: bool = False # Make plots if True (it takes some time to generate the plots!)
 
@@ -37,6 +37,7 @@ WINDOWS_SIZE: float = 3 # Size of the sliding window
 WINDOWS_STRIDE: float = 3 # Stride of the sliding window
 SAMPLING_RATE: int = 128 # Sampling rate of the EEG data
 DISCRETIZE_LABELS: bool = True # Discretize the labels if True
+DISCRETIZATION_METHOD: str = "personality_mean" # "personality_mean" | "fixed_mean"
 NORMALIZE_DATA: bool = True # Normalize the EEG data if True
 DROP_LAST: bool = False # Drop the last window if True (if False, zero-pad the last window)
 APPLY_AUGMENTATION: bool = False # Apply data augmentations to mel spectrograms if True
@@ -53,12 +54,12 @@ MELS_MAX_FREQ: int = 50 # Maximum frequency for the mel spectrogram
 # Training configurations
 EVALUATE_EACH_LABEL: bool = True # Evaluate each label separately if True
 BATCH_SIZE: int = 128 # Batch size
-LEARNING_RATE: float = 1e-5 # Learning rate
-REG: float = 0.1 # Regularization parameter
-EPOCHS: int = 150 # Number of epochs
-DROPOUT_P: float = 0.1 # Dropout probability
+LEARNING_RATE: float = 1e-4 # Learning rate
+REG: float = 0.03 # Regularization parameter
+EPOCHS: int = 100 # Number of epochs
+DROPOUT_P: float = 0.05 # Dropout probability
 THRESHOLD: float = 0.5 # Threshold for the binary classification
-VALIDATION_SCHEME: str = "SPLIT" # "LOOCV" | "K-FOLDCV" | "SPLIT"
+VALIDATION_SCHEME: str = "K-FOLDCV" # "LOOCV" | "K-FOLDCV" | "SPLIT"
 KFOLDCV: int = 3 # Number of folds for K-Fold Cross Validation
 SPLIT_RATIO: float = 0.2 # Ratio for the train-validation split
 OPTIMIZER: str = "AdamW" # "Adam" | "AdamW" | "SGD"
@@ -66,7 +67,7 @@ SCHEDULER: str = "StepLR" # "StepLR" | "ReduceLROnPlateau" | "CosineAnnealingLR"
 CRITERION: str = "BCEWithLogitsLoss" # "BCEWithLogitsLoss" | "CrossEntropyLoss"
 SCHEDULER_STEP_SIZE: int = 10 # Step size for the scheduler
 SCHEDULER_GAMMA: float = 0.1 # Gamma for the scheduler
-LABEL_SMOOTHING_EPSILON: float = 0.1 # Label smoothing (0.0 for no smoothing)
+LABEL_SMOOTHING_EPSILON: float = 0.0 # Label smoothing (0.0 for no smoothing)
 # Resume training configurations
 RESUME_TRAINING: bool = False # Resume training if True (specify the path of model to resume and the epoch to start from)
 PATH_MODEL_TO_RESUME: str = "ViT_2024-05-18_14-35-19" # Name of the model to resume
@@ -79,7 +80,7 @@ NUM_ENCODERS: int = 6 # Number of encoder layers in the transformer
 NUM_DECODERS: int = 6 # Number of decoder layers in the transformer
 USE_ENCODER_ONLY: bool = False # Use only the encoder part of the transformer if True
 HIDDEN_SIZE: int = 256 # Hidden size in the transformer
-POSITIONAL_ENCODING: Union[str, None] = "sinusoidal" # "sinusoidal" | None
+POSITIONAL_ENCODING: Union[str, None] = "learnable" # "sinusoidal" | "learnable" | None
 USE_LEARNABLE_TOKEN: bool = True # Use learnable token if True (append a learnable token to the input)
 MERGE_MELS_TYPOLOGY: str = "channels" # "channels" | "samples" (merge the mel bends leaving the channel dimension or the samples dimension inalterated)
 
@@ -93,6 +94,7 @@ assert DATASET_TO_USE in supported_datasets, f"{DATASET_TO_USE} is not a support
 assert OPTIMIZER in optimizers, f"{OPTIMIZER} is not a supported optimizer."
 assert POSITIONAL_ENCODING in positional_encodings or POSITIONAL_ENCODING is None, f"{POSITIONAL_ENCODING} is not a supported positional encoding."
 assert MERGE_MELS_TYPOLOGY in merge_mels_typologies, f"{MERGE_MELS_TYPOLOGY} is not a supported typology for merging the mel bands."
+assert DISCRETIZATION_METHOD in discretization_methods, f"{DISCRETIZATION_METHOD} is not a supported discretization method."
 assert 0 <= SPLIT_RATIO <= 1, f"Split ratio must be between 0 and 1, but got {SPLIT_RATIO}."
 assert 0 <= DROPOUT_P <= 1, f"Dropout probability must be between 0 and 1, but got {DROPOUT_P}."
 assert 0 <= THRESHOLD <= 1, f"Threshold must be between 0 and 1, but got {THRESHOLD}."

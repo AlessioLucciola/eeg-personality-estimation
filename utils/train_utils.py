@@ -167,18 +167,18 @@ def reset_weights(model, weights):
   return model
 
 def load_metrics(num_labels):
-    accuracy_metric = Accuracy(task="multilabel", num_labels=num_labels)
-    recall_metric = Recall(task="multilabel", num_labels=num_labels, average='macro')
-    precision_metric = Precision(task="multilabel", num_labels=num_labels, average='macro')
-    f1_metric = F1Score(task="multilabel", num_labels=num_labels, average='macro')
+    accuracy_metric = Accuracy(task="multilabel", num_labels=num_labels, average='micro')
+    recall_metric = Recall(task="multilabel", num_labels=num_labels, average='micro')
+    precision_metric = Precision(task="multilabel", num_labels=num_labels, average='micro')
+    f1_metric = F1Score(task="multilabel", num_labels=num_labels, average='micro')
     auroc_metric = AUROC(task="multilabel", num_labels=num_labels)
     label_metrics = {
         label: {
             'accuracy': Accuracy(task="binary"),
-            'recall': Recall(task="binary", average='macro'),
-            'precision': Precision(task="binary", average='macro'),
-            'f1': F1Score(task="binary", average='macro'),
-            'auroc': AUROC(task="binary")
+            'recall': Recall(task="binary", average='micro'),
+            'precision': Precision(task="binary", average='micro'),
+            'f1': F1Score(task="binary", average='micro'),
+            'auroc': AUROC(task="binary", average="micro")
         } for label in range(num_labels)
     }
     return accuracy_metric, recall_metric, precision_metric, f1_metric, auroc_metric, label_metrics
@@ -200,7 +200,7 @@ def measure_performances(
     auroc = auroc_metric(outputs, labels) * 100
     return accuracy, recall, precision, f1, auroc
 
-def get_positional_encoding(positional_encoding_name, max_position_embeddings=1024):
+def get_positional_encoding(positional_encoding_name, max_position_embeddings=1024, hidden_size=None):
     if positional_encoding_name == "sinusoidal":
         class GetSinusoidalPositionalEmbeddings(torch.nn.Module):
             def __init__(
@@ -222,6 +222,23 @@ def get_positional_encoding(positional_encoding_name, max_position_embeddings=10
                 pe = pe[:, :x.shape[1], :]  # Ensure the positional encoding matches the input sequence length
                 assert pe.shape == x.shape, f"Expected shape {x.shape}, but got {pe.shape}"
                 return pe
-        return GetSinusoidalPositionalEmbeddings()
+        return GetSinusoidalPositionalEmbeddings(max_position_embeddings=max_position_embeddings)
+    elif positional_encoding_name == "learnable":
+        class GetLearnablePositionalEmbeddings(torch.nn.Module):
+            def __init__(
+                    self,
+                    hidden_size: int,
+                    max_position_embeddings: int = max_position_embeddings,
+            ):
+                super().__init__()
+                self.max_position_embeddings = max_position_embeddings
+                self.hidden_size = hidden_size
+                self.embedder = torch.nn.Embedding(self.max_position_embeddings, self.hidden_size)
+
+            def forward(self, x):
+                pe = self.embedder(torch.arange(x.shape[1], device=x.device)).repeat(x.shape[0], 1, 1)
+                assert pe.shape == x.shape, f"Expected shape {x.shape}, but got {pe.shape}"
+                return pe
+        return GetLearnablePositionalEmbeddings(max_position_embeddings=max_position_embeddings, hidden_size=hidden_size)
     else:
         raise ValueError(f"Positional encoding {positional_encoding_name} is not supported.")

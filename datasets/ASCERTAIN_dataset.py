@@ -11,21 +11,25 @@ import einops
 class ASCERTAINDataset(EEGClassificationDataset):
     def __init__(self,
                  data_path: str,
-                 metadata_path: str
+                 metadata_path: str,
+                 apply_label_discretization: bool,
+                 discretization_method: str
                 ):
         super(ASCERTAINDataset, self).__init__(
             data_path=data_path,
             metadata_path=metadata_path,
+            apply_label_discretization=apply_label_discretization,
+            discretization_method=discretization_method,
             dataset_name="ASCERTAIN",
             subject_ids=None,
             labels=ascertain_labels,
-            labels_classes=ASCERTAIN_NUM_CLASSES,
+            labels_classes=ASCERTAIN_NUM_CLASSES
         )
     
     def load_data(self):
         metadata_df = self.upload_metadata() # Upload the metadata file
-        if DISCRETIZE_LABELS:
-            metadata_df = self.discretize_labels(metadata_df) # Discretize the personality traits
+        if self.apply_label_discretization:
+            metadata_df = self.discretize_labels(metadata_df, discretization_method=self.discretization_method) # Discretize the personality traits
         eeg_df = self.upload_eeg_data() # Upload the EEG data
         
         eegs_list = deque()
@@ -51,14 +55,25 @@ class ASCERTAINDataset(EEGClassificationDataset):
         self.subject_ids = subjects # Set the subject IDs
         return metadata_df
 
-    def discretize_labels(self, metadata_df):
-        # Discretize the personality traits based on their mean value
-        traits = metadata_df.columns[1:]
-        for trait in traits:
-            mean = metadata_df[trait].mean() # Calculate the mean value of the personality trait
-            assert mean >= 1 and mean <= 7
-            metadata_df[trait] = metadata_df[trait].apply(lambda x: 1 if x > mean else 0) # Discretize the personality trait based on the mean value
-        return metadata_df
+    def discretize_labels(self, metadata_df, discretization_method):
+        print("--DATASET-- Discretize labels parameters set to True. Discretizing personality traits..")
+        traits = metadata_df.columns[1:] # Extract the personality traits
+        if discretization_method == "fixed_mean":
+            print("--DATASET-- Discretizing personality traits based on fixed mean value of the dataset..")
+            # Discretize the personality traits based on fixed mean value of the dataset (that is 4)
+            for trait in traits:
+                metadata_df[trait] = metadata_df[trait].apply(lambda x: 1 if x > 4 else 0) # Discretize the personality trait based on the mean value
+            return metadata_df
+        elif discretization_method == "personality_mean":
+            print("--DATASET-- Discretizing personality traits based on their mean value..")
+            # Discretize the personality traits based on their mean value
+            for trait in traits:
+                mean = metadata_df[trait].mean() # Calculate the mean value of the personality trait
+                assert mean >= 1 and mean <= 7 # Check if the mean is within the range of the personality trait (it must be a value between 1 and 7)
+                metadata_df[trait] = metadata_df[trait].apply(lambda x: 1 if x > mean else 0) # Discretize the personality trait based on the mean value
+            return metadata_df
+        else:
+            raise ValueError(f"Unknown discretization method: {discretization_method}")
     
     def upload_eeg_data(self):
         missing_subjects = []

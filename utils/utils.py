@@ -96,13 +96,23 @@ def save_model(data_name, model, fold=None, epoch=None, is_best=False):
         else:
             torch.save(model.state_dict(), f'{path}/personality_estimation_{epoch}.pt')
 
-def instantiate_dataset(dataset_name):
+def instantiate_dataset(dataset_name, apply_label_discretization, discretization_method):
     if dataset_name == "AMIGOS":
         from datasets.AMIGOS_dataset import AMIGOSDataset
-        return AMIGOSDataset(data_path=AMIGOS_FILES_DIR, metadata_path=AMIGOS_METADATA_FILE)
+        return AMIGOSDataset(
+            apply_label_discretization=apply_label_discretization,
+            discretization_method=discretization_method,
+            data_path=AMIGOS_FILES_DIR,
+            metadata_path=AMIGOS_METADATA_FILE
+        )
     if dataset_name == "ASCERTAIN":
         from datasets.ASCERTAIN_dataset import ASCERTAINDataset
-        return ASCERTAINDataset(data_path=ASCERTAIN_FILES_DIR, metadata_path=ASCERTAIN_METADATA_FILE)
+        return ASCERTAINDataset(
+            apply_label_discretization=apply_label_discretization,
+            discretization_method=discretization_method,
+            data_path=ASCERTAIN_FILES_DIR,
+            metadata_path=ASCERTAIN_METADATA_FILE
+        )
     else:
         raise ValueError(f"Dataset {dataset_name} is not supported.")
     
