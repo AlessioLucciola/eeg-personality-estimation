@@ -15,21 +15,30 @@ def main():
     seed = resumed_configuration["seed"] if resumed_configuration != None else RANDOM_SEED
     set_seed(seed)
     device = select_device()
-    dataset = instantiate_dataset(resumed_configuration["dataset"] if resumed_configuration != None else DATASET_TO_USE)
-    dataloader = EEG_dataloader(dataset=dataset, seed=seed, batch_size=resumed_configuration["batch_size"] if resumed_configuration != None else BATCH_SIZE, validation_scheme=resumed_configuration["validation_scheme"] if resumed_configuration != None else VALIDATION_SCHEME)
+    dataset = instantiate_dataset(
+        dataset_name=resumed_configuration["dataset"] if resumed_configuration != None else DATASET_TO_USE,
+        apply_label_discretization=resumed_configuration["discretize_labels"] if resumed_configuration != None else DISCRETIZE_LABELS,
+        discretization_method=resumed_configuration["discretization_method"] if resumed_configuration != None else DISCRETIZATION_METHOD
+    )
+    dataloader = EEG_dataloader(dataset=dataset,
+        seed=seed,
+        batch_size=resumed_configuration["batch_size"] if resumed_configuration != None else BATCH_SIZE,
+        validation_scheme=resumed_configuration["validation_scheme"] if resumed_configuration != None else VALIDATION_SCHEME
+    )
     dataloaders = dataloader.get_dataloaders()
     
     
-    model = CustomCNN(in_channels=len(resumed_configuration["electrodes"]) if resumed_configuration != None else len(ELECTRODES),
-                     labels=dataset.labels,
-                     labels_classes=dataset.labels_classes,
-                     dropout_p=resumed_configuration["dropout_p"] if resumed_configuration != None else DROPOUT_P,
-                     device=device
-                    ).to(device)
+    model = CustomCNN(
+        in_channels=len(resumed_configuration["electrodes"]) if resumed_configuration != None else len(ELECTRODES),
+        labels=dataset.labels,
+        labels_classes=dataset.labels_classes,
+        dropout_p=resumed_configuration["dropout_p"] if resumed_configuration != None else DROPOUT_P,
+        device=device
+    ).to(device)
 
     if RESUME_TRAINING:
-        model.load_state_dict(torch.load(
-            f"{RESULTS_DIR}/{PATH_MODEL_TO_RESUME}/models/personality_estimation_{RESUME_EPOCH}.pt"))
+        model_path = f"{RESULTS_DIR}/{PATH_MODEL_TO_RESUME}/models/personality_estimation_{RESUME_EPOCH}.pt" if resumed_configuration["validation_scheme"] == "SPLIT" else f"{RESULTS_DIR}/{PATH_MODEL_TO_RESUME}/models/personality_estimation_fold_{RESUME_FOLD}_epoch_{RESUME_EPOCH}.pt"
+        model.load_state_dict(torch.load(model_path))
 
     optimizer = get_optimizer(
         optimizer_name=resumed_configuration["optimizer"] if resumed_configuration != None else OPTIMIZER,
@@ -53,6 +62,7 @@ def main():
             "architecture": "CustomCNN",
             "labels": dataset.labels,
             "discretize_labels": DISCRETIZE_LABELS,
+            "discretization_method": DISCRETIZATION_METHOD,
             "num_classes": dataset.labels_classes,
             "evaluate_each_label": EVALUATE_EACH_LABEL,
             "normalize_data": NORMALIZE_DATA,
@@ -82,6 +92,8 @@ def main():
             "use_wandb": USE_WANDB,
             "use_dml": USE_DML
         }
+    else:
+        config = resumed_configuration
     
     if config["validation_scheme"] == "SPLIT":
         if resumed_configuration != None:
