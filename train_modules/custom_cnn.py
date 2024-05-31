@@ -1,8 +1,8 @@
-from utils.utils import get_configurations, instantiate_dataset, set_seed, select_device
-from utils.train_utils import get_criterion, get_optimizer, get_scheduler
-from dataloaders.EEG_classification_dataloader import EEG_dataloader
-from train_modules.train_loops.train_loop_split import train_eval_loop as train_eval_loop_split
 from train_modules.train_loops.train_loop_kfold_loo import train_eval_loop as train_eval_loop_kfold_loo
+from train_modules.train_loops.train_loop_split import train_eval_loop as train_eval_loop_split
+from utils.train_utils import count_model_MACs, get_criterion, get_model_params, get_optimizer, get_scheduler
+from utils.utils import get_configurations, instantiate_dataset, set_seed, select_device
+from dataloaders.EEG_classification_dataloader import EEG_dataloader
 from models.custom_cnn import CustomCNN
 from config import *
 import torch
@@ -64,6 +64,7 @@ def main():
     if resumed_configuration == None:
         config = {
             "architecture": "CustomCNN",
+            "model_params": get_model_params(model),
             "labels": dataset.labels,
             "discretize_labels": DISCRETIZE_LABELS,
             "discretization_method": DISCRETIZATION_METHOD,
@@ -104,7 +105,10 @@ def main():
         config = resumed_configuration
     
     if config["validation_scheme"] == "SPLIT":
-        if resumed_configuration != None:
+        if resumed_configuration is None:
+            input_dummy_data = next(iter(dataloaders[0]))['spectrogram'][0].unsqueeze(0).to(device) #Take one element from the first fold (for MACs calculation)
+            macs = count_model_MACs(model, input_dummy_data)
+            config["macs"] = macs
             config["split_ratio"] = dataloader.split_ratio
 
         train_eval_loop_split(device=device,
@@ -117,7 +121,11 @@ def main():
                             resume=RESUME_TRAINING
                         )
     else:
-        if resumed_configuration != None:
+        if resumed_configuration is None:
+            fold_dataloaders = list(dataloaders.items())
+            input_dummy_data = next(iter(fold_dataloaders[0][1][0]))['spectrogram'][0].unsqueeze(0).to(device) #Take one element from the first fold (for MACs calculation)
+            macs = count_model_MACs(model, input_dummy_data)
+            config["macs"] = macs
             config["k_folds"] = dataloader.k_folds if config["validation_scheme"] == "K-FOLDCV" else len(dataloader.dataset.subjects_ids)
         
         train_eval_loop_kfold_loo(device=device,

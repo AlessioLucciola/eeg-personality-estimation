@@ -1,5 +1,6 @@
 from torchmetrics import AUROC, Accuracy, Recall, Precision, F1Score
 from config import LEARNING_RATE, REG, RESULTS_DIR
+from torchprofile import profile_macs
 import torch
 import math
 import json
@@ -242,3 +243,12 @@ def get_positional_encoding(positional_encoding_name, max_position_embeddings=10
         return GetLearnablePositionalEmbeddings(max_position_embeddings=max_position_embeddings, hidden_size=hidden_size)
     else:
         raise ValueError(f"Positional encoding {positional_encoding_name} is not supported.")
+    
+def get_model_params(model):
+    model_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    return model_params
+
+def count_model_MACs(model, input):
+    model.eval()
+    macs = profile_macs(model, input)
+    return macs
