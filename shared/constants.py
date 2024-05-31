@@ -67,3 +67,9 @@ discretization_methods = [
     "personality_mean",
     "fixed_mean"
 ]
+
+augmentation_methods = [
+    "spec_augment",
+    "additive_noise",
+    "flipping"
+]

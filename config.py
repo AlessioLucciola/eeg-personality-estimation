@@ -1,4 +1,4 @@
-from shared.constants import validation_schemes, supported_datasets, optimizers, positional_encodings, merge_mels_typologies, discretization_methods
+from shared.constants import validation_schemes, supported_datasets, optimizers, positional_encodings, merge_mels_typologies, discretization_methods, augmentation_methods
 from typing import List, Union
 import os
 
@@ -40,7 +40,8 @@ DISCRETIZE_LABELS: bool = True # Discretize the labels if True
 DISCRETIZATION_METHOD: str = "personality_mean" # "personality_mean" | "fixed_mean"
 NORMALIZE_DATA: bool = True # Normalize the EEG data if True
 DROP_LAST: bool = False # Drop the last window if True (if False, zero-pad the last window)
-APPLY_AUGMENTATION: bool = False # Apply data augmentations to mel spectrograms if True
+APPLY_AUGMENTATION: bool = True # Apply data augmentations to mel spectrograms if True
+AUGMENTATION_METHODS: List[str] = ["spec_augment", "additive_noise", "flipping"] # "spec_augment" | "additive_noise" | "flipping"
 AUGMENTATION_FREQ_MAX_PARAM = 0.35 # Maximum possible length of the frequency mask
 AUGMENTATION_TIME_MAX_PARAM = 0.35 # Maximum possible length of the time mask
 
@@ -95,6 +96,8 @@ assert OPTIMIZER in optimizers, f"{OPTIMIZER} is not a supported optimizer."
 assert POSITIONAL_ENCODING in positional_encodings or POSITIONAL_ENCODING is None, f"{POSITIONAL_ENCODING} is not a supported positional encoding."
 assert MERGE_MELS_TYPOLOGY in merge_mels_typologies, f"{MERGE_MELS_TYPOLOGY} is not a supported typology for merging the mel bands."
 assert DISCRETIZATION_METHOD in discretization_methods, f"{DISCRETIZATION_METHOD} is not a supported discretization method."
+assert all([method in augmentation_methods for method in AUGMENTATION_METHODS]), f"{AUGMENTATION_METHODS} is not a supported augmentation method."
+assert not APPLY_AUGMENTATION or (APPLY_AUGMENTATION and len(AUGMENTATION_METHODS) > 0), f"Apply augmentation must be True if there are augmentation methods to apply, but got {APPLY_AUGMENTATION} and {AUGMENTATION_METHODS}."
 assert 0 <= SPLIT_RATIO <= 1, f"Split ratio must be between 0 and 1, but got {SPLIT_RATIO}."
 assert 0 <= DROPOUT_P <= 1, f"Dropout probability must be between 0 and 1, but got {DROPOUT_P}."
 assert 0 <= THRESHOLD <= 1, f"Threshold must be between 0 and 1, but got {THRESHOLD}."

@@ -1,8 +1,8 @@
+from train_modules.train_loops.train_loop_kfold_loo import train_eval_loop as train_eval_loop_kfold_loo
+from train_modules.train_loops.train_loop_split import train_eval_loop as train_eval_loop_split
 from utils.utils import get_configurations, instantiate_dataset, set_seed, select_device
 from utils.train_utils import get_criterion, get_optimizer, get_scheduler
 from dataloaders.EEG_classification_dataloader import EEG_dataloader
-from train_modules.train_loops.train_loop_split import train_eval_loop as train_eval_loop_split
-from train_modules.train_loops.train_loop_kfold_loo import train_eval_loop as train_eval_loop_kfold_loo
 from models.resnet18 import ResNet18
 from config import *
 import torch
@@ -20,20 +20,27 @@ def main():
         apply_label_discretization=resumed_configuration["discretize_labels"] if resumed_configuration != None else DISCRETIZE_LABELS,
         discretization_method=resumed_configuration["discretization_method"] if resumed_configuration != None else DISCRETIZATION_METHOD
     )
-    dataloader = EEG_dataloader(dataset=dataset,
-                                seed=seed,
-                                batch_size=resumed_configuration["batch_size"] if resumed_configuration != None else BATCH_SIZE,
-                                validation_scheme=resumed_configuration["validation_scheme"] if resumed_configuration != None else VALIDATION_SCHEME)
+    dataloader = EEG_dataloader(
+        dataset=dataset,
+        seed=seed,
+        batch_size=resumed_configuration["batch_size"] if resumed_configuration != None else BATCH_SIZE,
+        validation_scheme=resumed_configuration["validation_scheme"] if resumed_configuration != None else VALIDATION_SCHEME,
+        apply_augmentation=resumed_configuration["is_data_augmented"] if resumed_configuration != None else APPLY_AUGMENTATION,
+        augmentation_methods=resumed_configuration["augmentation_methods"] if resumed_configuration != None else AUGMENTATION_METHODS,
+        augmentation_freq_max_param=resumed_configuration["augmentation_freq_max_param"] if resumed_configuration != None else AUGMENTATION_FREQ_MAX_PARAM,
+        augmentation_time_max_param=resumed_configuration["augmentation_time_max_param"] if resumed_configuration != None else AUGMENTATION_TIME_MAX_PARAM
+    )
     dataloaders = dataloader.get_dataloaders()
 
-    model = ResNet18(in_channels=len(resumed_configuration["electrodes"]) if resumed_configuration != None else len(ELECTRODES),
-                     labels=dataset.labels,
-                     labels_classes=dataset.labels_classes,
-                     dropout_p=resumed_configuration["dropout_p"] if resumed_configuration != None else DROPOUT_P,
-                     pretrained=resumed_configuration["use_pretrained_models"] if resumed_configuration != None else USE_PRETRAINED_MODELS,
-                     add_dropout_to_resnet=resumed_configuration["add_dropout_to_model"] if resumed_configuration != None else ADD_DROPOUT_TO_MODEL,
-                     device=device
-                    ).to(device)
+    model = ResNet18(
+        in_channels=len(resumed_configuration["electrodes"]) if resumed_configuration != None else len(ELECTRODES),
+        labels=dataset.labels,
+        labels_classes=dataset.labels_classes,
+        dropout_p=resumed_configuration["dropout_p"] if resumed_configuration != None else DROPOUT_P,
+        pretrained=resumed_configuration["use_pretrained_models"] if resumed_configuration != None else USE_PRETRAINED_MODELS,
+        add_dropout_to_resnet=resumed_configuration["add_dropout_to_model"] if resumed_configuration != None else ADD_DROPOUT_TO_MODEL,
+        device=device
+    ).to(device)
 
     if RESUME_TRAINING:
         model_path = f"{RESULTS_DIR}/{PATH_MODEL_TO_RESUME}/models/personality_estimation_{RESUME_EPOCH}.pt" if resumed_configuration["validation_scheme"] == "SPLIT" else f"{RESULTS_DIR}/{PATH_MODEL_TO_RESUME}/models/personality_estimation_fold_{RESUME_FOLD}_epoch_{RESUME_EPOCH}.pt"
@@ -92,6 +99,9 @@ def main():
             "add_dropout_to_model": ADD_DROPOUT_TO_MODEL,
             "use_pretrained_models": USE_PRETRAINED_MODELS,
             "is_data_augmented": APPLY_AUGMENTATION,
+            "augmentation_methods": AUGMENTATION_METHODS,
+            "augmentation_freq_max_param": AUGMENTATION_FREQ_MAX_PARAM,
+            "augmentation_time_max_param": AUGMENTATION_TIME_MAX_PARAM,
             "use_dml": USE_DML,
             "use_wandb": USE_WANDB 
         }

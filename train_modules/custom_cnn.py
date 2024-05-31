@@ -20,13 +20,17 @@ def main():
         apply_label_discretization=resumed_configuration["discretize_labels"] if resumed_configuration != None else DISCRETIZE_LABELS,
         discretization_method=resumed_configuration["discretization_method"] if resumed_configuration != None else DISCRETIZATION_METHOD
     )
-    dataloader = EEG_dataloader(dataset=dataset,
+    dataloader = EEG_dataloader(
+        dataset=dataset,
         seed=seed,
         batch_size=resumed_configuration["batch_size"] if resumed_configuration != None else BATCH_SIZE,
-        validation_scheme=resumed_configuration["validation_scheme"] if resumed_configuration != None else VALIDATION_SCHEME
+        validation_scheme=resumed_configuration["validation_scheme"] if resumed_configuration != None else VALIDATION_SCHEME,
+        apply_augmentation=resumed_configuration["is_data_augmented"] if resumed_configuration != None else APPLY_AUGMENTATION,
+        augmentation_methods=resumed_configuration["augmentation_methods"] if resumed_configuration != None else AUGMENTATION_METHODS,
+        augmentation_freq_max_param=resumed_configuration["augmentation_freq_max_param"] if resumed_configuration != None else AUGMENTATION_FREQ_MAX_PARAM,
+        augmentation_time_max_param=resumed_configuration["augmentation_time_max_param"] if resumed_configuration != None else AUGMENTATION_TIME_MAX_PARAM
     )
     dataloaders = dataloader.get_dataloaders()
-    
     
     model = CustomCNN(
         in_channels=len(resumed_configuration["electrodes"]) if resumed_configuration != None else len(ELECTRODES),
@@ -89,6 +93,10 @@ def main():
             "mel_min_freq": MELS_MIN_FREQ,
             "mel_max_freq": MELS_MAX_FREQ,
             "dropout_p": DROPOUT_P,
+            "is_data_augmented": APPLY_AUGMENTATION,
+            "augmentation_methods": AUGMENTATION_METHODS,
+            "augmentation_freq_max_param": AUGMENTATION_FREQ_MAX_PARAM,
+            "augmentation_time_max_param": AUGMENTATION_TIME_MAX_PARAM,
             "use_wandb": USE_WANDB,
             "use_dml": USE_DML
         }
