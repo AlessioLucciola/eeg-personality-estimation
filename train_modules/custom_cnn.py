@@ -127,6 +127,8 @@ def main():
             macs = count_model_MACs(model, input_dummy_data)
             config["macs"] = macs
             config["k_folds"] = dataloader.k_folds if config["validation_scheme"] == "K-FOLDCV" else len(dataloader.dataset.subjects_ids)
+            if config["validation_scheme"] == "LOOCV":
+                config["subjects_limit"] = dataloader.subjects_limit
         
         train_eval_loop_kfold_loo(device=device,
                             dataloaders=dataloaders,

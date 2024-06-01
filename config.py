@@ -37,18 +37,18 @@ WINDOWS_SIZE: float = 3 # Size of the sliding window
 WINDOWS_STRIDE: float = 3 # Stride of the sliding window
 SAMPLING_RATE: int = 128 # Sampling rate of the EEG data
 DISCRETIZE_LABELS: bool = True # Discretize the labels if True
-DISCRETIZATION_METHOD: str = "personality_mean" # "personality_mean" | "fixed_mean"
-NORMALIZE_DATA: bool = False # Normalize the EEG data if True
+DISCRETIZATION_METHOD: str = "personality_mean" # "personality_mean" | "fixed_mean" (only if DISCRETIZE_LABELS is True)
+NORMALIZE_DATA: bool = True # Normalize the EEG data if True
 DROP_LAST: bool = False # Drop the last window if True (if False, zero-pad the last window)
-APPLY_AUGMENTATION: bool = True # Apply data augmentations to mel spectrograms if True
-AUGMENTATION_METHODS: List[str] = ["spec_augment", "additive_noise", "flipping"] # "spec_augment" | "additive_noise" | "flipping"
-AUGMENTATION_FREQ_MAX_PARAM = 0.35 # Maximum possible length of the frequency mask
-AUGMENTATION_TIME_MAX_PARAM = 0.35 # Maximum possible length of the time mask
+APPLY_AUGMENTATION: bool = False # Apply data augmentations to mel spectrograms if True
+AUGMENTATION_METHODS: List[str] = ["spec_augment", "additive_noise", "flipping"] # "spec_augment" | "additive_noise" | "flipping" (only if APPLY_AUGMENTATION is True)
+AUGMENTATION_FREQ_MAX_PARAM = 0.35 # Maximum possible length of the frequency mask (only if "spec_augment" is in AUGMENTATION_METHODS and APPLY_AUGMENTATION is True)
+AUGMENTATION_TIME_MAX_PARAM = 0.35 # Maximum possible length of the time mask (only if "spec_augment" is in AUGMENTATION_METHODS and APPLY_AUGMENTATION is True)
 
 # Mel spectrogram configurations
 MELS: int = 8 # Number of mel bands
-MELS_WINDOW_SIZE: float = 0.05 # Size of the window for the mel spectrogram
-MELS_WINDOW_STRIDE: float = 0.02 # Stride of the window for the mel spectrogram
+MELS_WINDOW_SIZE: float = 0.2 # Size of the window for the mel spectrogram
+MELS_WINDOW_STRIDE: float = 0.2 # Stride of the window for the mel spectrogram
 MELS_MIN_FREQ: int = 0 # Minimum frequency for the mel spectrogram
 MELS_MAX_FREQ: int = 50 # Maximum frequency for the mel spectrogram
 
@@ -56,19 +56,21 @@ MELS_MAX_FREQ: int = 50 # Maximum frequency for the mel spectrogram
 EVALUATE_EACH_LABEL: bool = True # Evaluate each label separately if True
 BATCH_SIZE: int = 128 # Batch size
 LEARNING_RATE: float = 1e-4 # Learning rate
-REG: float = 0.03 # Regularization parameter
-EPOCHS: int = 100 # Number of epochs
-DROPOUT_P: float = 0.05 # Dropout probability
+REG: float = 0.05 # Regularization parameter
+EPOCHS: int = 10 # Number of epochs
+DROPOUT_P: float = 0.0 # Dropout probability
 THRESHOLD: float = 0.5 # Threshold for the binary classification
-VALIDATION_SCHEME: str = "K-FOLDCV" # "LOOCV" | "K-FOLDCV" | "SPLIT"
-KFOLDCV: int = 3 # Number of folds for K-Fold Cross Validation
-SPLIT_RATIO: float = 0.2 # Ratio for the train-validation split
+VALIDATION_SCHEME: str = "LOOCV" # "LOOCV" | "K-FOLDCV" | "SPLIT"
+KFOLDCV: int = 3 # Number of folds for K-Fold Cross Validation (only if VALIDATION_SCHEME is "K-FOLDCV")
+SPLIT_RATIO: float = 0.2 # Ratio for the train-validation split (only if VALIDATION_SCHEME is "SPLIT")
+SUBJECTS_LIMIT: int = 10 # Limit the number of subjects to consider (None for no limit) (only if VALIDATION_SCHEME is "LOOCV")
 OPTIMIZER: str = "AdamW" # "Adam" | "AdamW" | "SGD"
 SCHEDULER: str = "StepLR" # "StepLR" | "ReduceLROnPlateau" | "CosineAnnealingLR"
 CRITERION: str = "BCEWithLogitsLoss" # "BCEWithLogitsLoss" | "CrossEntropyLoss"
 SCHEDULER_STEP_SIZE: int = 10 # Step size for the scheduler
 SCHEDULER_GAMMA: float = 0.1 # Gamma for the scheduler
 LABEL_SMOOTHING_EPSILON: float = 0.0 # Label smoothing (0.0 for no smoothing)
+
 # Resume training configurations
 RESUME_TRAINING: bool = False # Resume training if True (specify the path of model to resume and the epoch to start from)
 PATH_MODEL_TO_RESUME: str = "ViT_2024-05-18_14-35-19" # Name of the model to resume
@@ -77,9 +79,9 @@ RESUME_FOLD: int = 3 # Fold to resume (only for K-Fold Cross Validation and Leav
 
 # Transformer configurations
 NUM_HEADS: int = 4 # Number of heads in the transformer
-NUM_ENCODERS: int = 6 # Number of encoder layers in the transformer
-NUM_DECODERS: int = 6 # Number of decoder layers in the transformer
-USE_ENCODER_ONLY: bool = False # Use only the encoder part of the transformer if True
+NUM_ENCODERS: int = 2 # Number of encoder layers in the transformer
+NUM_DECODERS: int = 0 # Number of decoder layers in the transformer (only if USE_ENCODER_ONLY is False)
+USE_ENCODER_ONLY: bool = True # Use only the encoder part of the transformer if True (no decoder part)
 HIDDEN_SIZE: int = 256 # Hidden size in the transformer
 POSITIONAL_ENCODING: Union[str, None] = "learnable" # "sinusoidal" | "learnable" | None
 USE_LEARNABLE_TOKEN: bool = True # Use learnable token if True (append a learnable token to the input)
@@ -114,6 +116,11 @@ assert 0 < MELS_MAX_FREQ, f"Maximum frequency for the mel spectrogram must be po
 assert 0 < WINDOWS_SIZE, f"Size of the sliding window must be positive, but got {WINDOWS_SIZE}."
 assert 0 < WINDOWS_STRIDE, f"Stride of the sliding window must be positive, but got {WINDOWS_STRIDE}."
 assert 0 < SAMPLING_RATE, f"Sampling rate of the EEG data must be positive, but got {SAMPLING_RATE}."
+assert 0 < NUM_HEADS, f"Number of heads in the transformer must be positive, but got {NUM_HEADS}."
+assert 0 < NUM_ENCODERS, f"Number of encoder layers in the transformer must be positive, but got {NUM_ENCODERS}."
+assert 0 <= NUM_DECODERS, f"Number of decoder layers in the transformer must be non-negative, but got {NUM_DECODERS}."
+assert 0 < HIDDEN_SIZE, f"Hidden size in the transformer must be positive, but got {HIDDEN_SIZE}."
+assert SUBJECTS_LIMIT is None or SUBJECTS_LIMIT > 0, f"Limit of subjects must be positive or None, but got {SUBJECTS_LIMIT}."
 assert ELECTRODES, f"List of electrodes cannot be empty."
 assert isinstance(DISCRETIZE_LABELS, bool), f"Discretize labels must be a boolean, but got {DISCRETIZE_LABELS}."
 assert isinstance(NORMALIZE_DATA, bool), f"Normalize data must be a boolean, but got {NORMALIZE_DATA}."

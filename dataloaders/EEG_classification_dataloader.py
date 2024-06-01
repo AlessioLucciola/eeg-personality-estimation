@@ -1,8 +1,9 @@
-from config import RANDOM_SEED, BATCH_SIZE, VALIDATION_SCHEME, KFOLDCV, SPLIT_RATIO, APPLY_AUGMENTATION, AUGMENTATION_FREQ_MAX_PARAM, AUGMENTATION_TIME_MAX_PARAM, AUGMENTATION_METHODS
+from config import RANDOM_SEED, BATCH_SIZE, VALIDATION_SCHEME, KFOLDCV, SPLIT_RATIO, APPLY_AUGMENTATION, AUGMENTATION_FREQ_MAX_PARAM, AUGMENTATION_TIME_MAX_PARAM, AUGMENTATION_METHODS, SUBJECTS_LIMIT
 from datasets.EEG_classification_dataset import EEGClassificationDataset
 from sklearn.model_selection import KFold, train_test_split
 from torch.utils.data import DataLoader
 from typing import Optional, List
+import random
 import torch
 
 # TO DO: Remove from here
@@ -18,6 +19,7 @@ class EEG_dataloader(DataLoader):
                  validation_scheme: str = VALIDATION_SCHEME,
                  k_folds: Optional[int] = KFOLDCV,
                  split_ratio: Optional[float] = SPLIT_RATIO,
+                 subjects_limit: Optional[int] = SUBJECTS_LIMIT,
                  apply_augmentation: bool = APPLY_AUGMENTATION,
                  augmentation_methods: List[str] = AUGMENTATION_METHODS,
                  augmentation_freq_max_param: float = AUGMENTATION_FREQ_MAX_PARAM,
@@ -29,6 +31,7 @@ class EEG_dataloader(DataLoader):
         self.validation_scheme = validation_scheme
         self.k_folds = k_folds
         self.split_ratio = split_ratio
+        self.subjects_limit = subjects_limit
         self.apply_augmentation = apply_augmentation
         self.augmentation_methods = augmentation_methods
         if self.apply_augmentation:
@@ -59,7 +62,12 @@ class EEG_dataloader(DataLoader):
     def loocv(self):
         print("--VALIDATION SCHEME-- Leave-One-Out Cross Validation (LOOCV) is selected.")
         loo_dataloaders = {}
-        for i, subject_id in enumerate(self.dataset.subject_ids):
+        if self.subjects_limit is not None:
+            limit = min(self.subjects_limit, len(self.dataset.subject_ids))
+            subjects_list = self.dataset.subject_ids[:limit]
+        else:
+            subjects_list = self.dataset.subject_ids
+        for i, subject_id in enumerate(subjects_list):
             train_idx = [j for j in range(len(self.dataset.windows)) if self.dataset.windows[j]['subject_id'] != subject_id]
             val_idx = [j for j in range(len(self.dataset.windows)) if self.dataset.windows[j]['subject_id'] == subject_id]
             train_dataset = torch.utils.data.Subset(self.dataset, train_idx)
