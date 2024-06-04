@@ -27,7 +27,7 @@ ASCERTAIN_NUM_CLASSES: int = 2
 
 # Miscellanous configurations
 RANDOM_SEED: int = 42 # Random seed
-USE_DML: bool = True # Use DirectML library if True (for AMD GPUs)
+USE_DML: bool = False # Use DirectML library if True (for AMD GPUs)
 USE_WANDB: bool = False # Use Weights & Biases for logging if True
 SAVE_RESULTS: bool = True # Save results in JSON files if True
 SAVE_MODELS: bool = False # Save models if True
@@ -78,7 +78,7 @@ RESUME_EPOCH: int = 6 # Epoch to resume
 RESUME_FOLD: int = 3 # Fold to resume (only for K-Fold Cross Validation and Leave-One-Out Cross Validation)
 
 # Transformer configurations
-NUM_HEADS: int = 4 # Number of heads in the transformer
+NUM_HEADS: int = 12 # Number of heads in the transformer
 NUM_ENCODERS: int = 2 # Number of encoder layers in the transformer
 NUM_DECODERS: int = 0 # Number of decoder layers in the transformer (only if USE_ENCODER_ONLY is False)
 USE_ENCODER_ONLY: bool = True # Use only the encoder part of the transformer if True (no decoder part)

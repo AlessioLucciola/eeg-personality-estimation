@@ -85,7 +85,7 @@ def train_eval_loop(device,
             fold_metrics = [] # List to store the metrics in a fold
 
         # Define the metrics
-        accuracy_metric, recall_metric, precision_metric, f1_metric, auroc_metric, label_metrics = load_metrics(num_labels=len(config["labels"]))
+        accuracy_metric, recall_metric, precision_metric, f1_metric, auroc_metric, label_metrics = load_metrics(num_labels=len(config["labels"]), device=device)
 
         fold_model = model # Copy the model for each fold
         fold_model = reset_weights(model=fold_model, weights=starting_weights) # Reset the weights of the model for each fold
