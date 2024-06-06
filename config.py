@@ -30,7 +30,7 @@ RANDOM_SEED: int = 42 # Random seed
 USE_DML: bool = False # Use DirectML library if True (for AMD GPUs)
 USE_WANDB: bool = False # Use Weights & Biases for logging if True
 SAVE_RESULTS: bool = True # Save results in JSON files if True
-SAVE_MODELS: bool = False # Save models if True
+SAVE_MODELS: bool = True # Save models if True
 
 # EEGNet configurations
 WINDOWS_SIZE: float = 3 # Size of the sliding window
@@ -73,9 +73,9 @@ LABEL_SMOOTHING_EPSILON: float = 0.0 # Label smoothing (0.0 for no smoothing)
 
 # Resume training configurations
 RESUME_TRAINING: bool = False # Resume training if True (specify the path of model to resume and the epoch to start from)
-PATH_MODEL_TO_RESUME: str = "ViT_2024-05-18_14-35-19" # Name of the model to resume
-RESUME_EPOCH: int = 6 # Epoch to resume
-RESUME_FOLD: int = 3 # Fold to resume (only for K-Fold Cross Validation and Leave-One-Out Cross Validation)
+PATH_MODEL_TO_RESUME: str = "ViT_2024-06-06_10-04-34" # Name of the model to resume
+RESUME_EPOCH: int = 10 # Epoch to resume
+RESUME_FOLD: int = 21 # Fold to resume (only for K-Fold Cross Validation and Leave-One-Out Cross Validation)
 
 # Transformer configurations
 NUM_HEADS: int = 16 # Number of heads in the transformer
