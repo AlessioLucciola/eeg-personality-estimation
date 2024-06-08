@@ -27,7 +27,7 @@ ASCERTAIN_NUM_CLASSES: int = 2
 
 # Miscellanous configurations
 RANDOM_SEED: int = 42 # Random seed
-USE_DML: bool = True # Use DirectML library if True (for AMD GPUs)
+USE_DML: bool = False # Use DirectML library if True (for AMD GPUs)
 USE_WANDB: bool = False # Use Weights & Biases for logging if True
 SAVE_RESULTS: bool = True # Save results in JSON files if True
 SAVE_MODELS: bool = True # Save models if True
@@ -40,13 +40,13 @@ DISCRETIZE_LABELS: bool = True # Discretize the labels if True
 DISCRETIZATION_METHOD: str = "personality_mean" # "personality_mean" | "fixed_mean" (only if DISCRETIZE_LABELS is True)
 NORMALIZE_DATA: bool = True # Normalize the EEG data if True
 DROP_LAST: bool = False # Drop the last window if True (if False, zero-pad the last window)
-APPLY_AUGMENTATION: bool = False # Apply data augmentations to mel spectrograms if True
+APPLY_AUGMENTATION: bool = True # Apply data augmentations to mel spectrograms if True
 AUGMENTATION_METHODS: List[str] = ["additive_noise", "flipping"] # "spec_augment" | "additive_noise" | "flipping" (only if APPLY_AUGMENTATION is True)
 AUGMENTATION_FREQ_MAX_PARAM = 0.35 # Maximum possible length of the frequency mask (only if "spec_augment" is in AUGMENTATION_METHODS and APPLY_AUGMENTATION is True)
 AUGMENTATION_TIME_MAX_PARAM = 0.35 # Maximum possible length of the time mask (only if "spec_augment" is in AUGMENTATION_METHODS and APPLY_AUGMENTATION is True)
 
 # Mel spectrogram configurations
-MELS: int = 16 # Number of mel bands
+MELS: int = 32 # Number of mel bands
 MELS_WINDOW_SIZE: float = 0.05 # Size of the window for the mel spectrogram
 MELS_WINDOW_STRIDE: float = 0.025 # Stride of the window for the mel spectrogram
 MELS_MIN_FREQ: int = 0 # Minimum frequency for the mel spectrogram
@@ -55,10 +55,10 @@ MELS_MAX_FREQ: int = 50 # Maximum frequency for the mel spectrogram
 # Training configurations
 EVALUATE_EACH_LABEL: bool = True # Evaluate each label separately if True
 BATCH_SIZE: int = 128 # Batch size
-LEARNING_RATE: float = 1e-4 # Learning rate
+LEARNING_RATE: float = 5e-5 # Learning rate
 REG: float = 0.1 # Regularization parameter
-EPOCHS: int = 20 # Number of epochs
-DROPOUT_P: float = 0.05 # Dropout probability
+EPOCHS: int = 30 # Number of epochs
+DROPOUT_P: float = 0.1 # Dropout probability
 THRESHOLD: float = 0.5 # Threshold for the binary classification
 VALIDATION_SCHEME: str = "LOOCV" # "LOOCV" | "K-FOLDCV" | "SPLIT"
 KFOLDCV: int = 3 # Number of folds for K-Fold Cross Validation (only if VALIDATION_SCHEME is "K-FOLDCV")
@@ -80,8 +80,8 @@ RESUME_FOLD: int = 21 # Fold to resume (only for K-Fold Cross Validation and Lea
 # Transformer configurations
 NUM_HEADS: int = 8 # Number of heads in the transformer
 NUM_ENCODERS: int = 6 # Number of encoder layers in the transformer
-NUM_DECODERS: int = 4 # Number of decoder layers in the transformer (only if USE_ENCODER_ONLY is False)
-USE_ENCODER_ONLY: bool = False # Use only the encoder part of the transformer if True (no decoder part)
+NUM_DECODERS: int = 0 # Number of decoder layers in the transformer (only if USE_ENCODER_ONLY is False)
+USE_ENCODER_ONLY: bool = True # Use only the encoder part of the transformer if True (no decoder part)
 HIDDEN_SIZE: int = 256 # Hidden size in the transformer
 POSITIONAL_ENCODING: Union[str, None] = "learnable" # "sinusoidal" | "learnable" | None
 USE_LEARNABLE_TOKEN: bool = True # Use learnable token if True (append a learnable token to the input)
