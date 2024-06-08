@@ -80,8 +80,8 @@ RESUME_FOLD: int = 3 # Fold to resume (only for K-Fold Cross Validation and Leav
 # Transformer configurations
 NUM_HEADS: int = 4 # Number of heads in the transformer
 NUM_ENCODERS: int = 2 # Number of encoder layers in the transformer
-NUM_DECODERS: int = 0 # Number of decoder layers in the transformer (only if USE_ENCODER_ONLY is False)
-USE_ENCODER_ONLY: bool = True # Use only the encoder part of the transformer if True (no decoder part)
+NUM_DECODERS: int = 2 # Number of decoder layers in the transformer (only if USE_ENCODER_ONLY is False)
+USE_ENCODER_ONLY: bool = False # Use only the encoder part of the transformer if True (no decoder part)
 HIDDEN_SIZE: int = 256 # Hidden size in the transformer
 POSITIONAL_ENCODING: Union[str, None] = "learnable" # "sinusoidal" | "learnable" | None
 USE_LEARNABLE_TOKEN: bool = True # Use learnable token if True (append a learnable token to the input)
