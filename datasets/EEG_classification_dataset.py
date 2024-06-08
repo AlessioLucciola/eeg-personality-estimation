@@ -11,6 +11,7 @@ import einops
 import torch
 import mne
 import os
+import gc
 
 class EEGClassificationDataset(Dataset, ABC):
     def __init__(self,
@@ -74,7 +75,7 @@ class EEGClassificationDataset(Dataset, ABC):
             print("--PLOTS-- Plotting amplitudes distribution of EEG data after normalization..")
             all_eegs = np.concatenate([np.concatenate(exp) for exp in self.eegs_data])
             plot_amplitudes_distribution(all_eegs, self.electrodes, dataset_name=self.dataset_name, title=f"Amplitudes distribution of EEG data after normalization")
-            del all_eegs
+            del all_eegs # Free up memory
 
         # Plot the subjects distribution
         if MAKE_PLOTS:
@@ -83,7 +84,7 @@ class EEGClassificationDataset(Dataset, ABC):
             for i, s_id in enumerate(self.subject_ids):
                 subject_samples_num[s_id] = len(self.eegs_data[i])
             #plot_subjects_distribution(subject_samples_num, dataset_name=self.dataset_name, title="Subjects distribution")
-            del subject_samples_num
+            del subject_samples_num # Free up memory
 
         # Plot the labels distribution
         if MAKE_PLOTS:
@@ -94,7 +95,7 @@ class EEGClassificationDataset(Dataset, ABC):
                     if subject_labels[label] == 1:
                         labels_num[label] += 1
             plot_labels_distribution(self.labels, labels_num, discretized_labels=True, dataset_name=self.dataset_name, title="Distribution of labels")
-            del labels_num
+            del labels_num # Free up memory
 
         # Divide the EEG data into windows
         self.windows = self.get_windows()
@@ -129,6 +130,9 @@ class EEGClassificationDataset(Dataset, ABC):
         )
         self.windows = self.get_mel_spectrograms(spectrogram_module=spectrogram_module)
 
+        del spectrogram_module, self.eegs_data, self.labels_data, self.subjects_data # Free up memory
+        gc.collect() # Garbage collection to free up memory
+
     def __len__(self):
         return len(self.windows)
     
@@ -136,9 +140,9 @@ class EEGClassificationDataset(Dataset, ABC):
         window = self.windows[idx]
         parsed_labels = torch.tensor(list(window["labels"].values()), dtype=torch.float)
         return {
-            "eeg_data": window["eeg_data"].astype(np.float32),
+            #"eeg_data": window["eeg_data"].astype(np.float32),
             "spectrogram": window["spectrogram"],
-            "sample_rate": self.sampling_rate,
+            #"sample_rate": self.sampling_rate,
             "subject_id": window["subject_id"],
             "labels": parsed_labels,
         }
@@ -176,7 +180,9 @@ class EEGClassificationDataset(Dataset, ABC):
                 div = (trial_scaled.max(axis=0) - trial_scaled.min(axis=0)) + epsilon
                 trial_scaled = 2 * ((trial_scaled - trial_scaled.min(axis=0)) / div) - 1 # Normalizes between -1 and 1
                 subject_experiment[j] = trial_scaled # Updates the EEG data
+                del trial, trial_scaled # Free up memory
             eegs_data[i] = subject_experiment
+            del scaler # Free up memory
         return eegs_data
     
     def get_windows(self):
@@ -200,9 +206,9 @@ class EEGClassificationDataset(Dataset, ABC):
                                 print(f"WARNING: Window shape of subject {subject_id} experiment {j} is {window_eeg.shape[0]} instead of {self.samples_per_window}. Data will be zero-padded.")
                             window_eeg = np.concatenate((window_eeg, np.zeros((self.samples_per_window - window_eeg.shape[0], window_eeg.shape[1]))), axis=0) # Zero-pads the data
                     window = {
-                        "experiment": j,
-                        "start": window_start,
-                        "end": window_end,
+                        #"experiment": j,
+                        #"start": window_start,
+                        #"end": window_end,
                         "eeg_data": window_eeg,
                         "subject_id": self.subjects_data[i],
                         "labels": self.labels_data[i]
@@ -215,4 +221,5 @@ class EEGClassificationDataset(Dataset, ABC):
         for i in tqdm(range(len(windows)), desc="Computing mel spectrograms of the windows..", unit="window", leave=False):
             window_spectrogram = spectrogram_module(windows[i]["eeg_data"]) # Compute mel spectrogram of the EEG data
             windows[i]["spectrogram"] = window_spectrogram # Update the window with the mel spectrogram
+            del windows[i]["eeg_data"] # Free up memory
         return windows
