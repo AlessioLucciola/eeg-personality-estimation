@@ -103,10 +103,10 @@ class ViT(nn.Module):
         x = self.encoder(x)
         #print(x.shape)
         if self.use_encoder_only:
-            x = x[:, 0, :]
+            feature = x[:, 0, :]
         else:
-            x = self.decoder(label_tokens, x)[:, 0, :]
+            feature = self.decoder(label_tokens, x)[:, 0, :]
         #print(x.shape)
-        x = self.classifier(x)
+        out = self.classifier(feature)
         #print(x.shape)
-        return x
+        return out, feature
