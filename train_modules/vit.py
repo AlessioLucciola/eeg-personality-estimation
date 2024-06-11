@@ -12,6 +12,12 @@ def main():
     if RESUME_TRAINING:
         resumed_configuration = get_configurations(PATH_MODEL_TO_RESUME)
 
+    criterion_name = resumed_configuration["criterion"] if resumed_configuration != None else CRITERION
+    criterion = get_criterion(
+        criterion_name=criterion_name,
+        smoothing_factor=resumed_configuration["label_smoothing_epsilon"] if resumed_configuration != None else LABEL_SMOOTHING_EPSILON
+    )
+    use_triplet = resumed_configuration["use_triplet"] if resumed_configuration != None else (True if criterion_name == "TripletMarginLoss" else False)
     seed = resumed_configuration["seed"] if resumed_configuration != None else RANDOM_SEED
     set_seed(seed)
     device = select_device()
@@ -20,6 +26,7 @@ def main():
         apply_label_discretization=resumed_configuration["discretize_labels"] if resumed_configuration != None else DISCRETIZE_LABELS,
         discretization_method=resumed_configuration["discretization_method"] if resumed_configuration != None else DISCRETIZATION_METHOD
     )
+
     dataloader = EEG_dataloader(
         dataset=dataset,
         seed=seed,
@@ -28,7 +35,8 @@ def main():
         apply_augmentation=resumed_configuration["is_data_augmented"] if resumed_configuration != None else APPLY_AUGMENTATION,
         augmentation_methods=resumed_configuration["augmentation_methods"] if resumed_configuration != None else AUGMENTATION_METHODS,
         augmentation_freq_max_param=resumed_configuration["augmentation_freq_max_param"] if resumed_configuration != None else AUGMENTATION_FREQ_MAX_PARAM,
-        augmentation_time_max_param=resumed_configuration["augmentation_time_max_param"] if resumed_configuration != None else AUGMENTATION_TIME_MAX_PARAM
+        augmentation_time_max_param=resumed_configuration["augmentation_time_max_param"] if resumed_configuration != None else AUGMENTATION_TIME_MAX_PARAM,
+        use_triplet=use_triplet
     )
     dataloaders = dataloader.get_dataloaders()
 
@@ -74,15 +82,12 @@ def main():
         step_size=resumed_configuration["scheduler_step_size"] if resumed_configuration != None else SCHEDULER_STEP_SIZE,
         gamma=resumed_configuration["scheduler_gamma"] if resumed_configuration != None else SCHEDULER_GAMMA
         )
-    criterion = get_criterion(
-        criterion_name=resumed_configuration["criterion"] if resumed_configuration != None else CRITERION,
-        smoothing_factor=resumed_configuration["label_smoothing_epsilon"] if resumed_configuration != None else LABEL_SMOOTHING_EPSILON
-    )
 
     if resumed_configuration == None:
         config = {
             "architecture": "ViT",
             "model_params": get_model_params(model),
+            "use_triplet": use_triplet,
             "labels": dataset.labels,
             "discretize_labels": DISCRETIZE_LABELS,
             "discretization_method": DISCRETIZATION_METHOD,
@@ -131,11 +136,13 @@ def main():
         config = resumed_configuration
     
     if config["validation_scheme"] == "SPLIT":
+        """
         if resumed_configuration is None:
             input_dummy_data = next(iter(dataloaders[0]))['spectrogram'][0].unsqueeze(0).to(device) #Take one element from the first fold (for MACs calculation)
             macs = count_model_MACs(model, input_dummy_data)
             config["macs"] = macs
             config["split_ratio"] = dataloader.split_ratio
+        """
 
         train_eval_loop_split(device=device,
                             dataloaders=dataloaders,

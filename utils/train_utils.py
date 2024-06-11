@@ -31,27 +31,32 @@ def get_criterion(criterion_name, smoothing_factor=0.1):
         print(f"--TRAIN-- Using label smoothing with epsilon = {smoothing_factor}")
     if criterion_name == "BCEWithLogitsLoss":
         # Binary Cross Entropy with Logits Loss modified to support label smoothing
-        class SmoothBCEWithLogitsLoss(torch.nn.Module):
-            def __init__(self, label_smoothing=0.0, reduction='mean'):
-                super(SmoothBCEWithLogitsLoss, self).__init__()
-                assert 0 <= label_smoothing < 1, "label_smoothing value must be between 0 and 1."
-                self.label_smoothing = label_smoothing
-                self.reduction = reduction
-                self.bce_with_logits = torch.nn.BCEWithLogitsLoss(reduction=reduction)
-
-            def forward(self, input, target):
-                if self.label_smoothing > 0:
-                    positive_smoothed_labels = 1.0 - self.label_smoothing
-                    negative_smoothed_labels = self.label_smoothing
-                    target = target * positive_smoothed_labels + (1 - target) * negative_smoothed_labels
-
-                loss = self.bce_with_logits(input, target)
-                return loss
-        return SmoothBCEWithLogitsLoss(label_smoothing=smoothing_factor)
+        return load_BCEWithLogitsLoss(smoothing_factor=smoothing_factor)
     elif criterion_name == "CrossEntropyLoss":
         return torch.nn.CrossEntropyLoss(label_smoothing=smoothing_factor)
+    elif criterion_name == "TripletMarginLoss":
+        return tuple((torch.nn.TripletMarginLoss(margin=1.0, p=2.0, reduction='mean'), load_BCEWithLogitsLoss(smoothing_factor=smoothing_factor)))
     else:
         raise ValueError(f"Criterion {criterion_name} is not supported.")
+
+def load_BCEWithLogitsLoss(smoothing_factor=0.1):
+    class SmoothBCEWithLogitsLoss(torch.nn.Module):
+        def __init__(self, label_smoothing=0.0, reduction='mean'):
+            super(SmoothBCEWithLogitsLoss, self).__init__()
+            assert 0 <= label_smoothing < 1, "label_smoothing value must be between 0 and 1."
+            self.label_smoothing = label_smoothing
+            self.reduction = reduction
+            self.bce_with_logits = torch.nn.BCEWithLogitsLoss(reduction=reduction)
+
+        def forward(self, input, target):
+            if self.label_smoothing > 0:
+                positive_smoothed_labels = 1.0 - self.label_smoothing
+                negative_smoothed_labels = self.label_smoothing
+                target = target * positive_smoothed_labels + (1 - target) * negative_smoothed_labels
+
+            loss = self.bce_with_logits(input, target)
+            return loss
+    return SmoothBCEWithLogitsLoss(label_smoothing=smoothing_factor)
 
 def add_dropout_to_model(model, dropout_p=0.25):
     for name, module in model.named_children():

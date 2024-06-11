@@ -53,6 +53,12 @@ schedulers = [
     "ReduceLROnPlateau"
 ]
 
+criterions = [
+    "BCEWithLogitsLoss",
+    "CrossEntropyLoss",
+    "TripletMarginLoss"
+]
+
 positional_encodings = [
     "sinusoidal",
     "learnable"

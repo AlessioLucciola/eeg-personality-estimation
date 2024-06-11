@@ -72,26 +72,33 @@ class MelSpectrogram(nn.Module):
             spectrogram = einops.rearrange(spectrogram, "b c s m -> (b s) c m")
         return spectrogram
 
-def apply_augmentation_to_spectrograms(data, aug_to_apply, time_mask_param, freq_mask_param, k_fold_index=None):
-    for i in tqdm(range(len(data)), desc=f"Applying augmentations to training data.." if k_fold_index is None else f"Applying augmentations to training data (Fold {k_fold_index})..", leave=False):
-        mel_spectrogram = data[i]["spectrogram"]
-        if "spec_augment" in aug_to_apply:
-            # Apply SpecAugment if the random number is greater than 0.5
-            if random.random() > 0.25:
-                mel_spectrogram = spec_augment(mel_spectrogram, time_mask_param, freq_mask_param)
-        
-        if "additive_noise" in aug_to_apply:
-            # Apply additive noise if the random number is greater than 0.5
-            if random.random() > 0.25:
-                mel_spectrogram = add_noise(mel_spectrogram)
-        
-        if "flipping" in aug_to_apply:
-        # Apply flipping if the random number is greater than 0.75
-            if random.random() > 0.5:
-                mel_spectrogram = flip(mel_spectrogram)
-        data[i]["spectrogram"] = mel_spectrogram
-    
+def apply_augmentation_to_spectrograms(data, aug_to_apply, time_mask_param, freq_mask_param, k_fold_index=None, single_sample=False):
+    if single_sample:
+        data = data["spectrogram"]
+        data = apply_augmentation(data, aug_to_apply, time_mask_param, freq_mask_param)
+    else:
+        for i in tqdm(range(len(data)), desc=f"Applying augmentations to training data.." if k_fold_index is None else f"Applying augmentations to training data (Fold {k_fold_index})..", leave=False):
+            mel_spectrogram = data[i]["spectrogram"]
+            mel_spectrogram = apply_augmentation(mel_spectrogram, aug_to_apply, time_mask_param, freq_mask_param)
+            data[i]["spectrogram"] = mel_spectrogram
     return data
+
+def apply_augmentation(mel_spectrogram, aug_to_apply, time_mask_param, freq_mask_param):
+    if "spec_augment" in aug_to_apply:
+        # Apply SpecAugment if the random number is greater than 0.5
+        if random.random() > 0.25:
+            mel_spectrogram = spec_augment(mel_spectrogram, time_mask_param, freq_mask_param)
+    
+    if "additive_noise" in aug_to_apply:
+        # Apply additive noise if the random number is greater than 0.5
+        if random.random() > 0.25:
+            mel_spectrogram = add_noise(mel_spectrogram)
+    
+    if "flipping" in aug_to_apply:
+    # Apply flipping if the random number is greater than 0.75
+        if random.random() > 0.5:
+            mel_spectrogram = flip(mel_spectrogram)
+    return mel_spectrogram
 
 def spec_augment(mel_spectrogram, time_mask_param, freq_mask_param):
     # Apply frequency masking

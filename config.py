@@ -1,4 +1,4 @@
-from shared.constants import validation_schemes, supported_datasets, optimizers, positional_encodings, merge_mels_typologies, discretization_methods, augmentation_methods
+from shared.constants import validation_schemes, supported_datasets, optimizers, positional_encodings, merge_mels_typologies, discretization_methods, augmentation_methods, schedulers, criterions
 from typing import List, Union
 import os
 
@@ -38,9 +38,9 @@ WINDOWS_STRIDE: float = 3 # Stride of the sliding window
 SAMPLING_RATE: int = 128 # Sampling rate of the EEG data
 DISCRETIZE_LABELS: bool = True # Discretize the labels if True
 DISCRETIZATION_METHOD: str = "personality_mean" # "personality_mean" | "fixed_mean" (only if DISCRETIZE_LABELS is True)
-NORMALIZE_DATA: bool = True # Normalize the EEG data if True
+NORMALIZE_DATA: bool = False # Normalize the EEG data if True
 DROP_LAST: bool = False # Drop the last window if True (if False, zero-pad the last window)
-APPLY_AUGMENTATION: bool = False # Apply data augmentations to mel spectrograms if True
+APPLY_AUGMENTATION: bool = True # Apply data augmentations to mel spectrograms if True
 AUGMENTATION_METHODS: List[str] = ["spec_augment", "additive_noise", "flipping"] # "spec_augment" | "additive_noise" | "flipping" (only if APPLY_AUGMENTATION is True)
 AUGMENTATION_FREQ_MAX_PARAM = 0.35 # Maximum possible length of the frequency mask (only if "spec_augment" is in AUGMENTATION_METHODS and APPLY_AUGMENTATION is True)
 AUGMENTATION_TIME_MAX_PARAM = 0.35 # Maximum possible length of the time mask (only if "spec_augment" is in AUGMENTATION_METHODS and APPLY_AUGMENTATION is True)
@@ -60,13 +60,13 @@ REG: float = 0.05 # Regularization parameter
 EPOCHS: int = 10 # Number of epochs
 DROPOUT_P: float = 0.0 # Dropout probability
 THRESHOLD: float = 0.5 # Threshold for the binary classification
-VALIDATION_SCHEME: str = "LOOCV" # "LOOCV" | "K-FOLDCV" | "SPLIT"
+VALIDATION_SCHEME: str = "SPLIT" # "LOOCV" | "K-FOLDCV" | "SPLIT"
 KFOLDCV: int = 3 # Number of folds for K-Fold Cross Validation (only if VALIDATION_SCHEME is "K-FOLDCV")
 SPLIT_RATIO: float = 0.2 # Ratio for the train-validation split (only if VALIDATION_SCHEME is "SPLIT")
 SUBJECTS_LIMIT: int = 10 # Limit the number of subjects to consider (None for no limit) (only if VALIDATION_SCHEME is "LOOCV")
 OPTIMIZER: str = "AdamW" # "Adam" | "AdamW" | "SGD"
 SCHEDULER: str = "StepLR" # "StepLR" | "ReduceLROnPlateau" | "CosineAnnealingLR"
-CRITERION: str = "BCEWithLogitsLoss" # "BCEWithLogitsLoss" | "CrossEntropyLoss"
+CRITERION: str = "BCEWithLogitsLoss" # "BCEWithLogitsLoss" | "CrossEntropyLoss" | "TripletMarginLoss"
 SCHEDULER_STEP_SIZE: int = 10 # Step size for the scheduler
 SCHEDULER_GAMMA: float = 0.1 # Gamma for the scheduler
 LABEL_SMOOTHING_EPSILON: float = 0.0 # Label smoothing (0.0 for no smoothing)
@@ -95,6 +95,8 @@ ADD_DROPOUT_TO_MODEL: bool = False # Add dropout layers to the model if True
 assert VALIDATION_SCHEME in validation_schemes, f"{VALIDATION_SCHEME} is not a supported validation scheme."
 assert DATASET_TO_USE in supported_datasets, f"{DATASET_TO_USE} is not a supported dataset."
 assert OPTIMIZER in optimizers, f"{OPTIMIZER} is not a supported optimizer."
+assert SCHEDULER in schedulers, f"{SCHEDULER} is not a supported scheduler."
+assert CRITERION in criterions, f"{CRITERION} is not a supported criterion."
 assert POSITIONAL_ENCODING in positional_encodings or POSITIONAL_ENCODING is None, f"{POSITIONAL_ENCODING} is not a supported positional encoding."
 assert MERGE_MELS_TYPOLOGY in merge_mels_typologies, f"{MERGE_MELS_TYPOLOGY} is not a supported typology for merging the mel bands."
 assert DISCRETIZATION_METHOD in discretization_methods, f"{DISCRETIZATION_METHOD} is not a supported discretization method."

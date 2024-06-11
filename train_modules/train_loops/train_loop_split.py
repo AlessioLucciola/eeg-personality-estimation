@@ -56,6 +56,12 @@ def train_eval_loop(device,
     
     # Define the training and validation loaders
     train_loader, val_loader = dataloaders
+    # Define the criterion to used depending on the use of the triplet loss
+    if config["use_triplet"]:
+        triplet_criterion = criterion[0]
+        binary_criterion = criterion[1]
+    else:
+        binary_criterion = criterion
 
     training_total_step = len(train_loader) # Number of batches in the training set
     val_total_step = len(val_loader) # Number of batches in the validation set
@@ -74,17 +80,41 @@ def train_eval_loop(device,
         epoch_tr_loss = 0
         for _, tr_batch in enumerate(tqdm(train_loader, desc=f"Training Epoch [{epoch+1}/{EPOCHS}]", leave=False)):
             # Select the data and the labels
-            tr_data, tr_labels = tr_batch['spectrogram'], tr_batch['labels']
-            tr_data = tr_data.to(device)
-            tr_labels = tr_labels.to(device)
+            if config["use_triplet"]:
+                anchor_sample, positive_sample, negative_sample = tr_batch[0], tr_batch[1], tr_batch[2]
+                tr_data, tr_labels = anchor_sample['spectrogram'], anchor_sample['labels']
+                tr_positive_data, tr_positive_labels = positive_sample['spectrogram'], positive_sample['labels']
+                tr_negative_data, tr_negative_labels = negative_sample['spectrogram'], negative_sample['labels']
+                tr_data = tr_data.to(device)
+                tr_positive_data = tr_positive_data.to(device)
+                tr_negative_data = tr_negative_data.to(device)
+                tr_labels = tr_labels.to(device)
+                tr_positive_labels = tr_positive_labels.to(device)
+                tr_negative_labels = tr_negative_labels.to(device)
+                
+                tr_outputs = model(tr_data) # Prediction for the anchor sample
+                epoch_tr_outputs = torch.cat((epoch_tr_outputs, tr_outputs), 0) # Concatenate the predictions for the anchor sample
+                tr_positive_outputs = model(tr_positive_data) # Prediction for the positive sample
+                tr_negative_outputs = model(tr_negative_data) # Prediction for the negative sample
 
-            # Forward pass
-            tr_outputs = model(tr_data) # Prediction
-            epoch_tr_outputs = torch.cat((epoch_tr_outputs, tr_outputs), 0)
-            
-            # Loss computation
-            tr_loss = criterion(tr_outputs, tr_labels)
-            epoch_tr_loss += tr_loss.item()
+                tr_triplet_loss = triplet_criterion(tr_outputs, tr_positive_outputs, tr_negative_outputs) # Compute the triplet loss
+                tr_loss_anchor = binary_criterion(tr_outputs, tr_labels) # Compute the loss for the anchor sample
+                tr_loss_positive = binary_criterion(tr_positive_outputs, tr_positive_labels) # Compute the loss for the positive sample
+                tr_loss_negative = binary_criterion(tr_negative_outputs, tr_negative_labels) # Compute the loss for the negative sample
+                tr_loss = tr_triplet_loss + tr_loss_anchor + tr_loss_positive + tr_loss_negative # Compute the total loss
+            else:
+                tr_data, tr_labels = tr_batch['spectrogram'], tr_batch['labels']
+                tr_data = tr_data.to(device)
+                tr_labels = tr_labels.to(device)
+
+                # Forward pass
+                tr_outputs = model(tr_data) # Prediction
+                epoch_tr_outputs = torch.cat((epoch_tr_outputs, tr_outputs), 0)
+                
+                # Loss computation
+                tr_loss = criterion(tr_outputs, tr_labels)
+
+            epoch_tr_loss += tr_loss.item() # Accumulate training loss
 
             # Backward pass
             optimizer.zero_grad()
@@ -171,7 +201,7 @@ def train_eval_loop(device,
                 epoch_val_outputs = torch.cat((epoch_val_outputs, val_outputs), 0)
 
                 # Loss computation
-                val_loss = criterion(val_outputs, val_labels) # Compute loss
+                val_loss = binary_criterion(val_outputs, val_labels) # Compute loss
                 epoch_val_loss += val_loss.item() # Accumulate validation loss
 
                 # Compute metrics
