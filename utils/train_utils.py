@@ -1,5 +1,5 @@
 from torchmetrics import AUROC, Accuracy, Recall, Precision, F1Score
-from config import LEARNING_RATE, REG, RESULTS_DIR
+from config import LEARNING_RATE, REG, RESULTS_DIR, USE_DML
 from torchprofile import profile_macs
 import torch
 import math
@@ -173,6 +173,8 @@ def reset_weights(model, weights):
   return model
 
 def load_metrics(num_labels, device):
+    if USE_DML:
+        device = torch.device("cpu") # Compatability with DirectML
     accuracy_metric = Accuracy(task="multilabel", num_labels=num_labels, average='micro').to(device)
     recall_metric = Recall(task="multilabel", num_labels=num_labels, average='micro').to(device)
     precision_metric = Precision(task="multilabel", num_labels=num_labels, average='micro').to(device)

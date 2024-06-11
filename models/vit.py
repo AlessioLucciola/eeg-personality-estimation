@@ -40,10 +40,6 @@ class ViT(nn.Module):
         
         self.dropout = nn.Dropout(p=self.dropout_p) # Dropout layer
 
-        print(self.hidden_size)
-        print(self.num_heads)
-        print(self.hidden_size % self.num_heads == 0)
-
         self.encoder = nn.TransformerEncoder(
             encoder_layer=nn.TransformerEncoderLayer(
                 batch_first=True,

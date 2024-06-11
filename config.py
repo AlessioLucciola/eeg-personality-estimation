@@ -40,7 +40,7 @@ DISCRETIZE_LABELS: bool = True # Discretize the labels if True
 DISCRETIZATION_METHOD: str = "personality_mean" # "personality_mean" | "fixed_mean" (only if DISCRETIZE_LABELS is True)
 NORMALIZE_DATA: bool = False # Normalize the EEG data if True
 DROP_LAST: bool = False # Drop the last window if True (if False, zero-pad the last window)
-APPLY_AUGMENTATION: bool = True # Apply data augmentations to mel spectrograms if True
+APPLY_AUGMENTATION: bool = False # Apply data augmentations to mel spectrograms if True
 AUGMENTATION_METHODS: List[str] = ["additive_noise", "flipping"] # "spec_augment" | "additive_noise" | "flipping" (only if APPLY_AUGMENTATION is True)
 AUGMENTATION_FREQ_MAX_PARAM = 0.35 # Maximum possible length of the frequency mask (only if "spec_augment" is in AUGMENTATION_METHODS and APPLY_AUGMENTATION is True)
 AUGMENTATION_TIME_MAX_PARAM = 0.35 # Maximum possible length of the time mask (only if "spec_augment" is in AUGMENTATION_METHODS and APPLY_AUGMENTATION is True)
@@ -81,11 +81,11 @@ RESUME_FOLD: int = 21 # Fold to resume (only for K-Fold Cross Validation and Lea
 NUM_HEADS: int = 4 # Number of heads in the transformer
 NUM_ENCODERS: int = 2 # Number of encoder layers in the transformer
 NUM_DECODERS: int = 2 # Number of decoder layers in the transformer (only if USE_ENCODER_ONLY is False)
-USE_ENCODER_ONLY: bool = False # Use only the encoder part of the transformer if True (no decoder part)
+USE_ENCODER_ONLY: bool = True # Use only the encoder part of the transformer if True (no decoder part)
 HIDDEN_SIZE: int = 256 # Hidden size in the transformer
 POSITIONAL_ENCODING: Union[str, None] = "learnable" # "sinusoidal" | "learnable" | None
 USE_LEARNABLE_TOKEN: bool = True # Use learnable token if True (append a learnable token to the input)
-MERGE_MELS_TYPOLOGY: str = "samples" # "channels" | "samples" (merge the mel bends leaving the channel dimension or the samples dimension inalterated)
+MERGE_MELS_TYPOLOGY: str = "channels" # "channels" | "samples" (merge the mel bends leaving the channel dimension or the samples dimension inalterated)
 
 # CNN configurations
 USE_PRETRAINED_MODELS: bool = False # Use a pretrained model if True
