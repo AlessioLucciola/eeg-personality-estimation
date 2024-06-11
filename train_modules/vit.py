@@ -136,27 +136,32 @@ def main():
         config = resumed_configuration
     
     if config["validation_scheme"] == "SPLIT":
-        """
+        #Take one element from the first fold (for MACs calculation)
         if resumed_configuration is None:
-            input_dummy_data = next(iter(dataloaders[0]))['spectrogram'][0].unsqueeze(0).to(device) #Take one element from the first fold (for MACs calculation)
+            if config["use_triplet"]:
+                input_dummy_data = next(iter(dataloaders[0]))[0]['spectrogram'].to(device)
+            else:
+                input_dummy_data = next(iter(dataloaders[0]))['spectrogram'][0].unsqueeze(0).to(device)
             macs = count_model_MACs(model, input_dummy_data)
             config["macs"] = macs
             config["split_ratio"] = dataloader.split_ratio
-        """
 
         train_eval_loop_split(device=device,
-                            dataloaders=dataloaders,
-                            model=model,
-                            config=resumed_configuration if resumed_configuration != None else config,
-                            optimizer=optimizer,
-                            scheduler=scheduler,
-                            criterion=criterion,
-                            resume=RESUME_TRAINING
-                        )
+            dataloaders=dataloaders,
+            model=model,
+            config=resumed_configuration if resumed_configuration != None else config,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            criterion=criterion,
+            resume=RESUME_TRAINING
+        )
     else:
         if resumed_configuration is None:
             fold_dataloaders = list(dataloaders.items())
-            input_dummy_data = next(iter(fold_dataloaders[0][1][0]))['spectrogram'][0].unsqueeze(0).to(device) #Take one element from the first fold (for MACs calculation)
+            if config["use_triplet"]:
+                input_dummy_data = next(iter(fold_dataloaders[0][1][0]))[0]['spectrogram'].to(device)
+            else:
+                input_dummy_data = next(iter(fold_dataloaders[0][1][0]))['spectrogram'][0].unsqueeze(0).to(device) #Take one element from the first fold (for MACs calculation)
             macs = count_model_MACs(model, input_dummy_data)
             config["macs"] = macs
             config["k_folds"] = dataloader.k_folds if config["validation_scheme"] == "K-FOLDCV" else len(dataloader.dataset.subject_ids)
@@ -164,14 +169,14 @@ def main():
                 config["subjects_limit"] = dataloader.subjects_limit
 
         train_eval_loop_kfold_loo(device=device,
-                            dataloaders=dataloaders,
-                            model=model,
-                            config=resumed_configuration if resumed_configuration != None else config,
-                            optimizer=optimizer,
-                            scheduler=scheduler,
-                            criterion=criterion,
-                            resume=RESUME_TRAINING
-                        )
+            dataloaders=dataloaders,
+            model=model,
+            config=resumed_configuration if resumed_configuration != None else config,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            criterion=criterion,
+            resume=RESUME_TRAINING
+        )
     
 if __name__ == "__main__":
     main()
