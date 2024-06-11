@@ -172,19 +172,19 @@ def reset_weights(model, weights):
   model.load_state_dict(weights)
   return model
 
-def load_metrics(num_labels):
-    accuracy_metric = Accuracy(task="multilabel", num_labels=num_labels, average='micro')
-    recall_metric = Recall(task="multilabel", num_labels=num_labels, average='micro')
-    precision_metric = Precision(task="multilabel", num_labels=num_labels, average='micro')
-    f1_metric = F1Score(task="multilabel", num_labels=num_labels, average='micro')
-    auroc_metric = AUROC(task="multilabel", num_labels=num_labels)
+def load_metrics(num_labels, device):
+    accuracy_metric = Accuracy(task="multilabel", num_labels=num_labels, average='micro').to(device)
+    recall_metric = Recall(task="multilabel", num_labels=num_labels, average='micro').to(device)
+    precision_metric = Precision(task="multilabel", num_labels=num_labels, average='micro').to(device)
+    f1_metric = F1Score(task="multilabel", num_labels=num_labels, average='micro').to(device)
+    auroc_metric = AUROC(task="multilabel", num_labels=num_labels).to(device)
     label_metrics = {
         label: {
-            'accuracy': Accuracy(task="binary"),
-            'recall': Recall(task="binary", average='micro'),
-            'precision': Precision(task="binary", average='micro'),
-            'f1': F1Score(task="binary", average='micro'),
-            'auroc': AUROC(task="binary", average="micro")
+            'accuracy': Accuracy(task="binary").to(device),
+            'recall': Recall(task="binary", average='micro').to(device),
+            'precision': Precision(task="binary", average='micro').to(device),
+            'f1': F1Score(task="binary", average='micro').to(device),
+            'auroc': AUROC(task="binary", average="micro").to(device)
         } for label in range(num_labels)
     }
     return accuracy_metric, recall_metric, precision_metric, f1_metric, auroc_metric, label_metrics

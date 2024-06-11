@@ -44,6 +44,7 @@ class AMIGOSDataset(EEGClassificationDataset):
             labels_dict = metadata_df[metadata_df['UserID'] == subject_id].iloc[0, 1:].to_dict() # Extract the personality traits of the subject
             mapped_labels_dict = {amigos_labels[key]: value for key, value in labels_dict.items()} # Map column names to their corresponding integer values
             labels_list.append(mapped_labels_dict) # Append the personality traits of the subject
+        del metadata_df, eeg_df # Remove the metadata and EEG data to free up memory
         return list(eegs_list), list(labels_list), list(subjects_list)
 
     
@@ -55,6 +56,7 @@ class AMIGOSDataset(EEGClassificationDataset):
         metadata_df['UserID'] = metadata_df['UserID'].astype(int)  # Convert 'UserID' column to integer
         subjects = list(metadata_df['UserID']) # First row contains the subject IDs
         self.subject_ids = subjects # Set the subject IDs
+        del subjects # Remove the subjects list to free up memory
         return metadata_df
     
     def discretize_labels(self, metadata_df, discretization_method):
@@ -65,6 +67,7 @@ class AMIGOSDataset(EEGClassificationDataset):
             # Discretize the personality traits based on fixed mean value of the dataset (that is 4)
             for trait in traits:
                 metadata_df[trait] = metadata_df[trait].apply(lambda x: 1 if x > 4 else 0) # Discretize the personality trait based on the mean value
+            del traits # Remove the traits list to free up memory
             return metadata_df
         elif discretization_method == "personality_mean":
             print("--DATASET-- Discretizing personality traits based on their mean value")
@@ -73,6 +76,7 @@ class AMIGOSDataset(EEGClassificationDataset):
                 mean = metadata_df[trait].mean() # Calculate the mean value of the personality trait
                 assert mean >= 1 and mean <= 7 # Check if the mean is within the range of the personality trait (it must be a value between 1 and 7)
                 metadata_df[trait] = metadata_df[trait].apply(lambda x: 1 if x > mean else 0) # Discretize the personality trait based on the mean value
+            del traits # Remove the traits list to free up memory
             return metadata_df
         else:
             raise ValueError(f"Unknown discretization method: {discretization_method}")
@@ -105,6 +109,7 @@ class AMIGOSDataset(EEGClassificationDataset):
         else:
             if PRINT_DATASET_DEBUG:
                 print("--DATASET-- All subjects have personality traits")
+        del missing_subjects, files_to_remove # Remove the lists to free up memory
         return metadata_df, eeg_df
 
     def parse_amigos_file_names(self, file):

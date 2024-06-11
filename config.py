@@ -27,38 +27,38 @@ ASCERTAIN_NUM_CLASSES: int = 2
 
 # Miscellanous configurations
 RANDOM_SEED: int = 42 # Random seed
-USE_DML: bool = True # Use DirectML library if True (for AMD GPUs)
+USE_DML: bool = False # Use DirectML library if True (for AMD GPUs)
 USE_WANDB: bool = False # Use Weights & Biases for logging if True
 SAVE_RESULTS: bool = True # Save results in JSON files if True
-SAVE_MODELS: bool = False # Save models if True
+SAVE_MODELS: bool = True # Save models if True
 
 # EEGNet configurations
 WINDOWS_SIZE: float = 3 # Size of the sliding window
 WINDOWS_STRIDE: float = 3 # Stride of the sliding window
-SAMPLING_RATE: int = 128 # Sampling rate of the EEG data
+SAMPLING_RATE: int = 256 # Sampling rate of the EEG data
 DISCRETIZE_LABELS: bool = True # Discretize the labels if True
 DISCRETIZATION_METHOD: str = "personality_mean" # "personality_mean" | "fixed_mean" (only if DISCRETIZE_LABELS is True)
 NORMALIZE_DATA: bool = False # Normalize the EEG data if True
 DROP_LAST: bool = False # Drop the last window if True (if False, zero-pad the last window)
-APPLY_AUGMENTATION: bool = False # Apply data augmentations to mel spectrograms if True
-AUGMENTATION_METHODS: List[str] = ["spec_augment", "additive_noise", "flipping"] # "spec_augment" | "additive_noise" | "flipping" (only if APPLY_AUGMENTATION is True)
+APPLY_AUGMENTATION: bool = True # Apply data augmentations to mel spectrograms if True
+AUGMENTATION_METHODS: List[str] = ["additive_noise", "flipping"] # "spec_augment" | "additive_noise" | "flipping" (only if APPLY_AUGMENTATION is True)
 AUGMENTATION_FREQ_MAX_PARAM = 0.35 # Maximum possible length of the frequency mask (only if "spec_augment" is in AUGMENTATION_METHODS and APPLY_AUGMENTATION is True)
 AUGMENTATION_TIME_MAX_PARAM = 0.35 # Maximum possible length of the time mask (only if "spec_augment" is in AUGMENTATION_METHODS and APPLY_AUGMENTATION is True)
 
 # Mel spectrogram configurations
-MELS: int = 8 # Number of mel bands
-MELS_WINDOW_SIZE: float = 0.2 # Size of the window for the mel spectrogram
-MELS_WINDOW_STRIDE: float = 0.2 # Stride of the window for the mel spectrogram
+MELS: int = 32 # Number of mel bands
+MELS_WINDOW_SIZE: float = 0.05 # Size of the window for the mel spectrogram
+MELS_WINDOW_STRIDE: float = 0.025 # Stride of the window for the mel spectrogram
 MELS_MIN_FREQ: int = 0 # Minimum frequency for the mel spectrogram
 MELS_MAX_FREQ: int = 50 # Maximum frequency for the mel spectrogram
 
 # Training configurations
 EVALUATE_EACH_LABEL: bool = True # Evaluate each label separately if True
 BATCH_SIZE: int = 128 # Batch size
-LEARNING_RATE: float = 1e-4 # Learning rate
-REG: float = 0.05 # Regularization parameter
-EPOCHS: int = 10 # Number of epochs
-DROPOUT_P: float = 0.0 # Dropout probability
+LEARNING_RATE: float = 5e-5 # Learning rate
+REG: float = 0.1 # Regularization parameter
+EPOCHS: int = 30 # Number of epochs
+DROPOUT_P: float = 0.1 # Dropout probability
 THRESHOLD: float = 0.5 # Threshold for the binary classification
 VALIDATION_SCHEME: str = "LOOCV" # "LOOCV" | "K-FOLDCV" | "SPLIT"
 KFOLDCV: int = 3 # Number of folds for K-Fold Cross Validation (only if VALIDATION_SCHEME is "K-FOLDCV")
@@ -73,9 +73,9 @@ LABEL_SMOOTHING_EPSILON: float = 0.0 # Label smoothing (0.0 for no smoothing)
 
 # Resume training configurations
 RESUME_TRAINING: bool = False # Resume training if True (specify the path of model to resume and the epoch to start from)
-PATH_MODEL_TO_RESUME: str = "ViT_2024-05-18_14-35-19" # Name of the model to resume
-RESUME_EPOCH: int = 6 # Epoch to resume
-RESUME_FOLD: int = 3 # Fold to resume (only for K-Fold Cross Validation and Leave-One-Out Cross Validation)
+PATH_MODEL_TO_RESUME: str = "ViT_2024-06-06_10-04-34" # Name of the model to resume
+RESUME_EPOCH: int = 10 # Epoch to resume
+RESUME_FOLD: int = 21 # Fold to resume (only for K-Fold Cross Validation and Leave-One-Out Cross Validation)
 
 # Transformer configurations
 NUM_HEADS: int = 4 # Number of heads in the transformer
@@ -85,7 +85,7 @@ USE_ENCODER_ONLY: bool = False # Use only the encoder part of the transformer if
 HIDDEN_SIZE: int = 256 # Hidden size in the transformer
 POSITIONAL_ENCODING: Union[str, None] = "learnable" # "sinusoidal" | "learnable" | None
 USE_LEARNABLE_TOKEN: bool = True # Use learnable token if True (append a learnable token to the input)
-MERGE_MELS_TYPOLOGY: str = "channels" # "channels" | "samples" (merge the mel bends leaving the channel dimension or the samples dimension inalterated)
+MERGE_MELS_TYPOLOGY: str = "samples" # "channels" | "samples" (merge the mel bends leaving the channel dimension or the samples dimension inalterated)
 
 # CNN configurations
 USE_PRETRAINED_MODELS: bool = False # Use a pretrained model if True

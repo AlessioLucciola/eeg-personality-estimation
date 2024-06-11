@@ -6,6 +6,7 @@ from tqdm import tqdm
 import torch
 import wandb
 import copy
+import gc
 
 def train_eval_loop(device,
                     dataloaders,
@@ -94,7 +95,7 @@ def train_eval_loop(device,
             fold_metrics = [] # List to store the metrics in a fold
 
         # Define the metrics
-        accuracy_metric, recall_metric, precision_metric, f1_metric, auroc_metric, label_metrics = load_metrics(num_labels=len(config["labels"]))
+        accuracy_metric, recall_metric, precision_metric, f1_metric, auroc_metric, label_metrics = load_metrics(num_labels=len(config["labels"]), device=device)
 
         fold_model = model # Copy the model for each fold
         fold_model = reset_weights(model=fold_model, weights=starting_weights) # Reset the weights of the model for each fold
@@ -359,6 +360,8 @@ def train_eval_loop(device,
                 save_model(data_name, model=fold_model, epoch=epoch+1, fold=i+1, is_best=False)
 
             #scheduler.step() # Update the learning rate
+        
+        gc.collect() # Garbage collection to free up memory
         
         final_fold_metrics = compute_average_fold_metrics(fold_metrics=fold_metrics, fold_index=i+1, evaluate_each_label=config['evaluate_each_label'], num_labels=len(config['labels'])) # Compute the average metrics for the current fold
         folds_metrics.append(final_fold_metrics) # Append the results for the current fold
