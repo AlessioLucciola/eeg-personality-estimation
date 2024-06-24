@@ -1,4 +1,4 @@
-from config import AMIGOS_NUM_CLASSES, AMIGOS_FILES_DIR, AMIGOS_METADATA_FILE, DISCRETIZE_LABELS, PRINT_DATASET_DEBUG, DISCRETIZATION_METHOD
+from config import AMIGOS_NUM_CLASSES, AMIGOS_FILES_DIR, AMIGOS_METADATA_FILE, PRINT_DATASET_DEBUG
 from datasets.EEG_classification_dataset import EEGClassificationDataset
 from shared.constants import amigos_labels
 from collections import deque

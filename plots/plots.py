@@ -86,25 +86,29 @@ def plot_labels_distribution(labels, labels_num, discretized_labels, dataset_nam
     
 def plot_mel_spectrogram(eeg_data, spectrogram_function, rows_name, dataset_name, title="Mel spectrogram of EEG data sample", scale=2):
     spectrogram = spectrogram_function(eeg_data)
-    lines = int(math.ceil(math.sqrt(spectrogram.shape[1])))
-    fig, axs = plt.subplots(nrows=lines, ncols=lines, figsize=(lines * scale * 1.5, lines * scale), tight_layout=True)
+    num_spectrograms = spectrogram.shape[0]
+    lines = int(math.ceil(math.sqrt(num_spectrograms)))
+    fig, axs = plt.subplots(nrows=lines, ncols=lines, figsize=(lines*scale*1.5, lines*scale), tight_layout=True)
     min_value, max_value = spectrogram.min(), spectrogram.max()
 
     fig.suptitle(title + f" - {dataset_name} dataset")
+
     for i_ax, ax in enumerate(axs.flat):
-        if i_ax < spectrogram.shape[1]:
-            im = ax.imshow(spectrogram[:, i_ax, :], vmin=min_value, vmax=max_value, aspect="auto", cmap=plt.get_cmap("hot"))
+        if i_ax < num_spectrograms:
+            im = ax.imshow(spectrogram[i_ax, :, :], vmin=min_value, vmax=max_value, aspect="auto", cmap=plt.get_cmap("hot"))
             divider = make_axes_locatable(ax)
             cax = divider.append_axes("right", size="5%", pad=0.05)
             fig.colorbar(im, cax=cax, orientation="vertical")
             ax.set_title(rows_name[i_ax])
             ax.set_xlabel("Time")
-            ax.set_ylabel("Sample")
+            ax.set_ylabel("Mels")
             ax.invert_yaxis()
         else:
-            ax.set_visible(False)
+            ax.axis('off')  # Turn off the axes for empty subplots
+
     path_to_save_data = os.path.join(PLOTS_DIR, "results", dataset_name, "mel_spectrograms")
     if not os.path.exists(path_to_save_data):
         os.makedirs(path_to_save_data)
     save_path = os.path.join(path_to_save_data, f"{title}.png")
     plt.savefig(save_path)
+    plt.close(fig)  # Close the figure to avoid memory issues

@@ -67,7 +67,7 @@ def train_eval_loop(device,
     val_total_step = len(val_loader) # Number of batches in the validation set
 
     # Define the metrics
-    accuracy_metric, recall_metric, precision_metric, f1_metric, auroc_metric, label_metrics = load_metrics(num_labels=len(config["labels"]))
+    accuracy_metric, recall_metric, precision_metric, f1_metric, auroc_metric, label_metrics = load_metrics(num_labels=len(config["labels"]), device=device)
 
     for epoch in range(RESUME_EPOCH if resume else 0, EPOCHS):
 

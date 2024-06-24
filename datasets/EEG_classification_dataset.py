@@ -69,7 +69,7 @@ class EEGClassificationDataset(Dataset, ABC):
         if MAKE_PLOTS:
             for i in tqdm(range(len(self.eegs_data)), desc="--PLOTS-- Plotting EEG data sample after normalization..", unit="subject", leave=False):
                 plot_sample(self.eegs_data[i][0], self.electrodes, dataset_name=self.dataset_name, data_normalized=True, title=f"EEG data sample for subject {self.subjects_data[i]} after normalization")
-
+        
         # Plot the amplitudes distribution of the EEG data after normalization
         if MAKE_PLOTS:
             print("--PLOTS-- Plotting amplitudes distribution of EEG data after normalization..")
@@ -83,7 +83,7 @@ class EEGClassificationDataset(Dataset, ABC):
             subject_samples_num = {}
             for i, s_id in enumerate(self.subject_ids):
                 subject_samples_num[s_id] = len(self.eegs_data[i])
-            #plot_subjects_distribution(subject_samples_num, dataset_name=self.dataset_name, title="Subjects distribution")
+            plot_subjects_distribution(subject_samples_num, dataset_name=self.dataset_name, title="Subjects distribution")
             del subject_samples_num # Free up memory
 
         # Plot the labels distribution
@@ -99,24 +99,6 @@ class EEGClassificationDataset(Dataset, ABC):
 
         # Divide the EEG data into windows
         self.windows = self.get_windows()
-        
-        # Plot the mel spectrogram of the EEG data
-        if MAKE_PLOTS:
-            spectrogram_plots_counter = {subject: 0 for subject in self.subject_ids}
-            spectrogram_module = MelSpectrogram(
-                sampling_rate=self.sampling_rate,
-                window_size=MELS_WINDOW_SIZE,
-                window_stride=MELS_WINDOW_STRIDE,
-                device=self.device,
-                mels=MELS,
-                min_freq=MELS_MIN_FREQ,
-                max_freq=MELS_MAX_FREQ
-            )
-            for i in range(len(self.windows)):
-                # Plot the mel spectrogram of 3 windows for each subject
-                if spectrogram_plots_counter[self.windows[i]["subject_id"]] < 2:
-                    spectrogram_plots_counter[self.windows[i]["subject_id"]] += 1
-                    plot_mel_spectrogram(self.windows[i]["eeg_data"], spectrogram_function=spectrogram_module, rows_name=self.electrodes, dataset_name=self.dataset_name, title=f"Mel spectrogram of EEG data for subject {self.windows[i]['subject_id']} experiment {self.windows[i]['experiment']} window {i}")
 
         # Load the mel spectrogram module
         spectrogram_module = MelSpectrogram(
@@ -128,6 +110,17 @@ class EEGClassificationDataset(Dataset, ABC):
             min_freq=MELS_MIN_FREQ,
             max_freq=MELS_MAX_FREQ
         )
+        
+        # Plot the mel spectrogram of the EEG data
+        if MAKE_PLOTS:
+            print("--PLOTS-- Plotting mel spectrogram of EEG data..")
+            spectrogram_plots_counter = {subject: 0 for subject in self.subject_ids}
+            for i in range(len(self.windows)):
+                # Plot the mel spectrogram of 3 windows for each subject
+                if spectrogram_plots_counter[self.windows[i]["subject_id"]] < 2:
+                    spectrogram_plots_counter[self.windows[i]["subject_id"]] += 1
+                    plot_mel_spectrogram(self.windows[i]["eeg_data"], spectrogram_function=spectrogram_module, rows_name=self.electrodes, dataset_name=self.dataset_name, title=f"Mel spectrogram of EEG data for subject {self.windows[i]['subject_id']} experiment {self.windows[i]['experiment']} window {i}")
+
         self.windows = self.get_mel_spectrograms(spectrogram_module=spectrogram_module)
 
         del spectrogram_module, self.eegs_data, self.labels_data, self.subjects_data # Free up memory
@@ -206,7 +199,7 @@ class EEGClassificationDataset(Dataset, ABC):
                                 print(f"WARNING: Window shape of subject {subject_id} experiment {j} is {window_eeg.shape[0]} instead of {self.samples_per_window}. Data will be zero-padded.")
                             window_eeg = np.concatenate((window_eeg, np.zeros((self.samples_per_window - window_eeg.shape[0], window_eeg.shape[1]))), axis=0) # Zero-pads the data
                     window = {
-                        #"experiment": j,
+                        "experiment": j,
                         #"start": window_start,
                         #"end": window_end,
                         "eeg_data": window_eeg,

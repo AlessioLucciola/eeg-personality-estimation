@@ -8,7 +8,7 @@ RESULTS_DIR: str = "results"
 PLOTS_DIR: str = "plots"
 DATASET_TO_USE: str = "AMIGOS" # "AMIGOS" | "ASCERTAIN"
 PRINT_DATASET_DEBUG: bool = False # Print debug information during dataset upload if True
-MAKE_PLOTS: bool = False # Make plots if True (it takes some time to generate the plots!)
+MAKE_PLOTS: bool = True # Make plots if True (it takes some time to generate the plots!)
 
 # AMIGOS dataset configurations
 AMIGOS_DATASET_DIR: str = os.path.join(DATA_DIR, "amigos")
@@ -27,7 +27,7 @@ ASCERTAIN_NUM_CLASSES: int = 2
 
 # Miscellanous configurations
 RANDOM_SEED: int = 42 # Random seed
-USE_DML: bool = False # Use DirectML library if True (for AMD GPUs)
+USE_DML: bool = True # Use DirectML library if True (for AMD GPUs)
 USE_WANDB: bool = False # Use Weights & Biases for logging if True
 SAVE_RESULTS: bool = True # Save results in JSON files if True
 SAVE_MODELS: bool = True # Save models if True
@@ -60,7 +60,7 @@ REG: float = 0.1 # Regularization parameter
 EPOCHS: int = 30 # Number of epochs
 DROPOUT_P: float = 0.1 # Dropout probability
 THRESHOLD: float = 0.5 # Threshold for the binary classification
-VALIDATION_SCHEME: str = "LOOCV" # "LOOCV" | "K-FOLDCV" | "SPLIT"
+VALIDATION_SCHEME: str = "SPLIT" # "LOOCV" | "K-FOLDCV" | "SPLIT"
 KFOLDCV: int = 3 # Number of folds for K-Fold Cross Validation (only if VALIDATION_SCHEME is "K-FOLDCV")
 SPLIT_RATIO: float = 0.2 # Ratio for the train-validation split (only if VALIDATION_SCHEME is "SPLIT")
 SUBJECTS_LIMIT: int = 10 # Limit the number of subjects to consider (None for no limit) (only if VALIDATION_SCHEME is "LOOCV")
