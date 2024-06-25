@@ -8,7 +8,7 @@ RESULTS_DIR: str = "results"
 PLOTS_DIR: str = "plots"
 DATASET_TO_USE: str = "AMIGOS" # "AMIGOS" | "ASCERTAIN"
 PRINT_DATASET_DEBUG: bool = False # Print debug information during dataset upload if True
-MAKE_PLOTS: bool = True # Make plots if True (it takes some time to generate the plots!)
+MAKE_PLOTS: bool = False # Make plots if True (it takes some time to generate the plots!)
 
 # AMIGOS dataset configurations
 AMIGOS_DATASET_DIR: str = os.path.join(DATA_DIR, "amigos")
@@ -27,10 +27,10 @@ ASCERTAIN_NUM_CLASSES: int = 2
 
 # Miscellanous configurations
 RANDOM_SEED: int = 42 # Random seed
-USE_DML: bool = True # Use DirectML library if True (for AMD GPUs)
+USE_DML: bool = False # Use DirectML library if True (for AMD GPUs)
 USE_WANDB: bool = False # Use Weights & Biases for logging if True
 SAVE_RESULTS: bool = True # Save results in JSON files if True
-SAVE_MODELS: bool = True # Save models if True
+SAVE_MODELS: bool = False # Save models if True
 
 # EEGNet configurations
 WINDOWS_SIZE: float = 3 # Size of the sliding window
@@ -38,9 +38,9 @@ WINDOWS_STRIDE: float = 3 # Stride of the sliding window
 SAMPLING_RATE: int = 256 # Sampling rate of the EEG data
 DISCRETIZE_LABELS: bool = True # Discretize the labels if True
 DISCRETIZATION_METHOD: str = "personality_mean" # "personality_mean" | "fixed_mean" (only if DISCRETIZE_LABELS is True)
-NORMALIZE_DATA: bool = False # Normalize the EEG data if True
+NORMALIZE_DATA: bool = True # Normalize the EEG data if True
 DROP_LAST: bool = False # Drop the last window if True (if False, zero-pad the last window)
-APPLY_AUGMENTATION: bool = False # Apply data augmentations to mel spectrograms if True
+APPLY_AUGMENTATION: bool = True # Apply data augmentations to mel spectrograms if True
 AUGMENTATION_METHODS: List[str] = ["additive_noise", "flipping"] # "spec_augment" | "additive_noise" | "flipping" (only if APPLY_AUGMENTATION is True)
 AUGMENTATION_FREQ_MAX_PARAM = 0.35 # Maximum possible length of the frequency mask (only if "spec_augment" is in AUGMENTATION_METHODS and APPLY_AUGMENTATION is True)
 AUGMENTATION_TIME_MAX_PARAM = 0.35 # Maximum possible length of the time mask (only if "spec_augment" is in AUGMENTATION_METHODS and APPLY_AUGMENTATION is True)
@@ -60,10 +60,10 @@ REG: float = 0.1 # Regularization parameter
 EPOCHS: int = 30 # Number of epochs
 DROPOUT_P: float = 0.1 # Dropout probability
 THRESHOLD: float = 0.5 # Threshold for the binary classification
-VALIDATION_SCHEME: str = "SPLIT" # "LOOCV" | "K-FOLDCV" | "SPLIT"
-KFOLDCV: int = 3 # Number of folds for K-Fold Cross Validation (only if VALIDATION_SCHEME is "K-FOLDCV")
+VALIDATION_SCHEME: str = "K-FOLDCV" # "LOOCV" | "K-FOLDCV" | "SPLIT"
+KFOLDCV: int = 5 # Number of folds for K-Fold Cross Validation (only if VALIDATION_SCHEME is "K-FOLDCV")
 SPLIT_RATIO: float = 0.2 # Ratio for the train-validation split (only if VALIDATION_SCHEME is "SPLIT")
-SUBJECTS_LIMIT: int = 10 # Limit the number of subjects to consider (None for no limit) (only if VALIDATION_SCHEME is "LOOCV")
+SUBJECTS_LIMIT: int = None # Limit the number of subjects to consider (None for no limit) (only if VALIDATION_SCHEME is "LOOCV")
 OPTIMIZER: str = "AdamW" # "Adam" | "AdamW" | "SGD"
 SCHEDULER: str = "StepLR" # "StepLR" | "ReduceLROnPlateau" | "CosineAnnealingLR"
 CRITERION: str = "TripletMarginLoss" # "BCEWithLogitsLoss" | "CrossEntropyLoss" | "TripletMarginLoss"
@@ -78,14 +78,14 @@ RESUME_EPOCH: int = 10 # Epoch to resume
 RESUME_FOLD: int = 21 # Fold to resume (only for K-Fold Cross Validation and Leave-One-Out Cross Validation)
 
 # Transformer configurations
-NUM_HEADS: int = 4 # Number of heads in the transformer
-NUM_ENCODERS: int = 2 # Number of encoder layers in the transformer
-NUM_DECODERS: int = 2 # Number of decoder layers in the transformer (only if USE_ENCODER_ONLY is False)
+NUM_HEADS: int = 8 # Number of heads in the transformer
+NUM_ENCODERS: int = 6 # Number of encoder layers in the transformer
+NUM_DECODERS: int = 0 # Number of decoder layers in the transformer (only if USE_ENCODER_ONLY is False)
 USE_ENCODER_ONLY: bool = True # Use only the encoder part of the transformer if True (no decoder part)
 HIDDEN_SIZE: int = 256 # Hidden size in the transformer
 POSITIONAL_ENCODING: Union[str, None] = "learnable" # "sinusoidal" | "learnable" | None
 USE_LEARNABLE_TOKEN: bool = True # Use learnable token if True (append a learnable token to the input)
-MERGE_MELS_TYPOLOGY: str = "channels" # "channels" | "samples" (merge the mel bends leaving the channel dimension or the samples dimension inalterated)
+MERGE_MELS_TYPOLOGY: str = "samples" # "channels" | "samples" (merge the mel bends leaving the channel dimension or the samples dimension inalterated)
 
 # CNN configurations
 USE_PRETRAINED_MODELS: bool = False # Use a pretrained model if True
