@@ -6,7 +6,7 @@ import os
 DATA_DIR: str = "data"
 RESULTS_DIR: str = "results"
 PLOTS_DIR: str = "plots"
-DATASET_TO_USE: str = "AMIGOS" # "AMIGOS" | "ASCERTAIN"
+DATASET_TO_USE: str = "ASCERTAIN" # "AMIGOS" | "ASCERTAIN"
 PRINT_DATASET_DEBUG: bool = False # Print debug information during dataset upload if True
 MAKE_PLOTS: bool = False # Make plots if True (it takes some time to generate the plots!)
 
@@ -27,7 +27,7 @@ ASCERTAIN_NUM_CLASSES: int = 2
 
 # Miscellanous configurations
 RANDOM_SEED: int = 42 # Random seed
-USE_DML: bool = False # Use DirectML library if True (for AMD GPUs)
+USE_DML: bool = True # Use DirectML library if True (for AMD GPUs)
 USE_WANDB: bool = False # Use Weights & Biases for logging if True
 SAVE_RESULTS: bool = True # Save results in JSON files if True
 SAVE_MODELS: bool = False # Save models if True
@@ -37,7 +37,7 @@ WINDOWS_SIZE: float = 3 # Size of the sliding window
 WINDOWS_STRIDE: float = 3 # Stride of the sliding window
 SAMPLING_RATE: int = 256 # Sampling rate of the EEG data
 DISCRETIZE_LABELS: bool = True # Discretize the labels if True
-DISCRETIZATION_METHOD: str = "personality_mean" # "personality_mean" | "fixed_mean" (only if DISCRETIZE_LABELS is True)
+DISCRETIZATION_METHOD: str = "fixed_mean" # "personality_mean" | "fixed_mean" (only if DISCRETIZE_LABELS is True)
 NORMALIZE_DATA: bool = True # Normalize the EEG data if True
 DROP_LAST: bool = False # Drop the last window if True (if False, zero-pad the last window)
 APPLY_AUGMENTATION: bool = True # Apply data augmentations to mel spectrograms if True
@@ -61,12 +61,12 @@ EPOCHS: int = 30 # Number of epochs
 DROPOUT_P: float = 0.1 # Dropout probability
 THRESHOLD: float = 0.5 # Threshold for the binary classification
 VALIDATION_SCHEME: str = "K-FOLDCV" # "LOOCV" | "K-FOLDCV" | "SPLIT"
-KFOLDCV: int = 5 # Number of folds for K-Fold Cross Validation (only if VALIDATION_SCHEME is "K-FOLDCV")
+KFOLDCV: int = 10 # Number of folds for K-Fold Cross Validation (only if VALIDATION_SCHEME is "K-FOLDCV")
 SPLIT_RATIO: float = 0.2 # Ratio for the train-validation split (only if VALIDATION_SCHEME is "SPLIT")
 SUBJECTS_LIMIT: int = None # Limit the number of subjects to consider (None for no limit) (only if VALIDATION_SCHEME is "LOOCV")
 OPTIMIZER: str = "AdamW" # "Adam" | "AdamW" | "SGD"
-SCHEDULER: str = "StepLR" # "StepLR" | "ReduceLROnPlateau" | "CosineAnnealingLR"
-CRITERION: str = "TripletMarginLoss" # "BCEWithLogitsLoss" | "CrossEntropyLoss" | "TripletMarginLoss"
+SCHEDULER: str = "CosineAnnealingLR" # "StepLR" | "MultiStepLR" | "ReduceLROnPlateau" | "CosineAnnealingLR"
+CRITERION: str = "BCEWithLogitsLoss" # "BCEWithLogitsLoss" | "CrossEntropyLoss" | "TripletMarginLoss"
 SCHEDULER_STEP_SIZE: int = 10 # Step size for the scheduler
 SCHEDULER_GAMMA: float = 0.1 # Gamma for the scheduler
 LABEL_SMOOTHING_EPSILON: float = 0.0 # Label smoothing (0.0 for no smoothing)

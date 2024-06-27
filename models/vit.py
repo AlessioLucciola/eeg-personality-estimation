@@ -90,23 +90,17 @@ class ViT(nn.Module):
             label_tokens = self.labels_embedding(label_indices)  # Embed the label indices (1, num_labels, hidden_size)
             label_tokens = label_tokens.expand(x.shape[0], -1, -1)  # # Repeat the label tokens across the batch dimension (batch_size, num_labels, hidden_size)
         x = self.merge_mels(x) # Merge the mel bands (merging typology is defined in the configuration file)
-        #print(x.shape)
         if self.positional_encoding is not None:
             x = x + self.positional_encoding(x) # Add positional encoding
             if not self.use_encoder_only:
                 label_tokens = label_tokens + self.positional_encoding(label_tokens) # Add positional encoding to the label tokens
-        #print(self.cls.weight.shape)
         if self.use_learnable_token:
             cls_token = self.cls(torch.tensor([0], device=self.device)).repeat(x.shape[0], 1, 1)  # Expand cls token to the batch size
             x = torch.cat([cls_token, x], dim=1)  # Add learnable token
-        #print(x.shape)
         x = self.encoder(x)
-        #print(x.shape)
         if self.use_encoder_only:
             feature = x[:, 0, :]
         else:
             feature = self.decoder(label_tokens, x)[:, 0, :]
-        #print(x.shape)
         out = self.classifier(feature)
-        #print(x.shape)
         return out, feature

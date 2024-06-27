@@ -50,7 +50,8 @@ optimizers = [
 schedulers = [
     "StepLR",
     "MultiStepLR",
-    "ReduceLROnPlateau"
+    "ReduceLROnPlateau",
+    "CosineAnnealingLR"
 ]
 
 criterions = [
