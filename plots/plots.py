@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from config import PLOTS_DIR
 from math import ceil
 import seaborn as sns
-import einops
+import pandas as pd
 import math
 import os
 
@@ -112,3 +112,30 @@ def plot_mel_spectrogram(eeg_data, spectrogram_function, rows_name, dataset_name
     save_path = os.path.join(path_to_save_data, f"{title}.png")
     plt.savefig(save_path)
     plt.close(fig)  # Close the figure to avoid memory issues
+
+def plot_trait_distribution(metadata_df, trait_name, mean_value, dataset_name, title="Trait distribution"):
+    trait_values = metadata_df[trait_name]
+    
+    # Group values into chunks
+    bins = [1, 2, 3, 4, 5, 6, 7]  # Define the bins for grouping
+    labels = ['1', '2', '3', '4', '5', '6']  # Labels for the bins
+    
+    grouped_counts = trait_values.groupby(pd.cut(trait_values, bins=bins, labels=labels), observed=True).count()
+    
+    plt.figure(figsize=(8, 5))
+    grouped_counts.plot(kind='bar', color='b', width=0.8, alpha=0.7)
+    
+    plt.axvline(x=labels.index(f'{mean_value}'), linestyle='--', color='r', label='Mean')
+    
+    plt.title(f'Distribution of Trait: {trait_name}')
+    plt.xlabel('Trait Value Groups')
+    plt.ylabel('Frequency')
+    plt.xticks(rotation=0)
+    plt.legend()
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    path_to_save_data = os.path.join(PLOTS_DIR, "results", dataset_name, "trait_distribution")
+    if not os.path.exists(path_to_save_data):
+        os.makedirs(path_to_save_data)
+    save_path = os.path.join(path_to_save_data, f"{title}_{trait_name}.png")
+    plt.savefig(save_path)
