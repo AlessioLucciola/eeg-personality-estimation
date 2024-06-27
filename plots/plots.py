@@ -113,29 +113,52 @@ def plot_mel_spectrogram(eeg_data, spectrogram_function, rows_name, dataset_name
     plt.savefig(save_path)
     plt.close(fig)  # Close the figure to avoid memory issues
 
-def plot_trait_distribution(metadata_df, trait_name, mean_value, dataset_name, title="Trait distribution"):
+def plot_trait_distribution(metadata_df, trait_name, mean_value, dataset_name, discretization_type, title="Trait distribution"):
     trait_values = metadata_df[trait_name]
     
     # Group values into chunks
     bins = [1, 2, 3, 4, 5, 6, 7]  # Define the bins for grouping
     labels = ['1', '2', '3', '4', '5', '6']  # Labels for the bins
     
-    grouped_counts = trait_values.groupby(pd.cut(trait_values, bins=bins, labels=labels), observed=True).count()
+    # Use pd.cut with include_lowest=True to include the lowest bin edge
+    grouped_counts = trait_values.groupby(pd.cut(trait_values, bins=bins, labels=labels, include_lowest=True), observed=True).count()
     
-    plt.figure(figsize=(8, 5))
-    grouped_counts.plot(kind='bar', color='b', width=0.8, alpha=0.7)
+    # Fill in missing bins with 0 counts
+    grouped_counts = grouped_counts.reindex(labels, fill_value=0)
     
-    plt.axvline(x=labels.index(f'{mean_value}'), linestyle='--', color='r', label='Mean')
+    plt.figure(figsize=(10, 6))  # Adjust figure size as needed
     
-    plt.title(f'Distribution of Trait: {trait_name}')
-    plt.xlabel('Trait Value Groups')
-    plt.ylabel('Frequency')
-    plt.xticks(rotation=0)
-    plt.legend()
+    # Plot bar chart
+    ax = grouped_counts.plot(kind='bar', color='b', width=0.8, alpha=0.7)
+    
+    # Plot mean line
+    ax.axvline(x=mean_value-1, linestyle='--', color='r', label='Mean')
+
+    plt.annotate(discretization_type, xy=(0.5, -0.25), xycoords='axes fraction', ha='center', va='center',
+                 fontsize=12, bbox=dict(boxstyle="round,pad=0.3", edgecolor="black", facecolor="white", alpha=0.7))
+    
+    # Set title and labels with increased font size
+    plt.title(f'Distribution of Trait: {trait_name}', fontsize=24)
+    plt.xlabel('Trait Value Groups', fontsize=20)
+    plt.ylabel('Frequency', fontsize=20)
+    
+    # Set x-axis tick labels with increased font size
+    plt.xticks(range(len(labels)), labels, rotation=0, fontsize=16)
+    plt.yticks(fontsize=16)
+    
+    # Set legend font size
+    plt.legend(fontsize=16)
+    
+    # Grid lines
     plt.grid(axis='y', linestyle='--', alpha=0.7)
+    
+    # Tight layout
     plt.tight_layout()
+    
+    # Save plot to file
     path_to_save_data = os.path.join(PLOTS_DIR, "results", dataset_name, "trait_distribution")
     if not os.path.exists(path_to_save_data):
         os.makedirs(path_to_save_data)
-    save_path = os.path.join(path_to_save_data, f"{title}_{trait_name}.png")
+    save_path = os.path.join(path_to_save_data, f"{title}_{trait_name}_{discretization_type}.png")
     plt.savefig(save_path)
+    plt.close()  # Close the figure to release memory

@@ -69,7 +69,7 @@ class AMIGOSDataset(EEGClassificationDataset):
             for trait in traits:
                 if MAKE_PLOTS:
                     print(f"--PLOT-- Plotting the distribution of the {trait} trait..")
-                    plot_trait_distribution(metadata_df, trait, 4, dataset_name="AMIGOS")
+                    plot_trait_distribution(metadata_df, trait, 4, discretization_type="Fixed mean", dataset_name="AMIGOS")
                 metadata_df[trait] = metadata_df[trait].apply(lambda x: 1 if x > 4 else 0) # Discretize the personality trait based on the mean value
             del traits # Remove the traits list to free up memory
             return metadata_df
@@ -80,7 +80,7 @@ class AMIGOSDataset(EEGClassificationDataset):
                 mean = metadata_df[trait].mean() # Calculate the mean value of the personality trait
                 if MAKE_PLOTS:
                     print(f"--PLOT-- Plotting the distribution of the {trait} trait..")
-                    plot_trait_distribution(metadata_df, trait, mean, dataset_name="AMIGOS")
+                    plot_trait_distribution(metadata_df, trait, mean, discretization_type="Personality mean", dataset_name="AMIGOS")
                 assert mean >= 1 and mean <= 7 # Check if the mean is within the range of the personality trait (it must be a value between 1 and 7)
                 metadata_df[trait] = metadata_df[trait].apply(lambda x: 1 if x > mean else 0) # Discretize the personality trait based on the mean value
             del traits # Remove the traits list to free up memory
