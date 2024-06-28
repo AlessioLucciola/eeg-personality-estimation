@@ -60,9 +60,9 @@ def plot_amplitudes_distribution(eeg_data, rows_names, dataset_name, scale=10, t
         ax.hist(eeg_data[:, i_electrode], bins=32, color='b', alpha=0.7)
         
         # Set individual titles and labels
-        ax.set_title(rows_names[i_electrode], fontsize=16)
-        ax.set_xlabel("mV", fontsize=14)
-        ax.set_ylabel("Count", fontsize=14)
+        ax.set_title(rows_names[i_electrode], fontsize=24)
+        ax.set_xlabel("mV", fontsize=20)
+        ax.set_ylabel("Count", fontsize=20)
         
         # Set y-axis to logarithmic scale
         ax.set_yscale("log")
@@ -71,8 +71,8 @@ def plot_amplitudes_distribution(eeg_data, rows_names, dataset_name, scale=10, t
         ax.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
         
         # Increase the font size of the ticks
-        ax.tick_params(axis='x', labelsize=12)
-        ax.tick_params(axis='y', labelsize=12)
+        ax.tick_params(axis='x', labelsize=16)
+        ax.tick_params(axis='y', labelsize=16)
     
     # Normalize y-limits across all subplots
     max_ylim = max([ax.get_ylim()[-1] for ax in axs.flat if ax.get_visible()])
@@ -109,8 +109,8 @@ def plot_subjects_distribution(subject_samples_num, dataset_name, title="Subject
     ax.set_ylabel("Number of Samples", fontsize=20)
     
     # Increase the font size of the ticks
-    ax.tick_params(axis='x', labelsize=14)
-    ax.tick_params(axis='y', labelsize=14)
+    ax.tick_params(axis='x', labelsize=16)
+    ax.tick_params(axis='y', labelsize=16)
     
     # Define path to save the plot
     path_to_save_data = os.path.join(PLOTS_DIR, "results", dataset_name, "subjects_distribution")
