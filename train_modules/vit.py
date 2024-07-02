@@ -75,13 +75,13 @@ def main():
         parameters=model.parameters(),
         lr=resumed_configuration["lr"] if resumed_configuration != None else LEARNING_RATE,
         weight_decay=resumed_configuration["reg"] if resumed_configuration != None else REG
-        )
+    )
     scheduler = get_scheduler(
         optimizer=optimizer,
         scheduler_name=resumed_configuration["scheduler"] if resumed_configuration != None else SCHEDULER,
         step_size=resumed_configuration["scheduler_step_size"] if resumed_configuration != None else SCHEDULER_STEP_SIZE,
         gamma=resumed_configuration["scheduler_gamma"] if resumed_configuration != None else SCHEDULER_GAMMA
-        )
+    )
 
     if resumed_configuration == None:
         config = {

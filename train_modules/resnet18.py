@@ -12,6 +12,12 @@ def main():
     if RESUME_TRAINING:
         resumed_configuration = get_configurations(PATH_MODEL_TO_RESUME)
 
+    criterion_name = resumed_configuration["criterion"] if resumed_configuration != None else CRITERION
+    criterion = get_criterion(
+        criterion_name=criterion_name,
+        smoothing_factor=resumed_configuration["label_smoothing_epsilon"] if resumed_configuration != None else LABEL_SMOOTHING_EPSILON
+    )
+    use_triplet = resumed_configuration["use_triplet"] if resumed_configuration != None else (True if criterion_name == "TripletMarginLoss" else False)
     seed = resumed_configuration["seed"] if resumed_configuration != None else RANDOM_SEED
     set_seed(seed)
     device = select_device()
@@ -28,7 +34,8 @@ def main():
         apply_augmentation=resumed_configuration["is_data_augmented"] if resumed_configuration != None else APPLY_AUGMENTATION,
         augmentation_methods=resumed_configuration["augmentation_methods"] if resumed_configuration != None else AUGMENTATION_METHODS,
         augmentation_freq_max_param=resumed_configuration["augmentation_freq_max_param"] if resumed_configuration != None else AUGMENTATION_FREQ_MAX_PARAM,
-        augmentation_time_max_param=resumed_configuration["augmentation_time_max_param"] if resumed_configuration != None else AUGMENTATION_TIME_MAX_PARAM
+        augmentation_time_max_param=resumed_configuration["augmentation_time_max_param"] if resumed_configuration != None else AUGMENTATION_TIME_MAX_PARAM,
+        use_triplet=use_triplet
     )
     dataloaders = dataloader.get_dataloaders()
 
@@ -51,22 +58,19 @@ def main():
         parameters=model.parameters(),
         lr=resumed_configuration["lr"] if resumed_configuration != None else LEARNING_RATE,
         weight_decay=resumed_configuration["reg"] if resumed_configuration != None else REG
-        )
+    )
     scheduler = get_scheduler(
         optimizer=optimizer,
         scheduler_name=resumed_configuration["scheduler"] if resumed_configuration != None else SCHEDULER,
         step_size=resumed_configuration["scheduler_step_size"] if resumed_configuration != None else SCHEDULER_STEP_SIZE,
         gamma=resumed_configuration["scheduler_gamma"] if resumed_configuration != None else SCHEDULER_GAMMA
-        )
-    criterion = get_criterion(
-        criterion_name=resumed_configuration["criterion"] if resumed_configuration != None else CRITERION,
-        smoothing_factor=resumed_configuration["label_smoothing_epsilon"] if resumed_configuration != None else LABEL_SMOOTHING_EPSILON
     )
 
     if resumed_configuration == None:
         config = {
             "architecture": "ResNet18",
             "model_params": get_model_params(model),
+            "use_triplet": use_triplet,
             "labels": dataset.labels,
             "discretize_labels": DISCRETIZE_LABELS,
             "discretization_method": DISCRETIZATION_METHOD,
@@ -110,40 +114,47 @@ def main():
         config = resumed_configuration
     
     if config["validation_scheme"] == "SPLIT":
+        #Take one element from the first fold (for MACs calculation)
         if resumed_configuration is None:
-            input_dummy_data = next(iter(dataloaders[0]))['spectrogram'][0].unsqueeze(0).to(device) #Take one element from the first fold (for MACs calculation)
+            if config["use_triplet"]:
+                input_dummy_data = next(iter(dataloaders[0]))[0]['spectrogram'].to(device)
+            else:
+                input_dummy_data = next(iter(dataloaders[0]))['spectrogram'][0].unsqueeze(0).to(device)
             macs = count_model_MACs(model, input_dummy_data)
             config["macs"] = macs
             config["split_ratio"] = dataloader.split_ratio
 
         train_eval_loop_split(device=device,
-                            dataloaders=dataloaders,
-                            model=model,
-                            config=resumed_configuration if resumed_configuration != None else config,
-                            optimizer=optimizer,
-                            scheduler=scheduler,
-                            criterion=criterion,
-                            resume=RESUME_TRAINING
-                        )
+            dataloaders=dataloaders,
+            model=model,
+            config=resumed_configuration if resumed_configuration != None else config,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            criterion=criterion,
+            resume=RESUME_TRAINING
+        )
     else:
         if resumed_configuration is None:
             fold_dataloaders = list(dataloaders.items())
-            input_dummy_data = next(iter(fold_dataloaders[0][1][0]))['spectrogram'][0].unsqueeze(0).to(device) #Take one element from the first fold (for MACs calculation)
+            if config["use_triplet"]:
+                input_dummy_data = next(iter(fold_dataloaders[0][1][0]))[0]['spectrogram'].to(device)
+            else:
+                input_dummy_data = next(iter(fold_dataloaders[0][1][0]))['spectrogram'][0].unsqueeze(0).to(device) #Take one element from the first fold (for MACs calculation)
             macs = count_model_MACs(model, input_dummy_data)
             config["macs"] = macs
             config["k_folds"] = dataloader.k_folds if config["validation_scheme"] == "K-FOLDCV" else len(dataloader.dataset.subject_ids)
             if config["validation_scheme"] == "LOOCV":
                 config["subjects_limit"] = dataloader.subjects_limit
-        
+
         train_eval_loop_kfold_loo(device=device,
-                            dataloaders=dataloaders,
-                            model=model,
-                            config=resumed_configuration if resumed_configuration != None else config,
-                            optimizer=optimizer,
-                            scheduler=scheduler,
-                            criterion=criterion,
-                            resume=RESUME_TRAINING
-                        )
+            dataloaders=dataloaders,
+            model=model,
+            config=resumed_configuration if resumed_configuration != None else config,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            criterion=criterion,
+            resume=RESUME_TRAINING
+        )
     
 if __name__ == "__main__":
     main()
