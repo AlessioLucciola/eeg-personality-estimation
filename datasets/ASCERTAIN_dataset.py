@@ -7,6 +7,7 @@ from config import *
 import pandas as pd
 import numpy as np
 import einops
+import re
 
 class ASCERTAINDataset(EEGClassificationDataset):
     def __init__(self,
@@ -28,9 +29,10 @@ class ASCERTAINDataset(EEGClassificationDataset):
     
     def load_data(self):
         metadata_df = self.upload_metadata() # Upload the metadata file
+        data_evaluation_df = self.upload_data_evaluation() # Upload the data evaluation file
         if self.apply_label_discretization:
             metadata_df = self.discretize_labels(metadata_df, discretization_method=self.discretization_method) # Discretize the personality traits
-        eeg_df = self.upload_eeg_data() # Upload the EEG data
+        eeg_df = self.upload_eeg_data(evaluation_data=data_evaluation_df) # Upload the EEG data
         
         eegs_list = deque()
         labels_list = deque()
@@ -44,7 +46,6 @@ class ASCERTAINDataset(EEGClassificationDataset):
             labels_list.append(mapped_labels_dict) # Append the personality traits of the subject
         return list(eegs_list), list(labels_list), list(subjects_list)
 
-
     def upload_metadata(self):
         # Upload the metadata file with the subject IDs and associated personality traits
         metadata_df = pd.read_excel(io=self.metadata_path, sheet_name="Results", nrows=59, header=None)
@@ -54,6 +55,15 @@ class ASCERTAINDataset(EEGClassificationDataset):
         subjects = list(metadata_df['Subject ID']) # First row contains the subject IDs
         self.subject_ids = subjects # Set the subject IDs
         return metadata_df
+    
+    def upload_data_evaluation(self):
+        # Upload the data evaluation file used to check if the EEG data is corrupted
+        data_evaluation_df = pd.read_excel(io=os.path.join(ASCERTAIN_DATASET_DIR, "Data_Evaluation.xls"), sheet_name="Data Evaluation", nrows=37, header=None)
+        data_evaluation_df.columns = data_evaluation_df.iloc[0] # Set the first row as the column names
+        data_evaluation_df = data_evaluation_df[1:] # Remove the first row
+        data_evaluation_df.iloc[0] = data_evaluation_df.iloc[0].astype(int) # Convert the first column to integer
+        data_evaluation_df.iloc[:, 0] = data_evaluation_df.iloc[:, 0].astype(int) # Convert the first column to integer
+        return data_evaluation_df
 
     def discretize_labels(self, metadata_df, discretization_method):
         print("--DATASET-- Discretize labels parameters set to True. Discretizing personality traits..")
@@ -75,7 +85,7 @@ class ASCERTAINDataset(EEGClassificationDataset):
         else:
             raise ValueError(f"Unknown discretization method: {discretization_method}")
     
-    def upload_eeg_data(self):
+    def upload_eeg_data(self, evaluation_data=None):
         missing_subjects = []
         electrodes_data = []
         for subject_folder in tqdm(os.listdir(self.data_path), desc="Uploading EEG data..", unit="subject", leave=False):
@@ -85,7 +95,12 @@ class ASCERTAINDataset(EEGClassificationDataset):
                 for file in os.listdir(os.path.join(self.data_path, subject_folder)):
                     if file.endswith('.mat'):
                         file_path = os.path.join(self.data_path, subject_folder, file)
-                        eeg_data = io.loadmat(file_path, simplify_cells=True)['ThisEEG'].astype(np.float32) # Load the EEG data (only the 'ThisEEG' field is needed
+                        experiment_id = int(re.search(r'\d+', file).group())
+                        if evaluation_data is not None:
+                            file_corrupted = self.check_corrupted_file(subject_id, experiment_id, evaluation_data)
+                            if file_corrupted:
+                                continue
+                        eeg_data = io.loadmat(file_path, simplify_cells=True)['ThisEEG'].astype(np.float32) # Load the EEG data (only the 'ThisEEG' field is needed)
                         eeg_data = einops.rearrange(eeg_data, "c s -> s c")
                         if eeg_data.shape[1] == 9:
                             eeg_data = eeg_data[:, :8]
@@ -100,6 +115,15 @@ class ASCERTAINDataset(EEGClassificationDataset):
                 print("--DATASET-- All subjects have associated personality traits")
 
         return electrodes_data
+
+    def check_corrupted_file(self, subject_id, experiment_id, evaluation_data):
+        evaluation_value = evaluation_data.loc[experiment_id, subject_id]
+        if evaluation_value > 3:
+            return True
+        else:
+            return False
+
+        
 
 if __name__ == "__main__":
     dataset = ASCERTAINDataset(data_path=ASCERTAIN_FILES_DIR, metadata_path=ASCERTAIN_METADATA_FILE)
