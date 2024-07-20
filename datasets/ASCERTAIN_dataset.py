@@ -88,29 +88,27 @@ class ASCERTAINDataset(EEGClassificationDataset):
     def upload_eeg_data(self, evaluation_data=None):
         missing_subjects = []
         electrodes_data = []
-        for subject_folder in tqdm(os.listdir(self.data_path), desc="Uploading EEG data..", unit="subject", leave=False):
-            subject_id = int(subject_folder[-2:]) # Extract the subject ID from the folder name (last two characters)
-            if subject_id in self.subject_ids:
-                subject_experiments = [] 
-                for file in os.listdir(os.path.join(self.data_path, subject_folder)):
-                    if file.endswith('.mat'):
-                        file_path = os.path.join(self.data_path, subject_folder, file)
-                        experiment_id = int(re.search(r'\d+', file).group())
-                        if evaluation_data is not None:
-                            file_corrupted = self.check_corrupted_file(subject_id, experiment_id, evaluation_data)
-                            if file_corrupted:
-                                continue
-                        eeg_data = io.loadmat(file_path, simplify_cells=True)['ThisEEG'].astype(np.float32) # Load the EEG data (only the 'ThisEEG' field is needed)
-                        eeg_data = einops.rearrange(eeg_data, "c s -> s c")
-                        if eeg_data.shape[1] == 9:
-                            eeg_data = eeg_data[:, :8]
-                        subject_experiments.append(eeg_data)
-                electrodes_data.append(tuple((subject_experiments, subject_id)))
-            else:
-                missing_subjects.append(subject_id)
+        for fi, subject_folder in enumerate(tqdm(os.listdir(self.data_path), desc="Uploading EEG data..", unit="subject", leave=False)):
+            file_p_id = int(subject_folder[-2:]) # Extract the subject ID from the folder name (last two characters)
+            subject_experiments = [] 
+            for file in os.listdir(os.path.join(self.data_path, subject_folder)):
+                if file.endswith('.mat'):
+                    file_path = os.path.join(self.data_path, subject_folder, file)
+                    experiment_id = int(re.search(r'\d+', file).group())
+                    if evaluation_data is not None:
+                        file_corrupted = self.check_corrupted_file(file_p_id, experiment_id, evaluation_data)
+                        if file_corrupted:
+                            continue
+                    eeg_data = io.loadmat(file_path, simplify_cells=True)['ThisEEG'].astype(np.float32) # Load the EEG data (only the 'ThisEEG' field is needed)
+                    eeg_data = einops.rearrange(eeg_data, "c s -> s c")
+                    if eeg_data.shape[1] == 9:
+                        eeg_data = eeg_data[:, :8]
+                    subject_experiments.append(eeg_data)
+            electrodes_data.append(tuple((subject_experiments, self.subject_ids[fi])))
+
         if PRINT_DATASET_DEBUG:
             if len(missing_subjects) > 0:
-                print(f"--DATASET-- Missing personality traits of these subjects (the associated files won't be considered): {missing_subjects}")
+                print(f"--DATASET-- Missing personality traits of these subjects or subject is corrupted (the associated files won't be considered): {missing_subjects}")
             else:
                 print("--DATASET-- All subjects have associated personality traits")
 

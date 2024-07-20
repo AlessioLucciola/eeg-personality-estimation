@@ -74,23 +74,28 @@ class EEG_dataloader(DataLoader):
             subjects_list = self.dataset.subject_ids[:limit]
         else:
             subjects_list = self.dataset.subject_ids
+        valid_folds = 0
         for i, subject_id in enumerate(subjects_list):
             train_idx = [j for j in range(len(self.dataset.windows)) if self.dataset.windows[j]['subject_id'] != subject_id]
             val_idx = [j for j in range(len(self.dataset.windows)) if self.dataset.windows[j]['subject_id'] == subject_id]
-            train_dataset = torch.utils.data.Subset(self.dataset, train_idx)
-            val_dataset = torch.utils.data.Subset(self.dataset, val_idx)
+            if len(val_idx) > 20:
+                train_dataset = torch.utils.data.Subset(self.dataset, train_idx)
+                val_dataset = torch.utils.data.Subset(self.dataset, val_idx)
 
-            # Apply augmentation to the training set if apply_augmentation is set to True
-            if self.apply_augmentation:
-                train_dataset = apply_augmentation_to_spectrograms(train_dataset, aug_to_apply=self.augmentation_methods, time_mask_param=self.augmentation_time_max_param, freq_mask_param=self.augmentation_freq_max_param, k_fold_index=i+1)
-            
-            # Prepare dataset for applying the triplet loss if use_triplet is set to True
-            if self.use_triplet:
-                train_dataset = EEGTripletDataset(train_dataset)
+                # Apply augmentation to the training set if apply_augmentation is set to True
+                if self.apply_augmentation:
+                    train_dataset = apply_augmentation_to_spectrograms(train_dataset, aug_to_apply=self.augmentation_methods, time_mask_param=self.augmentation_time_max_param, freq_mask_param=self.augmentation_freq_max_param, k_fold_index=i+1)
+                
+                # Prepare dataset for applying the triplet loss if use_triplet is set to True
+                if self.use_triplet:
+                    train_dataset = EEGTripletDataset(train_dataset)
 
-            train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
-            val_dataloader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=False)
-            loo_dataloaders[tuple((i, subject_id))] = tuple((train_dataloader, val_dataloader))
+                train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
+                val_dataloader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=False)
+                loo_dataloaders[tuple((valid_folds, subject_id))] = tuple((train_dataloader, val_dataloader))
+                valid_folds += 1
+            else:
+                print(f"--DATALOADER-- Skipping subject {subject_id} with less than 20 samples in the validation set.")
         return loo_dataloaders
     
     # K-Fold Cross Validation

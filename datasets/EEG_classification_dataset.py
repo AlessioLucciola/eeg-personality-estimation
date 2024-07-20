@@ -154,9 +154,9 @@ class EEGClassificationDataset(Dataset, ABC):
                 if PRINT_DATASET_DEBUG:
                     print(f"Subject {i} - Discarded {discarded_experiments} corrupted experiments")
         if data_discarded:
-            print("WARNING: Some experiments were discarded due to corruption or null values.")
+            print("--DATASET-- WARNING: Some experiments were discarded due to corruption or null values.")
         else :
-            print("No corrupted experiments found.")
+            print("--DATASET-- No corrupted experiments (with lots of NaN values) found.")
         return eegs_data
 
     def normalize_data(self, eegs_data, epsilon=1e-9):

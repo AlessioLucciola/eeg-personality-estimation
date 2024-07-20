@@ -107,7 +107,6 @@ def train_eval_loop(device,
             else:
                 epoch_to_resume_from = RESUME_EPOCH
         for epoch in range(epoch_to_resume_from if resume else 0, EPOCHS):
-
             # --Training--
             fold_model.train() # Set the model to training mode
             # Define the tensors to store the predictions and the labels for the training set
@@ -266,7 +265,7 @@ def train_eval_loop(device,
                     epoch_val_preds = epoch_val_preds.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
                     epoch_val_labels = epoch_val_labels.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
                     epoch_val_outputs = epoch_val_outputs.cpu() # Convert to CPU to avoid DirectML errors (only for DirectML)
-                
+                                
                 # Compute general metrics
                 val_accuracy, val_recall, val_precision, val_f1, val_auroc = measure_performances(
                     acc_metric=accuracy_metric,

@@ -24,7 +24,7 @@ def get_scheduler(optimizer, scheduler_name, step_size, gamma):
     elif scheduler_name == "ReduceLROnPlateau":
         return torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=gamma, patience=step_size, verbose=True)
     elif scheduler_name == "CosineAnnealingLR":
-        return torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=step_size, eta_min=1e-6)
+        return torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=step_size, eta_min=5e-5)
     else:
         raise ValueError(f"Scheduler {scheduler_name} is not supported.")
     

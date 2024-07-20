@@ -6,7 +6,7 @@ import os
 DATA_DIR: str = "data"
 RESULTS_DIR: str = "results"
 PLOTS_DIR: str = "plots"
-DATASET_TO_USE: str = "AMIGOS" # "AMIGOS" | "ASCERTAIN"
+DATASET_TO_USE: str = "ASCERTAIN" # "AMIGOS" | "ASCERTAIN"
 PRINT_DATASET_DEBUG: bool = False # Print debug information during dataset upload if True
 MAKE_PLOTS: bool = False # Make plots if True (it takes some time to generate the plots!)
 
@@ -30,14 +30,14 @@ RANDOM_SEED: int = 42 # Random seed
 USE_DML: bool = False # Use DirectML library if True (for AMD GPUs)
 USE_WANDB: bool = False # Use Weights & Biases for logging if True
 SAVE_RESULTS: bool = True # Save results in JSON files if True
-SAVE_MODELS: bool = True # Save models if True
+SAVE_MODELS: bool = False # Save models if True
 
 # EEGNet configurations
 WINDOWS_SIZE: float = 3 # Size of the sliding window
 WINDOWS_STRIDE: float = 3 # Stride of the sliding window
 SAMPLING_RATE: int = 256 # Sampling rate of the EEG data
 DISCRETIZE_LABELS: bool = True # Discretize the labels if True
-DISCRETIZATION_METHOD: str = "fixed_mean" # "personality_mean" | "fixed_mean" (only if DISCRETIZE_LABELS is True)
+DISCRETIZATION_METHOD: str = "personality_mean" # "personality_mean" | "fixed_mean" (only if DISCRETIZE_LABELS is True)
 NORMALIZE_DATA: bool = True # Normalize the EEG data if True
 DROP_LAST: bool = False # Drop the last window if True (if False, zero-pad the last window)
 APPLY_AUGMENTATION: bool = True # Apply data augmentations to mel spectrograms if True
@@ -55,13 +55,13 @@ MELS_MAX_FREQ: int = 50 # Maximum frequency for the mel spectrogram
 # Training configurations
 EVALUATE_EACH_LABEL: bool = True # Evaluate each label separately if True
 BATCH_SIZE: int = 128 # Batch size
-LEARNING_RATE: float = 5e-5 # Learning rate
+LEARNING_RATE: float = 1e-4 # Learning rate
 REG: float = 0.1 # Regularization parameter
 EPOCHS: int = 30 # Number of epochs
 DROPOUT_P: float = 0.1 # Dropout probability
 THRESHOLD: float = 0.5 # Threshold for the binary classification
-VALIDATION_SCHEME: str = "K-FOLDCV" # "LOOCV" | "K-FOLDCV" | "SPLIT"
-KFOLDCV: int = 5 # Number of folds for K-Fold Cross Validation (only if VALIDATION_SCHEME is "K-FOLDCV")
+VALIDATION_SCHEME: str = "LOOCV" # "LOOCV" | "K-FOLDCV" | "SPLIT"
+KFOLDCV: int = 10 # Number of folds for K-Fold Cross Validation (only if VALIDATION_SCHEME is "K-FOLDCV")
 SPLIT_RATIO: float = 0.2 # Ratio for the train-validation split (only if VALIDATION_SCHEME is "SPLIT")
 SUBJECTS_LIMIT: int = None # Limit the number of subjects to consider (None for no limit) (only if VALIDATION_SCHEME is "LOOCV")
 OPTIMIZER: str = "AdamW" # "Adam" | "AdamW" | "SGD"
@@ -73,9 +73,9 @@ LABEL_SMOOTHING_EPSILON: float = 0.0 # Label smoothing (0.0 for no smoothing)
 
 # Resume training configurations
 RESUME_TRAINING: bool = False # Resume training if True (specify the path of model to resume and the epoch to start from)
-PATH_MODEL_TO_RESUME: str = "ViT_2024-06-06_10-04-34" # Name of the model to resume
-RESUME_EPOCH: int = 10 # Epoch to resume
-RESUME_FOLD: int = 21 # Fold to resume (only for K-Fold Cross Validation and Leave-One-Out Cross Validation)
+PATH_MODEL_TO_RESUME: str = "ViT_2024-07-18_15-53-39" # Name of the model to resume
+RESUME_EPOCH: int = 30 # Epoch to resume
+RESUME_FOLD: int = 8 # Fold to resume (only for K-Fold Cross Validation and Leave-One-Out Cross Validation)
 
 # Transformer configurations
 NUM_HEADS: int = 8 # Number of heads in the transformer
@@ -156,6 +156,6 @@ assert isinstance(AMIGOS_METADATA_FILE, str), f"AMIGOS metadata file must be a s
 assert isinstance(AMIGOS_NUM_CLASSES, int), f"AMIGOS number of classes must be an integer, but got {AMIGOS_NUM_CLASSES}."
 
 if RESUME_TRAINING:
-    assert EPOCHS >= RESUME_EPOCH, f"The epoch to resume must be less or equal than the total number of epochs to reach, but got {RESUME_EPOCH} and {EPOCHS}."
+  assert EPOCHS >= RESUME_EPOCH, f"The epoch to resume must be less or equal than the total number of epochs to reach, but got {RESUME_EPOCH} and {EPOCHS}."
 
 
