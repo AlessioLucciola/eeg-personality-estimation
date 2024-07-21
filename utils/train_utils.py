@@ -115,7 +115,7 @@ def compute_average_fold_metrics(fold_metrics, fold_index, evaluate_each_label=F
         
         return final_fold_metrics
     else:
-        # If the fold is not final, simply return the metrics for the latest epoch
+        # If the fold is not final, simply return the metrics of the fold with the highest validation accuracy
         max_accuracy = float('-inf')
         max_accuracy_epoch = None
         for fi, fold in enumerate(fold_metrics):
