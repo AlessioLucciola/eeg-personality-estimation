@@ -1,5 +1,5 @@
 {
-  "architecture": "ViT",
+  "architecture": "EEGTransformer",
   "model_params": 5002245,
   "use_triplet": false,
   "labels": {
@@ -7,7 +7,7 @@
     "Agreeableness": 1,
     "Conscientiousness": 2,
     "Emotional Stability": 3,
-    "Creativity (openness)": 4
+    "Openness (Creativity)": 4
   },
   "discretize_labels": true,
   "discretization_method": "fixed_mean",
@@ -17,31 +17,25 @@
   "optimizer": "AdamW",
   "criterion": "BCEWithLogitsLoss",
   "label_smoothing_epsilon": 0.0,
-  "lr": 5e-05,
+  "lr": 0.0001,
   "reg": 0.1,
   "batch_size": 128,
   "threshold": 0.5,
   "scheduler": "CosineAnnealingLR",
   "scheduler_step_size": 10,
   "scheduler_gamma": 0.1,
-  "dataset": "AMIGOS",
+  "dataset": "ASCERTAIN",
   "seed": 42,
   "validation_scheme": "LOOCV",
   "electrodes": [
-    "AF3",
-    "F7",
-    "F3",
-    "FC5",
-    "T7",
-    "P7",
-    "O1",
-    "O2",
-    "P8",
-    "T8",
-    "FC6",
-    "F4",
-    "F8",
-    "AF4"
+    "ch1",
+    "ch2",
+    "ch3",
+    "ch4",
+    "ch5",
+    "ch6",
+    "ch7",
+    "ch8"
   ],
   "sampling_rate": 256,
   "eeg_window_size": 3,
@@ -69,10 +63,10 @@
   "augmentation_time_max_param": 0.35,
   "use_dml": false,
   "use_wandb": false,
-  "macs": 628612380,
-  "k_folds": 38,
+  "macs": 622271772,
+  "k_folds": 58,
   "subjects_limit": null,
-  "best_accuracy": 97.55217742919922,
-  "best_epoch": 2,
-  "best_fold": 33
+  "best_accuracy": 100.0,
+  "best_epoch": 1,
+  "best_fold": 38
 }

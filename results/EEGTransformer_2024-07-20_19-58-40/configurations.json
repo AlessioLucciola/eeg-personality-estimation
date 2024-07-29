@@ -1,5 +1,5 @@
 {
-  "architecture": "ViT",
+  "architecture": "EEGTransformer",
   "model_params": 5002245,
   "use_triplet": false,
   "labels": {

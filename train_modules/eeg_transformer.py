@@ -3,7 +3,7 @@ from train_modules.train_loops.train_loop_kfold_loo import train_eval_loop as tr
 from train_modules.train_loops.train_loop_split import train_eval_loop as train_eval_loop_split
 from utils.utils import get_configurations, instantiate_dataset, set_seed, select_device
 from dataloaders.EEG_classification_dataloader import EEG_dataloader
-from models.vit import ViT
+from models.eeg_transformer import EEGTransformer
 from config import *
 import torch
 
@@ -50,7 +50,7 @@ def main():
     else:
         positional_encoding = None
 
-    model = ViT(in_channels=len(resumed_configuration["electrodes"]) if resumed_configuration != None else len(ELECTRODES),
+    model = EEGTransformer(in_channels=len(resumed_configuration["electrodes"]) if resumed_configuration != None else len(ELECTRODES),
             labels=dataset.labels,
             labels_classes=dataset.labels_classes,
             hidden_size=resumed_configuration["transformer_hidden_size"] if resumed_configuration != None else HIDDEN_SIZE,
@@ -85,7 +85,7 @@ def main():
 
     if resumed_configuration == None:
         config = {
-            "architecture": "ViT",
+            "architecture": "EEGTransformer",
             "model_params": get_model_params(model),
             "use_triplet": use_triplet,
             "labels": dataset.labels,

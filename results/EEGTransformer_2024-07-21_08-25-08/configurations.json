@@ -1,5 +1,5 @@
 {
-  "architecture": "ViT",
+  "architecture": "EEGTransformer",
   "model_params": 5002245,
   "use_triplet": false,
   "labels": {
@@ -10,7 +10,7 @@
     "Openness (Creativity)": 4
   },
   "discretize_labels": true,
-  "discretization_method": "fixed_mean",
+  "discretization_method": "personality_mean",
   "num_classes": 2,
   "evaluate_each_label": true,
   "normalize_data": true,
@@ -66,7 +66,7 @@
   "macs": 622271772,
   "k_folds": 58,
   "subjects_limit": null,
-  "best_accuracy": 100.0,
-  "best_epoch": 1,
-  "best_fold": 38
+  "best_accuracy": 99.70149230957031,
+  "best_epoch": 2,
+  "best_fold": 28
 }

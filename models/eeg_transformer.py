@@ -3,7 +3,7 @@ from typing import List
 from torch import nn
 import torch
 
-class ViT(nn.Module):
+class EEGTransformer(nn.Module):
     def __init__(self,
                  in_channels: int,
                  labels: List[str],
@@ -22,7 +22,6 @@ class ViT(nn.Module):
                 ):
         super().__init__()
         
-        # TO DO: Check parameters validity
         self.in_channels = in_channels
         self.labels = labels
         self.labels_classes = labels_classes

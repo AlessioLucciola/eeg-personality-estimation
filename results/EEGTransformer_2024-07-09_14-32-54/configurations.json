@@ -1,5 +1,5 @@
 {
-  "architecture": "ViT",
+  "architecture": "EEGTransformer",
   "model_params": 5002245,
   "use_triplet": false,
   "labels": {
@@ -10,7 +10,7 @@
     "Creativity (openness)": 4
   },
   "discretize_labels": true,
-  "discretization_method": "fixed_mean",
+  "discretization_method": "personality_mean",
   "num_classes": 2,
   "evaluate_each_label": true,
   "normalize_data": true,
@@ -26,7 +26,7 @@
   "scheduler_gamma": 0.1,
   "dataset": "AMIGOS",
   "seed": 42,
-  "validation_scheme": "K-FOLDCV",
+  "validation_scheme": "LOOCV",
   "electrodes": [
     "AF3",
     "F7",
@@ -70,8 +70,9 @@
   "use_dml": false,
   "use_wandb": false,
   "macs": 628612380,
-  "k_folds": 10,
-  "best_accuracy": 99.42424011230469,
-  "best_epoch": 28,
-  "best_fold": 7
+  "k_folds": 38,
+  "subjects_limit": null,
+  "best_accuracy": 91.13851928710938,
+  "best_epoch": 1,
+  "best_fold": 36
 }
