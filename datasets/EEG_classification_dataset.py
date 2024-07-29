@@ -32,7 +32,6 @@ class EEGClassificationDataset(Dataset, ABC):
                 ):
         super().__init__()
 
-        # TO DO: Check parameters validity
         self.data_path = data_path
         self.metadata_path = metadata_path
         self.dataset_name = dataset_name

@@ -6,11 +6,6 @@ from typing import Optional, List
 from config import *
 import torch
 
-# TO DO: Remove from here
-from config import AMIGOS_FILES_DIR, AMIGOS_METADATA_FILE
-from datasets.AMIGOS_dataset import AMIGOSDataset
-from utils.eeg_utils import apply_augmentation_to_spectrograms
-
 class EEG_dataloader(DataLoader):
     def __init__(self,
             dataset: EEGClassificationDataset,
@@ -122,15 +117,3 @@ class EEG_dataloader(DataLoader):
     
     def get_dataloaders(self):
         return self.dataloaders
-    
-if __name__ == "__main__":
-    amigos_dataset = AMIGOSDataset(data_path=AMIGOS_FILES_DIR, metadata_path=AMIGOS_METADATA_FILE, apply_label_discretization=True, discretization_method="personality_mean")
-    dataloaders = EEG_dataloader(dataset=amigos_dataset, validation_scheme="K-FOLDCV", use_triplet=True).get_dataloaders()
-
-    # Just for debugging purposes
-    train_dataloader, test_dataloader = dataloaders[0]
-    for i, data in enumerate(train_dataloader):
-        print(data)
-        if i == 0:
-            break
-    ###
