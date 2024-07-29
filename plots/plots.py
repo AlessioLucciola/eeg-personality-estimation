@@ -23,8 +23,8 @@ def plot_sample(eeg_data, rows_names, dataset_name, data_normalized=False, scale
         ax.plot(eeg_data[:, i_ax])  # Plot the EEG data
         norm_string = "Before normalization" if not data_normalized else "After normalization"
         ax.set_title(f"{rows_names[i_ax]} channel - {norm_string}", fontsize=24)
-        ax.set_xlabel('Time', fontsize=20)  # Set x-axis label
-        ax.set_ylabel('Amplitude', fontsize=20)  # Set y-axis label
+        ax.set_xlabel('Sample (n)', fontsize=20)  # Set x-axis label
+        ax.set_ylabel('Amplitude (µV)', fontsize=20)  # Set y-axis label
         ax.tick_params(axis='both', which='major', labelsize=16)  # Increase xtick and ytick label size
         ax.set_ylim(eeg_data[:, i_ax].min(), eeg_data[:, i_ax].max())
     
@@ -49,7 +49,7 @@ def plot_amplitudes_distribution(eeg_data, rows_names, dataset_name, scale=10, t
     full_title = f"{title} - {dataset_name} dataset"
     
     # Set the main title with increased size
-    fig.suptitle(full_title, fontsize=28, y=1.02)
+    fig.suptitle(full_title, fontsize=30, y=1.02)
     
     for i_electrode, ax in enumerate(axs.flat):
         if i_electrode >= len(rows_names):
@@ -60,9 +60,9 @@ def plot_amplitudes_distribution(eeg_data, rows_names, dataset_name, scale=10, t
         ax.hist(eeg_data[:, i_electrode], bins=32, color='b', alpha=0.7)
         
         # Set individual titles and labels
-        ax.set_title(rows_names[i_electrode], fontsize=24)
-        ax.set_xlabel("mV", fontsize=20)
-        ax.set_ylabel("Count", fontsize=20)
+        ax.set_title(f"Amplitude distribution - Channel {rows_names[i_electrode]}", fontsize=28)
+        ax.set_xlabel("Amplitude (µV)", fontsize=24)
+        ax.set_ylabel("Count", fontsize=24)
         
         # Set y-axis to logarithmic scale
         ax.set_yscale("log")
@@ -160,9 +160,9 @@ def plot_mel_spectrogram(eeg_data, spectrogram_function, rows_name, dataset_name
             fig.colorbar(im, cax=cax, orientation="vertical")
             
             # Set title and labels with increased font size
-            ax.set_title(rows_name[i_ax], fontsize=20)
-            ax.set_xlabel("Time", fontsize=16)
-            ax.set_ylabel("Mels", fontsize=16)
+            ax.set_title(f"Mel Spectrogram - Channel {rows_name[i_ax]}", fontsize=20)
+            ax.set_xlabel("Time (s)", fontsize=16)
+            ax.set_ylabel("Mels (n)", fontsize=16)
             
             # Increase tick label size
             ax.tick_params(axis='both', which='major', labelsize=16)
