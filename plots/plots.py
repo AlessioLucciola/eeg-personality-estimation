@@ -60,8 +60,8 @@ def plot_amplitudes_distribution(eeg_data, rows_names, dataset_name, scale=10, t
         ax.hist(eeg_data[:, i_electrode], bins=32, color='b', alpha=0.7)
         
         # Set individual titles and labels
-        ax.set_title(f"Amplitude distribution - Channel {rows_names[i_electrode]}", fontsize=28)
-        ax.set_xlabel("Amplitude (µV)", fontsize=24)
+        ax.set_title(f"{rows_names[i_electrode]} Channel - Amplitude distribution", fontsize=28)
+        ax.set_xlabel("Amplitude", fontsize=24)
         ax.set_ylabel("Count", fontsize=24)
         
         # Set y-axis to logarithmic scale
@@ -160,9 +160,9 @@ def plot_mel_spectrogram(eeg_data, spectrogram_function, rows_name, dataset_name
             fig.colorbar(im, cax=cax, orientation="vertical")
             
             # Set title and labels with increased font size
-            ax.set_title(f"Mel Spectrogram - Channel {rows_name[i_ax]}", fontsize=20)
-            ax.set_xlabel("Time (s)", fontsize=16)
-            ax.set_ylabel("Mels (n)", fontsize=16)
+            ax.set_title(f"{rows_name[i_ax]} Channel - Mel Spectrogram", fontsize=20)
+            ax.set_xlabel("Time", fontsize=16)
+            ax.set_ylabel("Mels", fontsize=16)
             
             # Increase tick label size
             ax.tick_params(axis='both', which='major', labelsize=16)

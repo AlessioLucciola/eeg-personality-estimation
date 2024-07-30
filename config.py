@@ -8,7 +8,7 @@ RESULTS_DIR: str = "results"
 PLOTS_DIR: str = "plots"
 DATASET_TO_USE: str = "AMIGOS" # "AMIGOS" | "ASCERTAIN"
 PRINT_DATASET_DEBUG: bool = False # Print debug information during dataset upload if True
-MAKE_PLOTS: bool = False # Make plots if True (it takes some time to generate the plots!)
+MAKE_PLOTS: bool = True # Make plots if True (it takes some time to generate the plots!)
 
 # AMIGOS dataset configurations
 AMIGOS_DATASET_DIR: str = os.path.join(DATA_DIR, "amigos")
@@ -40,7 +40,7 @@ DISCRETIZE_LABELS: bool = True # Discretize the labels if True
 DISCRETIZATION_METHOD: str = "personality_mean" # "personality_mean" | "fixed_mean" (only if DISCRETIZE_LABELS is True)
 NORMALIZE_DATA: bool = True # Normalize the EEG data if True
 DROP_LAST: bool = False # Drop the last window if True (if False, zero-pad the last window)
-APPLY_AUGMENTATION: bool = True # Apply data augmentations to mel spectrograms if True
+APPLY_AUGMENTATION: bool = False # Apply data augmentations to mel spectrograms if True
 AUGMENTATION_METHODS: List[str] = ["additive_noise", "flipping"] # "spec_augment" | "additive_noise" | "flipping" (only if APPLY_AUGMENTATION is True)
 AUGMENTATION_FREQ_MAX_PARAM = 0.35 # Maximum possible length of the frequency mask (only if "spec_augment" is in AUGMENTATION_METHODS and APPLY_AUGMENTATION is True)
 AUGMENTATION_TIME_MAX_PARAM = 0.35 # Maximum possible length of the time mask (only if "spec_augment" is in AUGMENTATION_METHODS and APPLY_AUGMENTATION is True)
