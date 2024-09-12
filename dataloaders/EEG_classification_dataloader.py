@@ -1,4 +1,5 @@
 from datasets.EEG_classification_dataset import EEGClassificationDataset
+from utils.eeg_utils import apply_augmentation_to_spectrograms
 from sklearn.model_selection import KFold, train_test_split
 from datasets.EEG_triplet_dataset import EEGTripletDataset
 from torch.utils.data import DataLoader
